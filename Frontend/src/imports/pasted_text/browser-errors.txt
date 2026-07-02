@@ -1,0 +1,230 @@
+ Running frontend commit 7b9d7d2dd506c204500775d876d99404d6c5f759
+browser-intake-datadoghq.com/api/v2/rum:1  Failed to load resource: the server responded with a status of 405 (Method Not Allowed)
+ Statsig is not ready to log exposures, will retry in 1 seconds
+ Loaded 44 scripts (6451187b), 41 from cache (5621825b)
+ [import] git: 7b9d7d2dd506c204500775d876d99404d6c5f759, stamp: 9AA1407BA1383105
+ The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127
+ Autosave Changes not available or already claimed by another tab undefined
+ [Fullscreen] Booting... (emscripten version 4.0.21)
+ [GPU] graphicsAPI:"WebGPU", vendor:"Google Inc. (Intel)" renderer:"ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x00009A49) Direct3D11 vs_5_0 ps_5_0, D3D11)" deviceArchitecture:"gen-12lp" deviceDescription:"" webGPUDevice:"" webGPUVendor:"intel" bindings:"emdawnwebgpu"
+ [Fullscreen] Ready in 2154.5ms
+ The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127
+ [FullscreenApp] calling setEditorTheme and setting preference light
+ Sentry event id: 28757d4d8e82499ea0b1efc5ead254dd
+ [MultiplayerSession] connecting to wss://www.figma.com/api/multiplayer/wojs2KD3o7rWesJ0pyEwgj?role=editor&tracking_session_id=4MyJ0MZQIjrJ9Ox6&version=154&recentReload=0&file-load-streaming-compression&user-id=1380709812597243846&client_release=7b9d7d2dd506c204500775d876d99404d6c5f759
+ [MultiplayerSession] Joining file version 106 (initial load)
+ [FullscreenApp] calling setEditorTheme and setting preference light
+ Sentry event id: 9a56765ac1bb44a3be05bec65891dd3d
+ Sentry event id: 5b0ddefa267e41d8a8dbcb3c3ae37efe
+ [Fullscreen] loadtime=8.37s maxmem=14826068
+ [devtools] Initialized LS
+/api/plans/b21fbb4e-3480-493e-9af0-2a41bb6c7373/npm_private_registry/scopes:1  Failed to load resource: the server responded with a status of 403 ()
+ [devtools] Initialized LS
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ [MultiplayerSession] connecting to wss://www.figma.com/api/multiplayer/wojs2KD3o7rWesJ0pyEwgj?role=editor&tracking_session_id=4MyJ0MZQIjrJ9Ox6&version=154&recentReload=0&file-load-streaming-compression=&user-id=1380709812597243846&client_release=7b9d7d2dd506c204500775d876d99404d6c5f759&reconnect-key=be8281d3f0328b5d81ba0bd4c7f62f64e82d560a&reconnect-sequence-number=811&initialFileVersion=106&previousLoadMode=full&incremental-loading-validation=0
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ [MultiplayerSession] Joining file version 106 (skip_reload reconnect)
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+ WebSocket connection to 'wss://app-oeeedjcpt7ytp3zfaod5oerczdzhh2wqbfnvsrwro5bzk2tx3av6.makeproxy-c.figma.site/' failed: 
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+/api/rev/wojs2KD3o7rWesJ0pyEwgj/code_snapshot/c940d307bbcdbd447c7b632c489041e481682640c5c48bad2a399eac449dcc65:1  Failed to load resource: the server responded with a status of 404 ()
+ Failed to fetch snapshot files: 
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 408 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+cors-image-proxy.figma.com/?url=https%3A%2F%2F6fd22b71-abed-4c79-9c7c-912c28e24032-v3-figmaiframepreview.figma.site%2F_components%2Flive%2F43e92b23e8e5dd96c29af7843408ee1736ff6671%2FWhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 403 ()
+ Too many elapsed hits of react since last report
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+vendor-core-5a58dfb552452d49.min.js.br:54 [MultiplayerSession] connecting to wss://www.figma.com/api/multiplayer/wojs2KD3o7rWesJ0pyEwgj?role=editor&tracking_session_id=4MyJ0MZQIjrJ9Ox6&version=154&recentReload=0&file-load-streaming-compression=&user-id=1380709812597243846&client_release=7b9d7d2dd506c204500775d876d99404d6c5f759&reconnect-key=be8281d3f0328b5d81ba0bd4c7f62f64e82d560a&reconnect-sequence-number=839&initialFileVersion=106&previousLoadMode=full&incremental-loading-validation=0
+vendor-core-5a58dfb552452d49.min.js.br:54 [MultiplayerSession] Joining file version 106 (skip_reload reconnect)
+/api/rev/wojs2KD3o7rWesJ0pyEwgj/code_snapshot/f5a3ce658d1d6a7bf638b495949790cffce8292d3ae933b773b58562e2cf69bb:1  Failed to load resource: the server responded with a status of 404 ()
+installHook.js:1 Failed to fetch snapshot files: w: XHR for "/api/rev/wojs2KD3o7rWesJ0pyEwgj/code_snapshot/f5a3ce658d1d6a7bf638b495949790cffce8292d3ae933b773b58562e2cf69bb" failed with status 404
+    at P (3835-526626f3c5ac9623.min.js.br:1445:11072)
+    at async Object.O [as get] (3835-526626f3c5ac9623.min.js.br:1445:11454)
+    at async 1180-8c530ecc71a73a54.min.js.br:3:5990
+    at async 1180-8c530ecc71a73a54.min.js.br:8:25250
+    at async 6632-4aa0568f43964981.min.js.br:3:276
+    at async _ (1180-8c530ecc71a73a54.min.js.br:8:24670)
+    at async 1180-8c530ecc71a73a54.min.js.br:8:10819
+overrideMethod @ installHook.js:1
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+code_components_preview_iframe-1131ced77065be40.min.js.br:66 [App] Current page: home Authenticated: false
+code_components_preview_iframe-1131ced77065be40.min.js.br:66 [App] Current page: home Authenticated: true
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_-1.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
+WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.d18b37a1.jpeg:1  Failed to load resource: the server responded with a status of 404 ()
