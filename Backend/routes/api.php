@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Catalog\BrandController;
+use App\Http\Controllers\Api\Catalog\MediaController;
+use App\Http\Controllers\Api\Catalog\ProductController;
+use App\Http\Controllers\Api\Orders\CartController;
+use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
 
-// ─── Public Auth Routes (no token needed) ────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -15,30 +19,53 @@ Route::prefix('auth')->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
-// ─── Protected Routes (require valid Sanctum token) ──────────────────────────
+Route::get('/brands', [BrandController::class, 'index']);
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{product}', [ProductController::class, 'show']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 
-    // Admin only routes
     Route::middleware('admin')->prefix('admin')->group(function () {
-        // Phase 2: Admin management routes go here
         Route::get('/dashboard', fn() => response()->json(['message' => 'Admin dashboard — Phase 2']));
+
+        Route::get('/brands', [BrandController::class, 'adminIndex']);
+        Route::post('/brands', [BrandController::class, 'store']);
+        Route::put('/brands/{brand}', [BrandController::class, 'update']);
+        Route::delete('/brands/{brand}', [BrandController::class, 'destroy']);
+
+        Route::get('/products', [ProductController::class, 'adminIndex']);
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{product}', [ProductController::class, 'update']);
+        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+        Route::patch('/products/variants/{variant}/stock', [ProductController::class, 'updateVariantStock']);
+
+        Route::post('/media/upload', [MediaController::class, 'upload']);
     });
 
-    // Staff + Admin + Staff Supervisor routes
     Route::middleware('role:admin,staff,staffsupervisor')->prefix('staff')->group(function () {
-        // Phase 2: Staff routes go here
         Route::get('/dashboard', fn() => response()->json(['message' => 'Staff dashboard — Phase 2']));
+
+        Route::get('/orders', [OrderController::class, 'staffIndex']);
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+        Route::patch('/orders/{order}/assign', [OrderController::class, 'assignToSelf']);
     });
 
-    // Customer routes
     Route::middleware('role:customer')->prefix('customer')->group(function () {
-        // Phase 2: Customer routes go here
         Route::get('/profile', fn() => response()->json(['message' => 'Customer profile — Phase 2']));
+
+        Route::get('/cart', [CartController::class, 'index']);
+        Route::post('/cart', [CartController::class, 'store']);
+        Route::patch('/cart/{cartItem}', [CartController::class, 'update']);
+        Route::delete('/cart/{cartItem}', [CartController::class, 'destroy']);
+        Route::delete('/cart', [CartController::class, 'clear']);
+
+        Route::post('/orders/checkout', [OrderController::class, 'checkout']);
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/orders/{order}', [OrderController::class, 'show']);
     });
 });
