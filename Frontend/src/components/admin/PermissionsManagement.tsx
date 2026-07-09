@@ -86,7 +86,7 @@ export default function PermissionsManagement() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold bg-linear-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
           Permissions Management
         </h2>
       </div>
@@ -151,7 +151,7 @@ export default function PermissionsManagement() {
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
+                <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
                   {member.avatar}
                 </div>
                 <div>
@@ -220,7 +220,7 @@ export default function PermissionsManagement() {
                           </div>
                         </div>
                         <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
                             isSelected
                               ? isStaffPerm
                                 ? "border-cyan-500 bg-cyan-500"

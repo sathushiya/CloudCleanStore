@@ -191,7 +191,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
             {/* User Profile */}
             <div className="p-6 border-b border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                <div className="w-16 h-16 bg-linear-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-xl font-bold">
                   {user?.avatar || 'U'}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -440,7 +440,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
                           <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
                             LKR {item.price.toFixed(2)}
                           </div>
-                          <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple)] transition-all text-sm">
+                          <button className="px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple) transition-all text-sm">
                             Add to Cart
                           </button>
                         </div>
@@ -456,7 +456,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h1 className="text-3xl font-bold">Saved Addresses</h1>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple)] transition-all">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple) transition-all">
                     <Plus className="w-5 h-5" />
                     Add Address
                   </button>
@@ -511,7 +511,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
 
                 <div className="bg-white dark:bg-white/5 rounded-3xl p-6 lg:p-8 border border-gray-200 dark:border-purple-700/20">
                   <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
-                    <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                    <div className="w-24 h-24 bg-linear-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-3xl font-bold">
                       {user?.avatar || 'U'}
                     </div>
                     <div className="flex-1 text-center sm:text-left">
@@ -566,7 +566,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
                     <div className="flex gap-3 pt-4">
                       <button
                         type="submit"
-                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105"
+                        className="px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105"
                       >
                         Save Changes
                       </button>
@@ -655,7 +655,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
       {/* Floating Search Button */}
       <button
         onClick={() => setSearchModalOpen(true)}
-        className="fixed bottom-24 right-8 z-50 w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-full shadow-lg shadow-purple-500/50 hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-110 flex items-center justify-center"
+        className="fixed bottom-24 right-8 z-50 w-14 h-14 bg-linear-to-br from-purple-600 to-purple-700 text-white rounded-full shadow-lg shadow-purple-500/50 hover:shadow-(--glow-purple-strong) transition-all hover:scale-110 flex items-center justify-center"
         aria-label="Search products"
       >
         <Search className="w-6 h-6" />

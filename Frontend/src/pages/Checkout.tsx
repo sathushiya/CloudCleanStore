@@ -168,7 +168,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
 
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <Check className="w-12 h-12 text-green-600 dark:text-green-400" />
@@ -245,7 +245,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
                           <p className="text-sm text-gray-600 dark:text-gray-400">{address.city}</p>
                           {address.message && (
                             <div className="mt-2 flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                              <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                              <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                               <p className="text-xs text-blue-700 dark:text-blue-300">{address.message}</p>
                             </div>
                           )}
@@ -426,7 +426,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
               <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
                 {items.map((item) => (
                   <div key={`${item.product.id}-${item.variant.id}`} className="flex gap-3">
-                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
                       <ImageWithFallback
                         src={item.product.image}
                         alt={item.product.name}
@@ -472,7 +472,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
               <button
                 onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder || items.length === 0}
-                className="w-full mt-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                className="w-full mt-6 py-4 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
               >
                 {isSubmittingOrder ? 'Placing Order...' : 'Place Order'}
               </button>
@@ -605,7 +605,7 @@ function AddressModal({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
+            <label className="flex text-sm font-semibold mb-2 items-center gap-2">
               <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               Delivery Instructions (Optional)
             </label>
@@ -632,7 +632,7 @@ function AddressModal({
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105"
+              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105"
             >
               {address ? 'Update Address' : 'Add Address'}
             </button>

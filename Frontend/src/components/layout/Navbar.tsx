@@ -48,13 +48,13 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-[var(--glass-bg)] border-b border-[var(--glass-border)] shadow-[var(--glass-shadow)]">
+    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-(--glass-bg) border-b border-(--glass-border) shadow-(--glass-shadow)">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Hamburger Menu Button - Left Side */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg hover:bg-[var(--accent)] transition-colors text-gray-900 dark:text-white"
+            className="p-2 rounded-lg hover:bg-accent transition-colors text-gray-900 dark:text-white"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -68,12 +68,12 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
           <div className="flex items-center space-x-2 md:space-x-4">
             {isAuthenticated && (
               <>
-                <button onClick={onNavigateToShop} className="p-2 hover:bg-[var(--accent)] rounded-full transition-colors">
+                <button onClick={onNavigateToShop} className="p-2 hover:bg-accent rounded-full transition-colors">
                   <Search className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setNotificationModalOpen(true)}
-                  className="p-2 hover:bg-[var(--accent)] rounded-full transition-colors relative"
+                  className="p-2 hover:bg-accent rounded-full transition-colors relative"
                 >
                   <Bell className="w-5 h-5" />
                   {notificationCount > 0 && (
@@ -82,17 +82,17 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                     </span>
                   )}
                 </button>
-                <button onClick={onOpenCart} className="p-2 hover:bg-[var(--accent)] rounded-full transition-colors relative">
+                <button onClick={onOpenCart} className="p-2 hover:bg-accent rounded-full transition-colors relative">
                   <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-[var(--primary)] text-white text-xs rounded-full flex items-center justify-center px-1">
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center px-1">
                       {cartCount}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setProfileModalOpen(true)}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--primary)] text-white rounded-full hover:opacity-90 transition-all hover:shadow-[var(--glow-purple)]"
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-(--glow-purple)"
                 >
                   <User className="w-4 h-4" />
                   {user?.name?.split(' ')[0] || 'Profile'}
@@ -102,7 +102,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
             {!isAuthenticated && (
               <button
                 onClick={onNavigateToLogin}
-                className="px-4 py-2 text-sm font-medium bg-[var(--primary)] text-white rounded-full hover:opacity-90 transition-all hover:shadow-[var(--glow-purple)]"
+                className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-(--glow-purple)"
               >
                 Sign In
               </button>
@@ -114,22 +114,22 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
       {/* 60% Dark Overlay Background - Covers entire page */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-[9998] animate-fadeIn"
+          className="fixed inset-0 bg-black/60 z-9998 animate-fadeIn"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Left Slide-out Sidebar Menu - On top of overlay - Fully Opaque */}
-      <div className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-[#6b21a8] shadow-2xl z-[9999] transform transition-transform duration-300 ease-out ${
+      <div className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-[#6b21a8] shadow-2xl z-9999 transform transition-transform duration-300 ease-out ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full bg-[#6b21a8]">
           {/* Sidebar Header with Logo and Close X Button */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-purple-700 flex-shrink-0 bg-[#6b21a8]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-purple-700 shrink-0 bg-[#6b21a8]">
             <Logo className="h-8" />
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="w-10 h-10 bg-purple-800 hover:bg-purple-700 rounded-lg flex items-center justify-center transition-colors text-white flex-shrink-0"
+              className="w-10 h-10 bg-purple-800 hover:bg-purple-700 rounded-lg flex items-center justify-center transition-colors text-white shrink-0"
               aria-label="Close menu"
             >
               <X className="w-6 h-6" />
@@ -138,14 +138,14 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
 
           {/* Sidebar Navigation Content - Vertical Auto Layout, All Items Visible */}
           <div className="flex-1 px-5 py-4 flex flex-col bg-[#6b21a8]">
-            <nav className="flex flex-col gap-1 flex-shrink-0 bg-[#6b21a8]">
+            <nav className="flex flex-col gap-1 shrink-0 bg-[#6b21a8]">
               {/* Show different menu based on authentication status */}
               {!isAuthenticated ? (
                 <>
                   {/* Main Navigation Items - For Non-Authenticated Users */}
                   <a
                     href="#home"
-                    className="flex-shrink-0 block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Home
@@ -155,13 +155,13 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       scrollToProducts();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full text-left block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full text-left block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
                     Shop
                   </button>
                   <a
                     href="#brands"
-                    className="flex-shrink-0 block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Brands
@@ -171,7 +171,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       scrollToFooter();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full text-left block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full text-left block px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
                     Contact Us
                   </button>
@@ -184,9 +184,9 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       onNavigateToActivity?.();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
-                    <Clock className="w-5 h-5 flex-shrink-0" />
+                    <Clock className="w-5 h-5 shrink-0" />
                     <span>My Activity</span>
                   </button>
                   <button
@@ -194,9 +194,9 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       onNavigateToOrders?.();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
-                    <Package className="w-5 h-5 flex-shrink-0" />
+                    <Package className="w-5 h-5 shrink-0" />
                     <span>My Orders</span>
                   </button>
                   <button
@@ -204,9 +204,9 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       onNavigateToAddresses?.();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
-                    <MapPin className="w-5 h-5 flex-shrink-0" />
+                    <MapPin className="w-5 h-5 shrink-0" />
                     <span>My Addresses</span>
                   </button>
                   <button
@@ -214,9 +214,9 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       onNavigateToSettings?.();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
-                    <Settings className="w-5 h-5 flex-shrink-0" />
+                    <Settings className="w-5 h-5 shrink-0" />
                     <span>Settings</span>
                   </button>
                   <button
@@ -224,16 +224,16 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       onNavigateToWishlist?.();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
                   >
-                    <Heart className="w-5 h-5 flex-shrink-0" />
+                    <Heart className="w-5 h-5 shrink-0" />
                     <span>Wishlist</span>
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex-shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-red-300 hover:text-red-100 hover:bg-red-900 rounded-lg transition-all font-medium"
+                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-red-300 hover:text-red-100 hover:bg-red-900 rounded-lg transition-all font-medium"
                   >
-                    <LogOut className="w-5 h-5 flex-shrink-0" />
+                    <LogOut className="w-5 h-5 shrink-0" />
                     <span>Logout</span>
                   </button>
                 </>
@@ -241,13 +241,13 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
 
               {/* Sign In Button - Only for Non-Authenticated Users */}
               {!isAuthenticated && (
-                <div className="flex-shrink-0 pt-2 mt-2 border-t border-purple-700 bg-[#6b21a8]">
+                <div className="shrink-0 pt-2 mt-2 border-t border-purple-700 bg-[#6b21a8]">
                   <button
                     onClick={() => {
                       onNavigateToLogin?.();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex-shrink-0 w-full px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-medium transition-all"
+                    className="shrink-0 w-full px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-medium transition-all"
                   >
                     Sign In
                   </button>
@@ -277,14 +277,14 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
         <>
           {/* Dark Overlay - Covers Entire Page */}
           <div
-            className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/70 z-[9998] animate-fadeIn"
+            className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/70 z-9998 animate-fadeIn"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
             onClick={() => setNotificationModalOpen(false)}
           />
 
           {/* Notification Drawer */}
           <div
-            className={`fixed top-0 right-0 bottom-0 w-96 max-w-[90vw] z-[9999] shadow-2xl transform transition-transform duration-300 ease-out ${
+            className={`fixed top-0 right-0 bottom-0 w-96 max-w-[90vw] z-9999 shadow-2xl transform transition-transform duration-300 ease-out ${
               notificationModalOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
             style={{ backgroundColor: '#1e1147' }}
@@ -306,7 +306,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                 {/* Notification Item 1 */}
                 <div className="bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
                       <Package className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -314,14 +314,14 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       <p className="text-white/60 text-xs mb-2">Your order #ORD-2024-003 has been shipped and is on its way!</p>
                       <p className="text-white/40 text-xs">2 hours ago</p>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
                   </div>
                 </div>
 
                 {/* Notification Item 2 */}
                 <div className="bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center shrink-0">
                       <Heart className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -329,14 +329,14 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       <p className="text-white/60 text-xs mb-2">Premium Floor Polish is now 20% off! Get it before the sale ends.</p>
                       <p className="text-white/40 text-xs">5 hours ago</p>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
                   </div>
                 </div>
 
                 {/* Notification Item 3 */}
                 <div className="bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
                       <Bell className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -344,7 +344,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                       <p className="text-white/60 text-xs mb-2">Check out our latest eco-friendly cleaning products!</p>
                       <p className="text-white/40 text-xs">1 day ago</p>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
                   </div>
                 </div>
 
@@ -378,14 +378,14 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
         <>
           {/* Dark Overlay - Covers Entire Page */}
           <div
-            className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/70 z-[9998] animate-fadeIn"
+            className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/70 z-9998 animate-fadeIn"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
             onClick={() => setProfileModalOpen(false)}
           />
 
           {/* Profile Drawer */}
           <div
-            className={`fixed top-0 right-0 bottom-0 w-96 max-w-[90vw] z-[9999] shadow-2xl transform transition-transform duration-300 ease-out ${
+            className={`fixed top-0 right-0 bottom-0 w-96 max-w-[90vw] z-9999 shadow-2xl transform transition-transform duration-300 ease-out ${
               profileModalOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
             style={{ backgroundColor: '#1e1147' }}
@@ -405,7 +405,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
               {/* Profile Avatar */}
               <div className="flex flex-col items-center mb-8">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center text-white text-4xl font-bold border-4 border-white/20">
+                  <div className="w-32 h-32 rounded-full bg-linear-to-br from-purple-600 to-purple-800 flex items-center justify-center text-white text-4xl font-bold border-4 border-white/20">
                     {user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                   </div>
                   <button className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-full flex items-center justify-center text-purple-600 shadow-lg hover:bg-gray-100 transition-colors">
