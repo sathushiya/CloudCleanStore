@@ -1,14 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Search, Edit, Trash2, Package, AlertCircle, X, Save } from 'lucide-react';
-import { products as initialProducts, Product, ProductVariant, categories } from '../../data/products';
+import { Product, ProductVariant, categories } from '../../data/products';
+import { productService, toFrontendProduct } from '../../services/productService';
+import ImageUploader from './ImageUploader';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 
 export default function ProductsManagement() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const apiProducts = await productService.adminList();
+        if (!cancelled) setProducts(apiProducts.map(toFrontendProduct));
+      } catch (err) {
+        if (!cancelled) setLoadError('Could not load products from the server.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadProducts();
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
@@ -20,12 +44,20 @@ export default function ProductsManagement() {
 
   const lowStockProducts = products.filter((p) => p.variants.some((v) => v.stock < 10));
 
-  const handleDeleteProduct = (productId: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await productService.remove(Number(productId));
       setProducts(products.filter((p) => p.id !== productId));
+    } catch (err) {
+      alert('Failed to delete product. Please try again.');
     }
   };
 
+  // NOTE: Add/Edit still update local state only. Wiring these to
+  // productService.create / productService.update requires the modal form
+  // (below) to select a real brand_id from GET /brands instead of typing a
+  // free-text brand name — that's the next follow-up on this file.
   const handleSaveProduct = (updatedProduct: Product) => {
     setProducts(
       products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
@@ -56,6 +88,13 @@ export default function ProductsManagement() {
           Add Product
         </button>
       </div>
+
+      {isLoading && (
+        <div className="text-center py-8 text-gray-500">Loading products...</div>
+      )}
+      {loadError && !isLoading && (
+        <div className="text-center py-8 text-red-500">{loadError}</div>
+      )}
 
       {/* Total Products Metric */}
       <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
@@ -250,6 +289,13 @@ function EditProductModal({ product, onSave, onClose }: EditProductModalProps) {
             </div>
 
             <div>
+              <ImageUploader
+                value={formData.image}
+                onChange={(url) => setFormData({ ...formData, image: url })}
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Brand</label>
               <input
                 type="text"
@@ -373,7 +419,7 @@ function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
     brand: '',
     category: 'bathroom',
     description: '',
-    image: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=500',
+    image: '',
     rating: 4.5,
     reviews: 0,
     badge: '',
@@ -414,6 +460,11 @@ function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+          />
+
+          <ImageUploader
+            value={formData.image}
+            onChange={(url) => setFormData({ ...formData, image: url })}
           />
 
           <div className="grid grid-cols-2 gap-4">

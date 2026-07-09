@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { authenticateUser, validateEmail } from "../utils/auth";
+import { validateEmail } from "../utils/auth";
 import Logo from "../components/common/Logo";
 import BackButton from "../components/common/BackButton";
 import authService from "../services/authService";

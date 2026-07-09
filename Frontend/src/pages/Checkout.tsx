@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { cartService } from '../services/cartService';
+import { orderService } from '../services/orderService';
 import { ImageWithFallback } from '../components/common/ImageWithFallback';
 import BackButton from '../components/common/BackButton';
 
@@ -38,7 +40,7 @@ interface Address {
 }
 
 export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
-  const { items, getCartTotal } = useCart();
+  const { items, getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const [selectedAddress, setSelectedAddress] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('banking');
@@ -47,6 +49,8 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
   const [showBankTransfer, setShowBankTransfer] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal * 0.08;
@@ -106,15 +110,41 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
     }
   };
 
+  // Pushes the local cart into the backend cart, then checks out — this is what
+  // actually creates a real Order row (previously this was purely simulated).
+  const submitOrder = async () => {
+    setIsSubmittingOrder(true);
+    setOrderError(null);
+    try {
+      for (const item of items) {
+        await cartService.add(Number(item.variant.id), item.quantity);
+      }
+
+      const selectedAddr = addresses.find(a => a.id === selectedAddress) || addresses[0];
+      const deliveryAddress = selectedAddr
+        ? `${selectedAddr.address}, ${selectedAddr.city}`
+        : 'Address not provided';
+
+      await orderService.checkout(deliveryAddress);
+
+      clearCart();
+      setShowSuccess(true);
+      setTimeout(() => {
+        onOrderPlaced();
+      }, 3000);
+    } catch (err) {
+      setOrderError('We could not place your order. Please check your connection and try again.');
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  };
+
   const handlePlaceOrder = () => {
     if (paymentMethod === 'banking') {
       setShowBankTransfer(true);
       return;
     }
-    setShowSuccess(true);
-    setTimeout(() => {
-      onOrderPlaced();
-    }, 3000);
+    submitOrder();
   };
 
   if (showBankTransfer) {
@@ -127,11 +157,11 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
         orderDetails={{
           customerName: user?.name || selectedAddr?.name || 'Customer',
           address: selectedAddr ? `${selectedAddr.address}, ${selectedAddr.city}` : 'N/A',
-          products: items.map(i => ({ name: i.name, quantity: i.quantity })),
+          products: items.map(i => ({ name: i.product.name, quantity: i.quantity })),
           deliveryTime,
         }}
         onBack={() => setShowBankTransfer(false)}
-        onConfirm={onOrderPlaced}
+        onConfirm={submitOrder}
       />
     );
   }
@@ -432,12 +462,19 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
                 </div>
               </div>
 
+              {orderError && (
+                <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+                  {orderError}
+                </div>
+              )}
+
               {/* Place Order Button */}
               <button
                 onClick={handlePlaceOrder}
-                className="w-full mt-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105"
+                disabled={isSubmittingOrder || items.length === 0}
+                className="w-full mt-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
               >
-                Place Order
+                {isSubmittingOrder ? 'Placing Order...' : 'Place Order'}
               </button>
             </div>
           </div>
@@ -448,7 +485,13 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
       {showAddressModal && (
         <AddressModal
           address={editingAddress}
-          onSave={editingAddress ? handleEditAddress : handleAddAddress}
+          onSave={(addr) => {
+            if (editingAddress) {
+              handleEditAddress(addr as Address);
+            } else {
+              handleAddAddress(addr as Omit<Address, 'id'>);
+            }
+          }}
           onClose={() => {
             setShowAddressModal(false);
             setEditingAddress(null);

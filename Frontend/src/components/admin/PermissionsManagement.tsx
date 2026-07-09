@@ -204,7 +204,7 @@ export default function PermissionsManagement() {
                       }
                       className={`p-4 rounded-xl border transition-all text-left ${
                         isSelected
-                          ? isDeliveryPerm
+                          ? isStaffPerm
                             ? "bg-cyan-500/10 border-cyan-500/50"
                             : "bg-purple-500/10 border-purple-500/50"
                           : "bg-white/5 border-white/10 hover:bg-white/10"

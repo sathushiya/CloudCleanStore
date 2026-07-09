@@ -547,7 +547,7 @@ export default function Dashboard({ onLogout, onBack, activeTab: initialTab = 'o
                         <label className="block text-sm font-medium mb-2">Phone Number</label>
                         <input
                           type="tel"
-                          defaultValue={user?.phone}
+                          defaultValue={user?.phone_number}
                           className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
                         />
                       </div>

@@ -441,7 +441,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                   <label className="block text-white font-semibold mb-2">Phone Number</label>
                   <input
                     type="tel"
-                    defaultValue={user?.phone || ''}
+                    defaultValue={user?.phone_number || ''}
                     placeholder="Enter your phone number"
                     className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
                   />

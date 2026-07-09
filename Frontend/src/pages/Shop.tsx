@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Star, ShoppingCart } from 'lucide-react';
-import { products, categories } from '../data/products';
+import { categories } from '../data/products';
 import { Product } from '../data/products';
+import { productService, toFrontendProduct } from '../services/productService';
 import SearchBar from '../components/common/SearchBar';
 import ProductModal from '../components/ProductModal';
 import { ImageWithFallback } from '../components/common/ImageWithFallback';
@@ -14,6 +15,9 @@ interface ShopProps {
 export default function Shop({ onBack }: ShopProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Check for category filter from sessionStorage on mount
   useEffect(() => {
@@ -25,9 +29,32 @@ export default function Shop({ onBack }: ShopProps) {
     }
   }, []);
 
-  const filteredProducts = products.filter((product) =>
-    selectedCategory === 'all' ? true : product.category === selectedCategory
-  );
+  // Fetch products whenever the category filter changes
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const paginated = await productService.list(
+          selectedCategory === 'all' ? {} : { category: selectedCategory }
+        );
+        if (!cancelled) {
+          setProducts(paginated.data.map(toFrontendProduct));
+        }
+      } catch (err) {
+        if (!cancelled) setError('Could not load products. Please try again.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadProducts();
+    return () => { cancelled = true; };
+  }, [selectedCategory]);
+
+  const filteredProducts = products;
 
   return (
     <section className="py-8 md:py-16 min-h-screen" id="shop">
@@ -70,6 +97,15 @@ export default function Shop({ onBack }: ShopProps) {
         </div>
 
         {/* Products Grid */}
+        {isLoading && (
+          <div className="text-center py-16 text-gray-500">Loading products...</div>
+        )}
+
+        {error && !isLoading && (
+          <div className="text-center py-16 text-red-500">{error}</div>
+        )}
+
+        {!isLoading && !error && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => {
             const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
@@ -154,9 +190,10 @@ export default function Shop({ onBack }: ShopProps) {
             );
           })}
         </div>
+        )}
 
         {/* No Results */}
-        {filteredProducts.length === 0 && (
+        {!isLoading && !error && filteredProducts.length === 0 && (
           <div className="text-center py-16">
             <p className="text-gray-500 dark:text-gray-400">No products found in this category</p>
           </div>

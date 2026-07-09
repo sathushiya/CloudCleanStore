@@ -1,35 +1,29 @@
-import axios from "axios";
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
+import axios from 'axios';
 
 const api = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
   withCredentials: true, // needed for Sanctum CSRF
 });
 
 // ─── Request Interceptor: attach access token ────────────────────────────────
 api.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem("access_token") ||
-    sessionStorage.getItem("access_token");
-
+  const token = localStorage.getItem('access_token') 
+    || sessionStorage.getItem('access_token');
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
+  
   return config;
 });
 
 // ─── Response Interceptor: auto-refresh token on 401 ────────────────────────
 let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: unknown) => void;
-  reject: (reason?: unknown) => void;
-}> = [];
+let failedQueue: Array<{ resolve: (value: unknown) => void; reject: (reason?: unknown) => void }> = [];
 
 const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
@@ -49,32 +43,30 @@ api.interceptors.response.use(
         // Queue the request until token is refreshed
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        }).catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken =
-        localStorage.getItem("refresh_token") ||
-        sessionStorage.getItem("refresh_token");
+      const refreshToken = localStorage.getItem('refresh_token')
+        || sessionStorage.getItem('refresh_token');
 
       if (!refreshToken) {
         // No refresh token, force logout
         clearAuthStorage();
-        window.location.href = "/";
+        window.location.href = '/';
         return Promise.reject(error);
       }
 
       try {
-        const { data } = await axios.post(`${apiBaseUrl}/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+          { refresh_token: refreshToken }
+        );
 
         const newAccessToken = data.data.tokens.access_token;
         const newRefreshToken = data.data.tokens.refresh_token;
@@ -84,10 +76,11 @@ api.interceptors.response.use(
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
+
       } catch (refreshError) {
         processQueue(refreshError, null);
         clearAuthStorage();
-        window.location.href = "/";
+        window.location.href = '/';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -95,7 +88,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 // ─── Token Storage Helpers ───────────────────────────────────────────────────
@@ -103,32 +96,30 @@ api.interceptors.response.use(
 export function storeTokens(
   accessToken: string,
   refreshToken: string,
-  rememberMe: boolean = false,
+  rememberMe: boolean = false
 ) {
   const storage = rememberMe ? localStorage : sessionStorage;
-
-  storage.setItem("access_token", accessToken);
-  storage.setItem("refresh_token", refreshToken);
-
+  
+  storage.setItem('access_token', accessToken);
+  storage.setItem('refresh_token', refreshToken);
+  
   // Also store which storage was used so we can clear the right one on logout
-  localStorage.setItem("auth_storage", rememberMe ? "local" : "session");
+  localStorage.setItem('auth_storage', rememberMe ? 'local' : 'session');
 }
 
 export function clearAuthStorage() {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("cloudclean_user");
-  localStorage.removeItem("auth_storage");
-  sessionStorage.removeItem("access_token");
-  sessionStorage.removeItem("refresh_token");
-  sessionStorage.removeItem("cloudclean_user");
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('cloudclean_user');
+  localStorage.removeItem('auth_storage');
+  sessionStorage.removeItem('access_token');
+  sessionStorage.removeItem('refresh_token');
+  sessionStorage.removeItem('cloudclean_user');
 }
 
 export function getStoredToken(): string | null {
-  return (
-    localStorage.getItem("access_token") ||
-    sessionStorage.getItem("access_token")
-  );
+  return localStorage.getItem('access_token') 
+    || sessionStorage.getItem('access_token');
 }
 
 export default api;
