@@ -55,12 +55,12 @@ class User extends Authenticatable
 
     public function isSupervisor(): bool
     {
-        return $this->role === 'supervisor';
+        return $this->role === 'staffsupervisor';
     }
 
     public function isStaff(): bool
     {
-        return in_array($this->role, ['staff', 'delivery', 'supervisor']);
+        return in_array($this->role, ['staff', 'staffsupervisor']);
     }
 
     public function isEmailVerified(): bool

@@ -30,8 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', fn() => response()->json(['message' => 'Admin dashboard — Phase 2']));
     });
 
-    // Staff + Admin + Supervisor routes
-    Route::middleware('role:admin,staff,supervisor')->prefix('staff')->group(function () {
+    // Staff + Admin + Staff Supervisor routes
+    Route::middleware('role:admin,staff,staffsupervisor')->prefix('staff')->group(function () {
         // Phase 2: Staff routes go here
         Route::get('/dashboard', fn() => response()->json(['message' => 'Staff dashboard — Phase 2']));
     });

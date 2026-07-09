@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Package,
   CheckCircle,
@@ -24,11 +24,17 @@ import {
   Volume2,
   Eye,
   Moon,
-  Sun
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { DeliveryTask, deliveryTasks as initialTasks, staffMembers as initialStaffMembers, StaffMember, autoAssignDeliveryTask } from '../data/admin';
-import OrderNotificationPopup from '../components/OrderNotificationPopup';
+  Sun,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import {
+  DeliveryTask,
+  deliveryTasks as initialTasks,
+  staffMembers as initialStaffMembers,
+  StaffMember,
+  autoAssignDeliveryTask,
+} from "../data/admin";
+import OrderNotificationPopup from "../components/OrderNotificationPopup";
 
 interface StaffDashboardProps {
   onLogout: () => void;
@@ -37,7 +43,8 @@ interface StaffDashboardProps {
 export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const { user, logout } = useAuth();
   const [tasks, setTasks] = useState<DeliveryTask[]>(initialTasks);
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(initialStaffMembers);
+  const [staffMembers, setStaffMembers] =
+    useState<StaffMember[]>(initialStaffMembers);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -51,29 +58,31 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     autoAcceptTasks: false,
     soundAlerts: true,
     showCompleted: true,
-    darkMode: false
+    darkMode: false,
   });
 
-  const currentStaff = staffMembers.find(s => s.email === user?.email);
+  const currentStaff = staffMembers.find((s) => s.email === user?.email);
 
   // Sync availability state with staff status
   useEffect(() => {
     if (currentStaff) {
-      setIsAvailable(currentStaff.status === 'active');
+      setIsAvailable(currentStaff.status === "active");
     }
   }, [currentStaff?.status]);
 
   // Poll localStorage for new tasks created after payment confirmation
   useEffect(() => {
     const poll = setInterval(() => {
-      const newTasks: DeliveryTask[] = JSON.parse(localStorage.getItem('newDeliveryTasks') || '[]');
+      const newTasks: DeliveryTask[] = JSON.parse(
+        localStorage.getItem("newDeliveryTasks") || "[]",
+      );
       if (newTasks.length > 0) {
-        setTasks(prev => {
-          const existingIds = new Set(prev.map(t => t.id));
-          const toAdd = newTasks.filter(t => !existingIds.has(t.id));
+        setTasks((prev) => {
+          const existingIds = new Set(prev.map((t) => t.id));
+          const toAdd = newTasks.filter((t) => !existingIds.has(t.id));
           return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
         });
-        localStorage.removeItem('newDeliveryTasks');
+        localStorage.removeItem("newDeliveryTasks");
       }
     }, 2000);
     return () => clearInterval(poll);
@@ -83,15 +92,17 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   useEffect(() => {
     if (settings.autoAcceptTasks && currentStaff) {
       const newlyAssignedTasks = tasks.filter(
-        t => t.status === 'assigned' && t.assignedTo === currentStaff.id
+        (t) => t.status === "assigned" && t.assignedTo === currentStaff.id,
       );
 
       if (newlyAssignedTasks.length > 0) {
-        setTasks(tasks.map(t =>
-          newlyAssignedTasks.some(nat => nat.id === t.id)
-            ? { ...t, status: 'in_progress' }
-            : t
-        ));
+        setTasks(
+          tasks.map((t) =>
+            newlyAssignedTasks.some((nat) => nat.id === t.id)
+              ? { ...t, status: "in_progress" }
+              : t,
+          ),
+        );
       }
     }
   }, [tasks, settings.autoAcceptTasks, currentStaff]);
@@ -100,7 +111,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   useEffect(() => {
     // Only show notifications to available staff
     if (settings.notifications && isAvailable) {
-      const pendingOrders = tasks.filter(t => t.status === 'pending' && !t.assignedTo);
+      const pendingOrders = tasks.filter(
+        (t) => t.status === "pending" && !t.assignedTo,
+      );
       if (pendingOrders.length > 0 && !showOrderNotification) {
         // Show notification with a slight delay to avoid instant pop-up
         const timer = setTimeout(() => {
@@ -122,24 +135,33 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   };
 
   // Get pending orders that are completely unassigned
-  const pendingOrders = tasks.filter(t => t.status === 'pending' && !t.assignedTo);
+  const pendingOrders = tasks.filter(
+    (t) => t.status === "pending" && !t.assignedTo,
+  );
 
   // Filter tasks based on user role
-  const myTasks = user?.role === 'delivery'
-    ? tasks.filter(t => t.assignedTo === currentStaff?.id)
-    : tasks;
+  const myTasks =
+    user?.role === "staff"
+      ? tasks.filter((t) => t.assignedTo === currentStaff?.id)
+      : tasks;
 
-  const assignedToMe = myTasks.filter(t =>
-    t.status === 'assigned' &&
-    t.assignedTo === currentStaff?.id &&
-    (!currentStaff || !t.declinedBy.includes(currentStaff.id)) // Exclude declined tasks
+  const assignedToMe = myTasks.filter(
+    (t) =>
+      t.status === "assigned" &&
+      t.assignedTo === currentStaff?.id &&
+      (!currentStaff || !t.declinedBy.includes(currentStaff.id)), // Exclude declined tasks
   );
-  const inProgress = myTasks.filter(t => t.status === 'in_progress' && t.assignedTo === currentStaff?.id);
-  const completed = myTasks.filter(t => t.status === 'completed' && t.assignedTo === currentStaff?.id);
-  const tasksAwaiting = tasks.filter(t =>
-    t.status === 'pending' &&
-    currentStaff &&
-    t.declinedBy.includes(currentStaff.id)
+  const inProgress = myTasks.filter(
+    (t) => t.status === "in_progress" && t.assignedTo === currentStaff?.id,
+  );
+  const completed = myTasks.filter(
+    (t) => t.status === "completed" && t.assignedTo === currentStaff?.id,
+  );
+  const tasksAwaiting = tasks.filter(
+    (t) =>
+      t.status === "pending" &&
+      currentStaff &&
+      t.declinedBy.includes(currentStaff.id),
   );
 
   const handleAvailabilityToggle = () => {
@@ -149,53 +171,76 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     const goingOffline = isAvailable;
 
     // If going unavailable, confirm with user
-    if (goingOffline && currentStaff.role === 'delivery') {
-      const myActiveTasks = tasks.filter(t =>
-        t.assignedTo === currentStaff.id &&
-        (t.status === 'assigned' || t.status === 'in_progress')
+    if (goingOffline && currentStaff.role === "staff") {
+      const myActiveTasks = tasks.filter(
+        (t) =>
+          t.assignedTo === currentStaff.id &&
+          (t.status === "assigned" || t.status === "in_progress"),
       );
 
       if (myActiveTasks.length > 0) {
-        if (!confirm(`You have ${myActiveTasks.length} active task(s). Going offline will auto-reassign them to other staff. Continue?`)) {
+        if (
+          !confirm(
+            `You have ${myActiveTasks.length} active task(s). Going offline will auto-reassign them to other staff. Continue?`,
+          )
+        ) {
           return;
         }
       }
     }
 
     // Toggle availability
-    const newStatus = isAvailable ? 'inactive' : 'active';
+    const newStatus = isAvailable ? "inactive" : "active";
     const newAvailability = !isAvailable;
 
     setIsAvailable(newAvailability);
 
     // Update staff status
-    setStaffMembers(staffMembers.map(s =>
-      s.id === currentStaff.id ? { ...s, status: newStatus } : s
-    ));
+    setStaffMembers(
+      staffMembers.map((s) =>
+        s.id === currentStaff.id ? { ...s, status: newStatus } : s,
+      ),
+    );
 
     // If going unavailable, reassign all assigned tasks
-    if (goingOffline && currentStaff.role === 'delivery') {
-      const myAssignedTasks = tasks.filter(t =>
-        t.assignedTo === currentStaff.id &&
-        (t.status === 'assigned' || t.status === 'in_progress')
+    if (goingOffline && currentStaff.role === "staff") {
+      const myAssignedTasks = tasks.filter(
+        (t) =>
+          t.assignedTo === currentStaff.id &&
+          (t.status === "assigned" || t.status === "in_progress"),
       );
 
       if (myAssignedTasks.length > 0) {
         let updatedTasks = [...tasks];
 
-        myAssignedTasks.forEach(task => {
+        myAssignedTasks.forEach((task) => {
           const reassigned = autoAssignDeliveryTask(
-            { ...task, status: 'pending', assignedTo: null, assignedAt: null, declinedBy: [...task.declinedBy, currentStaff.id] },
-            staffMembers.filter(s => s.id !== currentStaff.id && s.status === 'active')
+            {
+              ...task,
+              status: "pending",
+              assignedTo: null,
+              assignedAt: null,
+              declinedBy: [...task.declinedBy, currentStaff.id],
+            },
+            staffMembers.filter(
+              (s) => s.id !== currentStaff.id && s.status === "active",
+            ),
           );
 
           if (reassigned) {
-            updatedTasks = updatedTasks.map(t => t.id === task.id ? reassigned : t);
+            updatedTasks = updatedTasks.map((t) =>
+              t.id === task.id ? reassigned : t,
+            );
           } else {
-            updatedTasks = updatedTasks.map(t =>
+            updatedTasks = updatedTasks.map((t) =>
               t.id === task.id
-                ? { ...t, status: 'pending', assignedTo: null, assignedAt: null }
-                : t
+                ? {
+                    ...t,
+                    status: "pending",
+                    assignedTo: null,
+                    assignedAt: null,
+                  }
+                : t,
             );
           }
         });
@@ -206,25 +251,27 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   };
 
   const handleAcceptTask = (taskId: string) => {
-    setTasks(tasks.map(t =>
-      t.id === taskId ? { ...t, status: 'in_progress' } : t
-    ));
+    setTasks(
+      tasks.map((t) => (t.id === taskId ? { ...t, status: "in_progress" } : t)),
+    );
   };
 
   // Handle claiming order from notification popup
   const handleClaimOrder = (taskId: string) => {
     if (!currentStaff) return;
 
-    setTasks(tasks.map(t =>
-      t.id === taskId
-        ? {
-            ...t,
-            status: 'assigned' as const,
-            assignedTo: currentStaff.id,
-            assignedAt: new Date().toISOString()
-          }
-        : t
-    ));
+    setTasks(
+      tasks.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              status: "assigned" as const,
+              assignedTo: currentStaff.id,
+              assignedAt: new Date().toISOString(),
+            }
+          : t,
+      ),
+    );
 
     setShowOrderNotification(false);
   };
@@ -233,80 +280,95 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const handleReAcceptTask = (taskId: string) => {
     if (!currentStaff) return;
 
-    if (confirm('You previously declined this task. Are you sure you want to accept it now?')) {
-      setTasks(tasks.map(t =>
-        t.id === taskId
-          ? {
-              ...t,
-              status: 'assigned' as const,
-              assignedTo: currentStaff.id,
-              assignedAt: new Date().toISOString(),
-              declinedBy: t.declinedBy.filter(id => id !== currentStaff.id) // Remove from declined list
-            }
-          : t
-      ));
+    if (
+      confirm(
+        "You previously declined this task. Are you sure you want to accept it now?",
+      )
+    ) {
+      setTasks(
+        tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                status: "assigned" as const,
+                assignedTo: currentStaff.id,
+                assignedAt: new Date().toISOString(),
+                declinedBy: t.declinedBy.filter((id) => id !== currentStaff.id), // Remove from declined list
+              }
+            : t,
+        ),
+      );
     }
   };
 
   const handleDeclineTask = (taskId: string) => {
-    if (currentStaff && confirm('Are you sure you want to decline this task?')) {
-      const task = tasks.find(t => t.id === taskId);
+    if (
+      currentStaff &&
+      confirm("Are you sure you want to decline this task?")
+    ) {
+      const task = tasks.find((t) => t.id === taskId);
       if (!task) return;
 
       const reassigned = autoAssignDeliveryTask(
         {
           ...task,
-          status: 'pending',
+          status: "pending",
           assignedTo: null,
           assignedAt: null,
-          declinedBy: [...task.declinedBy, currentStaff.id]
+          declinedBy: [...task.declinedBy, currentStaff.id],
         },
-        staffMembers.filter(s => s.id !== currentStaff.id)
+        staffMembers.filter((s) => s.id !== currentStaff.id),
       );
 
       if (reassigned) {
-        setTasks(tasks.map(t => t.id === taskId ? reassigned : t));
+        setTasks(tasks.map((t) => (t.id === taskId ? reassigned : t)));
       } else {
-        setTasks(tasks.map(t =>
-          t.id === taskId
-            ? {
-                ...t,
-                status: 'pending',
-                assignedTo: null,
-                assignedAt: null,
-                declinedBy: [...t.declinedBy, currentStaff.id]
-              }
-            : t
-        ));
+        setTasks(
+          tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  status: "pending",
+                  assignedTo: null,
+                  assignedAt: null,
+                  declinedBy: [...t.declinedBy, currentStaff.id],
+                }
+              : t,
+          ),
+        );
       }
     }
   };
 
   const handleCompleteTask = (taskId: string) => {
-    setTasks(tasks.map(t =>
-      t.id === taskId
-        ? { ...t, status: 'completed', completedAt: new Date().toISOString() }
-        : t
-    ));
+    setTasks(
+      tasks.map((t) =>
+        t.id === taskId
+          ? { ...t, status: "completed", completedAt: new Date().toISOString() }
+          : t,
+      ),
+    );
 
     // Update staff performance
     if (currentStaff) {
-      setStaffMembers(staffMembers.map(s =>
-        s.id === currentStaff.id
-          ? {
-              ...s,
-              performance: {
-                ...s.performance,
-                tasksCompleted: s.performance.tasksCompleted + 1,
-                points: s.performance.points + 10,
-                currentMonth: {
-                  tasks: s.performance.currentMonth.tasks + 1,
-                  earnings: s.performance.currentMonth.earnings + 50
-                }
+      setStaffMembers(
+        staffMembers.map((s) =>
+          s.id === currentStaff.id
+            ? {
+                ...s,
+                performance: {
+                  ...s.performance,
+                  tasksCompleted: s.performance.tasksCompleted + 1,
+                  points: s.performance.points + 10,
+                  currentMonth: {
+                    tasks: s.performance.currentMonth.tasks + 1,
+                    earnings: s.performance.currentMonth.earnings + 50,
+                  },
+                },
               }
-            }
-          : s
-      ));
+            : s,
+        ),
+      );
     }
   };
 
@@ -315,21 +377,29 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     setMapViewTask(task);
   };
 
-  const getStatusColor = (status: DeliveryTask['status']) => {
+  const getStatusColor = (status: DeliveryTask["status"]) => {
     switch (status) {
-      case 'assigned': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'in_progress': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case "assigned":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "in_progress":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      case "completed":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'medium': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-      case 'low': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case "high":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
+      case "medium":
+        return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+      case "low":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
@@ -343,7 +413,11 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
           >
-            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {sidebarOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
       </div>
@@ -352,7 +426,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
         {/* Sidebar */}
         <aside
           className={`fixed lg:static inset-y-0 left-0 z-40 w-80 bg-white dark:bg-[#1a1425] border-r border-gray-200 dark:border-purple-700/20 transform transition-transform duration-300 overflow-y-auto ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
           <div className="h-full flex flex-col">
@@ -379,7 +453,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
               <div className="flex items-center gap-3 mb-4">
                 <div className="relative">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                    {currentStaff?.avatar || user?.name?.charAt(0).toUpperCase()}
+                    {currentStaff?.avatar ||
+                      user?.name?.charAt(0).toUpperCase()}
                   </div>
                   <button
                     onClick={() => setEditProfileOpen(true)}
@@ -390,7 +465,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 </div>
                 <div className="flex-1">
                   <h2 className="font-bold text-lg">{user?.name}</h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">{user?.role}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+                    {user?.role}
+                  </p>
                   <button
                     onClick={() => setEditProfileOpen(true)}
                     className="text-xs text-purple-600 dark:text-purple-400 hover:underline mt-1"
@@ -405,33 +482,41 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Toggle clicked, current state:', isAvailable);
+                  console.log("Toggle clicked, current state:", isAvailable);
                   handleAvailabilityToggle();
                 }}
                 className={`rounded-xl p-4 border-2 transition-all cursor-pointer hover:shadow-lg select-none active:scale-95 ${
                   isAvailable
-                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500/30 hover:border-green-500/50'
-                    : 'bg-gray-50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-700 hover:border-gray-400'
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-500/30 hover:border-green-500/50"
+                    : "bg-gray-50 dark:bg-gray-900/50 border-gray-300 dark:border-gray-700 hover:border-gray-400"
                 }`}
               >
                 <div className="flex items-center justify-between mb-3 pointer-events-none">
-                  <span className="text-sm font-semibold">Availability Status</span>
+                  <span className="text-sm font-semibold">
+                    Availability Status
+                  </span>
                   <div
                     className={`relative w-14 h-7 rounded-full transition-all shadow-lg ${
-                      isAvailable ? 'bg-green-500' : 'bg-gray-400'
+                      isAvailable ? "bg-green-500" : "bg-gray-400"
                     }`}
                   >
                     <div
                       className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform shadow-md ${
-                        isAvailable ? 'translate-x-7' : 'translate-x-0'
+                        isAvailable ? "translate-x-7" : "translate-x-0"
                       }`}
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pointer-events-none">
-                  <div className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                  <p className={`text-xs font-bold ${isAvailable ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                    {isAvailable ? 'ONLINE - Ready for Tasks' : 'OFFLINE - Unavailable'}
+                  <div
+                    className={`w-2 h-2 rounded-full ${isAvailable ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
+                  ></div>
+                  <p
+                    className={`text-xs font-bold ${isAvailable ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-400"}`}
+                  >
+                    {isAvailable
+                      ? "ONLINE - Ready for Tasks"
+                      : "OFFLINE - Unavailable"}
                   </p>
                 </div>
               </div>
@@ -444,7 +529,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 {/* Tasks Assigned to You */}
                 <button
                   onClick={() => {
-                    document.getElementById('assigned-tasks-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document
+                      .getElementById("assigned-tasks-section")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
                     setSidebarOpen(false);
                   }}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group"
@@ -468,7 +555,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 {/* In Progress */}
                 <button
                   onClick={() => {
-                    document.getElementById('in-progress-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document
+                      .getElementById("in-progress-section")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
                     setSidebarOpen(false);
                   }}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"
@@ -492,7 +581,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 {/* Tasks Awaiting */}
                 <button
                   onClick={() => {
-                    document.getElementById('awaiting-tasks-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document
+                      .getElementById("awaiting-tasks-section")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
                     setSidebarOpen(false);
                   }}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all group"
@@ -534,13 +625,14 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-3xl font-bold mb-2">
-                  Welcome back, {user?.name?.split(' ')[0]}!
+                  Welcome back, {user?.name?.split(" ")[0]}!
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {user?.role === 'delivery' ? 'Manage your delivery tasks' : 'View system tasks and orders'}
+                  {user?.role === "staff"
+                    ? "Manage your staff tasks"
+                    : "View system tasks and orders"}
                 </p>
               </div>
-
             </div>
 
             {/* Stats Cards */}
@@ -551,8 +643,12 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                     <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-1">{assignedToMe.length}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Assigned to You</div>
+                <div className="text-3xl font-bold mb-1">
+                  {assignedToMe.length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Assigned to You
+                </div>
               </div>
 
               <div className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-gray-200 dark:border-purple-700/20">
@@ -561,8 +657,12 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                     <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-1">{inProgress.length}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">In Progress</div>
+                <div className="text-3xl font-bold mb-1">
+                  {inProgress.length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  In Progress
+                </div>
               </div>
 
               <div className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-gray-200 dark:border-purple-700/20">
@@ -571,8 +671,12 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                     <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
-                <div className="text-3xl font-bold mb-1">{completed.length}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Completed Today</div>
+                <div className="text-3xl font-bold mb-1">
+                  {completed.length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Completed Today
+                </div>
               </div>
 
               <div className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-gray-200 dark:border-purple-700/20">
@@ -582,16 +686,22 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                   </div>
                 </div>
                 <div className="text-3xl font-bold mb-1">
-                  {currentStaff ? currentStaff.performance.currentMonth.tasks : 0}
+                  {currentStaff
+                    ? currentStaff.performance.currentMonth.tasks
+                    : 0}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Tasks This Month</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Tasks This Month
+                </div>
               </div>
             </div>
 
             {/* Assigned Tasks */}
             {assignedToMe.length > 0 && (
               <div id="assigned-tasks-section">
-                <h2 className="text-2xl font-bold mb-4">Tasks Assigned to You</h2>
+                <h2 className="text-2xl font-bold mb-4">
+                  Tasks Assigned to You
+                </h2>
                 <div className="space-y-4">
                   {assignedToMe.map((task) => (
                     <div
@@ -603,14 +713,20 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                           <div className="flex items-start justify-between">
                             <div>
                               <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-lg font-semibold">{task.orderId}</h3>
-                                <span className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(task.status)}`}>
+                                <h3 className="text-lg font-semibold">
+                                  {task.orderId}
+                                </h3>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(task.status)}`}
+                                >
                                   {task.status}
                                 </span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs border ${getPriorityColor(task.priority)}`}>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs border ${getPriorityColor(task.priority)}`}
+                                >
                                   {task.priority}
                                 </span>
-                                {task.deliveryTime === 'express' && (
+                                {task.deliveryTime === "express" && (
                                   <span className="px-2 py-0.5 rounded-full text-xs border bg-orange-500/20 text-orange-400 border-orange-500/30">
                                     Express
                                   </span>
@@ -648,20 +764,26 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                             <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 p-4 rounded-lg">
                               <div className="flex items-center gap-2 mb-2">
                                 <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                                <div className="font-bold text-green-700 dark:text-green-300">In-District Delivery</div>
+                                <div className="font-bold text-green-700 dark:text-green-300">
+                                  In-District Delivery
+                                </div>
                               </div>
                               <div className="text-sm text-green-700 dark:text-green-300">
-                                <strong>Instruction:</strong> Perform Door-to-Door Delivery
+                                <strong>Instruction:</strong> Perform
+                                Door-to-Door Delivery
                               </div>
                             </div>
                           ) : (
                             <div className="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-500 p-4 rounded-lg">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                                <div className="font-bold text-orange-700 dark:text-orange-300">Out-of-District Delivery</div>
+                                <div className="font-bold text-orange-700 dark:text-orange-300">
+                                  Out-of-District Delivery
+                                </div>
                               </div>
                               <div className="text-sm text-orange-700 dark:text-orange-300">
-                                <strong>Instruction:</strong> Hand over to Nearest Courier Service
+                                <strong>Instruction:</strong> Hand over to
+                                Nearest Courier Service
                               </div>
                               <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                                 Customer District: {task.customerDistrict}
@@ -670,10 +792,15 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                           )}
 
                           <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
-                            <div className="text-sm font-semibold mb-2">Products:</div>
+                            <div className="text-sm font-semibold mb-2">
+                              Products:
+                            </div>
                             <div className="space-y-1">
                               {task.products.map((product, idx) => (
-                                <div key={idx} className="text-sm text-gray-600 dark:text-gray-400">
+                                <div
+                                  key={idx}
+                                  className="text-sm text-gray-600 dark:text-gray-400"
+                                >
                                   {product.name} × {product.quantity}
                                 </div>
                               ))}
@@ -719,8 +846,12 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                           <div className="flex items-start justify-between">
                             <div>
                               <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-lg font-semibold">{task.orderId}</h3>
-                                <span className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(task.status)}`}>
+                                <h3 className="text-lg font-semibold">
+                                  {task.orderId}
+                                </h3>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(task.status)}`}
+                                >
                                   {task.status}
                                 </span>
                               </div>
@@ -745,20 +876,26 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                             <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 p-4 rounded-lg">
                               <div className="flex items-center gap-2 mb-2">
                                 <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                                <div className="font-bold text-green-700 dark:text-green-300">In-District Delivery</div>
+                                <div className="font-bold text-green-700 dark:text-green-300">
+                                  In-District Delivery
+                                </div>
                               </div>
                               <div className="text-sm text-green-700 dark:text-green-300">
-                                <strong>Instruction:</strong> Perform Door-to-Door Delivery
+                                <strong>Instruction:</strong> Perform
+                                Door-to-Door Delivery
                               </div>
                             </div>
                           ) : (
                             <div className="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-500 p-4 rounded-lg">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                                <div className="font-bold text-orange-700 dark:text-orange-300">Out-of-District Delivery</div>
+                                <div className="font-bold text-orange-700 dark:text-orange-300">
+                                  Out-of-District Delivery
+                                </div>
                               </div>
                               <div className="text-sm text-orange-700 dark:text-orange-300">
-                                <strong>Instruction:</strong> Hand over to Nearest Courier Service
+                                <strong>Instruction:</strong> Hand over to
+                                Nearest Courier Service
                               </div>
                               <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                                 Customer District: {task.customerDistrict}
@@ -796,7 +933,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 Tasks Awaiting
                 {tasksAwaiting.length > 0 && (
                   <span className="px-3 py-1 rounded-full text-sm bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                    {tasksAwaiting.length} {tasksAwaiting.length === 1 ? 'task' : 'tasks'}
+                    {tasksAwaiting.length}{" "}
+                    {tasksAwaiting.length === 1 ? "task" : "tasks"}
                   </span>
                 )}
               </h2>
@@ -804,7 +942,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
               {tasksAwaiting.length > 0 ? (
                 <>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    These are tasks you previously declined. They will disappear once another staff member accepts them.
+                    These are tasks you previously declined. They will disappear
+                    once another staff member accepts them.
                   </p>
                   <div className="space-y-4">
                     {tasksAwaiting.map((task) => (
@@ -817,14 +956,20 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                             <div className="flex items-start justify-between">
                               <div>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-lg font-semibold">{task.orderId}</h3>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(task.status)}`}>
+                                  <h3 className="text-lg font-semibold">
+                                    {task.orderId}
+                                  </h3>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-xs border ${getStatusColor(task.status)}`}
+                                  >
                                     awaiting acceptance
                                   </span>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs border ${getPriorityColor(task.priority)}`}>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-xs border ${getPriorityColor(task.priority)}`}
+                                  >
                                     {task.priority}
                                   </span>
-                                  {task.deliveryTime === 'express' && (
+                                  {task.deliveryTime === "express" && (
                                     <span className="px-2 py-0.5 rounded-full text-xs border bg-orange-500/20 text-orange-400 border-orange-500/30">
                                       Express
                                     </span>
@@ -853,10 +998,15 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                             </div>
 
                             <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
-                              <div className="text-sm font-semibold mb-2">Products:</div>
+                              <div className="text-sm font-semibold mb-2">
+                                Products:
+                              </div>
                               <div className="space-y-1">
                                 {task.products.map((product, idx) => (
-                                  <div key={idx} className="text-sm text-gray-600 dark:text-gray-400">
+                                  <div
+                                    key={idx}
+                                    className="text-sm text-gray-600 dark:text-gray-400"
+                                  >
                                     {product.name} × {product.quantity}
                                   </div>
                                 ))}
@@ -865,7 +1015,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
 
                             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500/30 p-3 rounded-lg">
                               <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                                <strong>Status:</strong> Waiting for another staff member to accept this task.
+                                <strong>Status:</strong> Waiting for another
+                                staff member to accept this task.
                               </div>
                             </div>
                           </div>
@@ -874,9 +1025,17 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                             <button
                               onClick={() => handleReAcceptTask(task.id)}
                               className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                              style={{ boxShadow: '0 0 20px rgba(22, 163, 74, 0.3)' }}
-                              onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 40px rgba(22, 163, 74, 0.6)'}
-                              onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(22, 163, 74, 0.3)'}
+                              style={{
+                                boxShadow: "0 0 20px rgba(22, 163, 74, 0.3)",
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.boxShadow =
+                                  "0 0 40px rgba(22, 163, 74, 0.6)")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.boxShadow =
+                                  "0 0 20px rgba(22, 163, 74, 0.3)")
+                              }
                             >
                               <CheckCircle className="w-5 h-5" />
                               Accept Anyway
@@ -897,7 +1056,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                   </div>
                   <h3 className="text-xl font-bold mb-2">No Awaiting Tasks</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    You haven't declined any tasks recently. Dismissed tasks will appear here until they're accepted by other staff members.
+                    You haven't declined any tasks recently. Dismissed tasks
+                    will appear here until they're accepted by other staff
+                    members.
                   </p>
                 </div>
               )}
@@ -908,7 +1069,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 <Package className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                 <h2 className="text-2xl font-bold mb-2">No Active Tasks</h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  You're all caught up! New tasks will appear here when assigned.
+                  You're all caught up! New tasks will appear here when
+                  assigned.
                 </p>
               </div>
             )}
@@ -930,7 +1092,11 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
           staff={currentStaff}
           onClose={() => setEditProfileOpen(false)}
           onSave={(updatedStaff) => {
-            setStaffMembers(staffMembers.map(s => s.id === updatedStaff.id ? updatedStaff : s));
+            setStaffMembers(
+              staffMembers.map((s) =>
+                s.id === updatedStaff.id ? updatedStaff : s,
+              ),
+            );
             setEditProfileOpen(false);
           }}
         />
@@ -942,7 +1108,10 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
           task={mapViewTask}
           onClose={() => setMapViewTask(null)}
           onStartNavigation={() => {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapViewTask.address)}`, '_blank');
+            window.open(
+              `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapViewTask.address)}`,
+              "_blank",
+            );
           }}
         />
       )}
@@ -971,7 +1140,11 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   );
 }
 
-function EditProfileModal({ staff, onClose, onSave }: {
+function EditProfileModal({
+  staff,
+  onClose,
+  onSave,
+}: {
   staff: StaffMember;
   onClose: () => void;
   onSave: (staff: StaffMember) => void;
@@ -1000,7 +1173,10 @@ function EditProfileModal({ staff, onClose, onSave }: {
       <div className="glass-effect border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 glass-effect border-b border-white/10 p-6 flex items-center justify-between">
           <h3 className="text-xl font-bold">Edit Profile</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1010,7 +1186,11 @@ function EditProfileModal({ staff, onClose, onSave }: {
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="w-32 h-32 rounded-full object-cover" />
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="w-32 h-32 rounded-full object-cover"
+                />
               ) : (
                 <div className="w-32 h-32 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
                   {staff.avatar}
@@ -1026,7 +1206,9 @@ function EditProfileModal({ staff, onClose, onSave }: {
                 />
               </label>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Click camera icon to upload photo</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Click camera icon to upload photo
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1035,7 +1217,9 @@ function EditProfileModal({ staff, onClose, onSave }: {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500"
                 required
               />
@@ -1047,7 +1231,9 @@ function EditProfileModal({ staff, onClose, onSave }: {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="flex-1 bg-transparent focus:outline-none"
                   required
                 />
@@ -1060,7 +1246,9 @@ function EditProfileModal({ staff, onClose, onSave }: {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   className="flex-1 bg-transparent focus:outline-none"
                   required
                 />
@@ -1099,26 +1287,38 @@ function EditProfileModal({ staff, onClose, onSave }: {
   );
 }
 
-function MapViewModal({ task, onClose, onStartNavigation }: {
+function MapViewModal({
+  task,
+  onClose,
+  onStartNavigation,
+}: {
   task: DeliveryTask;
   onClose: () => void;
   onStartNavigation: () => void;
 }) {
-  const getStatusColor = (status: DeliveryTask['status']) => {
+  const getStatusColor = (status: DeliveryTask["status"]) => {
     switch (status) {
-      case 'assigned': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'in_progress': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case "assigned":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "in_progress":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      case "completed":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'text-red-400 bg-red-500/20';
-      case 'medium': return 'text-orange-400 bg-orange-500/20';
-      case 'low': return 'text-green-400 bg-green-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
+      case "high":
+        return "text-red-400 bg-red-500/20";
+      case "medium":
+        return "text-orange-400 bg-orange-500/20";
+      case "low":
+        return "text-green-400 bg-green-500/20";
+      default:
+        return "text-gray-400 bg-gray-500/20";
     }
   };
 
@@ -1135,21 +1335,31 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
               <div>
                 <div className="flex items-center gap-3">
                   <h3 className="text-xl font-bold">{task.orderId}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs border ${getStatusColor(task.status)}`}>
-                    {task.status.replace('_', ' ').toUpperCase()}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs border ${getStatusColor(task.status)}`}
+                  >
+                    {task.status.replace("_", " ").toUpperCase()}
                   </span>
-                  {task.deliveryTime === 'express' && (
+                  {task.deliveryTime === "express" && (
                     <span className="px-3 py-1 rounded-full text-xs border bg-orange-500/20 text-orange-400 border-orange-500/30">
                       EXPRESS
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Customer: {task.customerName} • Priority: <span className={`font-semibold ${getPriorityColor(task.priority).split(' ')[0]}`}>{task.priority.toUpperCase()}</span>
+                  Customer: {task.customerName} • Priority:{" "}
+                  <span
+                    className={`font-semibold ${getPriorityColor(task.priority).split(" ")[0]}`}
+                  >
+                    {task.priority.toUpperCase()}
+                  </span>
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -1162,8 +1372,18 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
             <div className="absolute inset-0 opacity-20">
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+                  <pattern
+                    id="grid"
+                    width="40"
+                    height="40"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M 40 0 L 0 0 0 40"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="0.5"
+                    />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
@@ -1173,9 +1393,21 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
             {/* Route visualization */}
             <svg className="absolute inset-0 w-full h-full">
               <defs>
-                <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#8b5cf6', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
+                <linearGradient
+                  id="routeGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    style={{ stopColor: "#8b5cf6", stopOpacity: 1 }}
+                  />
+                  <stop
+                    offset="100%"
+                    style={{ stopColor: "#06b6d4", stopOpacity: 1 }}
+                  />
                 </linearGradient>
               </defs>
               <path
@@ -1219,21 +1451,30 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <span className="font-bold text-purple-600 dark:text-purple-400">Estimated Time</span>
+                  <span className="font-bold text-purple-600 dark:text-purple-400">
+                    Estimated Time
+                  </span>
                 </div>
                 <div className="text-3xl font-bold">{task.estimatedTime}</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  {new Date(task.assignedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(task.assignedAt || Date.now()).toLocaleTimeString(
+                    [],
+                    { hour: "2-digit", minute: "2-digit" },
+                  )}
                 </div>
               </div>
 
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-2">
                   <Navigation className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span className="font-bold text-blue-600 dark:text-blue-400">Distance</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    Distance
+                  </span>
                 </div>
                 <div className="text-3xl font-bold">2.4 mi</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">via Main St</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  via Main St
+                </div>
               </div>
             </div>
 
@@ -1242,7 +1483,9 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-white mt-0.5" />
                 <div className="flex-1">
-                  <div className="text-white font-semibold mb-1">Delivery Address</div>
+                  <div className="text-white font-semibold mb-1">
+                    Delivery Address
+                  </div>
                   <div className="text-white/90 text-sm">{task.address}</div>
                 </div>
               </div>
@@ -1258,7 +1501,9 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">Customer</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                    Customer
+                  </div>
                   <div className="font-bold text-lg">{task.customerName}</div>
                 </div>
               </div>
@@ -1282,7 +1527,10 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
               </div>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {task.products.map((product, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-sm bg-white/5 p-2 rounded-lg">
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center text-sm bg-white/5 p-2 rounded-lg"
+                  >
                     <span className="flex-1">{product.name}</span>
                     <span className="px-2 py-1 bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-bold">
                       ×{product.quantity}
@@ -1300,20 +1548,35 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Order ID</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Order ID
+                  </span>
                   <span className="font-semibold">{task.orderId}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Items</span>
-                  <span className="font-semibold">{task.products.reduce((sum, p) => sum + p.quantity, 0)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Items
+                  </span>
+                  <span className="font-semibold">
+                    {task.products.reduce((sum, p) => sum + p.quantity, 0)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Assigned</span>
-                  <span className="font-semibold">{new Date(task.assignedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Assigned
+                  </span>
+                  <span className="font-semibold">
+                    {new Date(task.assignedAt || Date.now()).toLocaleTimeString(
+                      [],
+                      { hour: "2-digit", minute: "2-digit" },
+                    )}
+                  </span>
                 </div>
                 <div className="pt-3 border-t border-white/20 flex justify-between">
                   <span className="font-bold">Total Amount</span>
-                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">${task.total.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    ${task.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1329,8 +1592,10 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
               <p>• Ring doorbell upon arrival</p>
               <p>• Leave packages at front door if no answer</p>
               <p>• Contact customer if unable to deliver: +1 (555) 123-4567</p>
-              {task.deliveryTime === 'express' && (
-                <p className="text-orange-600 dark:text-orange-400 font-semibold">⚡ EXPRESS DELIVERY - Handle with priority!</p>
+              {task.deliveryTime === "express" && (
+                <p className="text-orange-600 dark:text-orange-400 font-semibold">
+                  ⚡ EXPRESS DELIVERY - Handle with priority!
+                </p>
               )}
             </div>
           </div>
@@ -1346,8 +1611,8 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
             </button>
             <button
               onClick={() => {
-                if (confirm('Call customer?')) {
-                  window.open('tel:+15551234567');
+                if (confirm("Call customer?")) {
+                  window.open("tel:+15551234567");
                 }
               }}
               className="px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:shadow-[0_0_40px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-2 font-semibold text-lg"
@@ -1369,7 +1634,11 @@ function MapViewModal({ task, onClose, onStartNavigation }: {
   );
 }
 
-function SettingsModal({ settings, onClose, onSave }: {
+function SettingsModal({
+  settings,
+  onClose,
+  onSave,
+}: {
   settings: {
     notifications: boolean;
     autoAcceptTasks: boolean;
@@ -1395,9 +1664,9 @@ function SettingsModal({ settings, onClose, onSave }: {
     const newValue = !formData.darkMode;
     setFormData({ ...formData, darkMode: newValue });
     if (newValue) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   };
 
@@ -1411,7 +1680,10 @@ function SettingsModal({ settings, onClose, onSave }: {
             </div>
             <h3 className="text-xl font-bold">Settings & Preferences</h3>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1419,7 +1691,7 @@ function SettingsModal({ settings, onClose, onSave }: {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Notifications Toggle */}
           <div
-            onClick={() => handleToggle('notifications')}
+            onClick={() => handleToggle("notifications")}
             className="bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
           >
             <div className="flex items-center justify-between">
@@ -1429,17 +1701,19 @@ function SettingsModal({ settings, onClose, onSave }: {
                 </div>
                 <div>
                   <h4 className="font-semibold">Push Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Receive notifications for new tasks</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Receive notifications for new tasks
+                  </p>
                 </div>
               </div>
               <div
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  formData.notifications ? 'bg-purple-600' : 'bg-gray-400'
+                  formData.notifications ? "bg-purple-600" : "bg-gray-400"
                 }`}
               >
                 <div
                   className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform ${
-                    formData.notifications ? 'translate-x-7' : 'translate-x-0'
+                    formData.notifications ? "translate-x-7" : "translate-x-0"
                   }`}
                 />
               </div>
@@ -1448,7 +1722,7 @@ function SettingsModal({ settings, onClose, onSave }: {
 
           {/* Auto Accept Tasks Toggle */}
           <div
-            onClick={() => handleToggle('autoAcceptTasks')}
+            onClick={() => handleToggle("autoAcceptTasks")}
             className="bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
           >
             <div className="flex items-center justify-between">
@@ -1458,17 +1732,19 @@ function SettingsModal({ settings, onClose, onSave }: {
                 </div>
                 <div>
                   <h4 className="font-semibold">Auto-Accept Tasks</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Automatically accept assigned tasks</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Automatically accept assigned tasks
+                  </p>
                 </div>
               </div>
               <div
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  formData.autoAcceptTasks ? 'bg-purple-600' : 'bg-gray-400'
+                  formData.autoAcceptTasks ? "bg-purple-600" : "bg-gray-400"
                 }`}
               >
                 <div
                   className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform ${
-                    formData.autoAcceptTasks ? 'translate-x-7' : 'translate-x-0'
+                    formData.autoAcceptTasks ? "translate-x-7" : "translate-x-0"
                   }`}
                 />
               </div>
@@ -1477,7 +1753,7 @@ function SettingsModal({ settings, onClose, onSave }: {
 
           {/* Sound Alerts Toggle */}
           <div
-            onClick={() => handleToggle('soundAlerts')}
+            onClick={() => handleToggle("soundAlerts")}
             className="bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
           >
             <div className="flex items-center justify-between">
@@ -1487,17 +1763,19 @@ function SettingsModal({ settings, onClose, onSave }: {
                 </div>
                 <div>
                   <h4 className="font-semibold">Sound Alerts</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Play sound for task notifications</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Play sound for task notifications
+                  </p>
                 </div>
               </div>
               <div
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  formData.soundAlerts ? 'bg-purple-600' : 'bg-gray-400'
+                  formData.soundAlerts ? "bg-purple-600" : "bg-gray-400"
                 }`}
               >
                 <div
                   className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform ${
-                    formData.soundAlerts ? 'translate-x-7' : 'translate-x-0'
+                    formData.soundAlerts ? "translate-x-7" : "translate-x-0"
                   }`}
                 />
               </div>
@@ -1506,7 +1784,7 @@ function SettingsModal({ settings, onClose, onSave }: {
 
           {/* Show Completed Tasks Toggle */}
           <div
-            onClick={() => handleToggle('showCompleted')}
+            onClick={() => handleToggle("showCompleted")}
             className="bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all"
           >
             <div className="flex items-center justify-between">
@@ -1516,17 +1794,19 @@ function SettingsModal({ settings, onClose, onSave }: {
                 </div>
                 <div>
                   <h4 className="font-semibold">Show Completed Tasks</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Display completed tasks in main view</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Display completed tasks in main view
+                  </p>
                 </div>
               </div>
               <div
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  formData.showCompleted ? 'bg-purple-600' : 'bg-gray-400'
+                  formData.showCompleted ? "bg-purple-600" : "bg-gray-400"
                 }`}
               >
                 <div
                   className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform ${
-                    formData.showCompleted ? 'translate-x-7' : 'translate-x-0'
+                    formData.showCompleted ? "translate-x-7" : "translate-x-0"
                   }`}
                 />
               </div>
@@ -1549,17 +1829,19 @@ function SettingsModal({ settings, onClose, onSave }: {
                 </div>
                 <div>
                   <h4 className="font-semibold">Dark Mode</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Switch between light and dark theme</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Switch between light and dark theme
+                  </p>
                 </div>
               </div>
               <div
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  formData.darkMode ? 'bg-purple-600' : 'bg-gray-400'
+                  formData.darkMode ? "bg-purple-600" : "bg-gray-400"
                 }`}
               >
                 <div
                   className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform ${
-                    formData.darkMode ? 'translate-x-7' : 'translate-x-0'
+                    formData.darkMode ? "translate-x-7" : "translate-x-0"
                   }`}
                 />
               </div>

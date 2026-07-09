@@ -2,7 +2,7 @@ export interface User {
   id: number;
   email: string;
   name: string;
-  role: 'admin' | 'staff' | 'delivery' | 'supervisor' | 'customer';
+  role: "admin" | "staff" | "staffsupervisor" | "customer";
   phone_number?: string;
   email_verified: boolean;
   avatar: string;
@@ -11,7 +11,7 @@ export interface User {
 export interface PasswordValidation {
   isValid: boolean;
   errors: string[];
-  strength: 'weak' | 'medium' | 'strong';
+  strength: "weak" | "medium" | "strong";
 }
 
 // ─── Product ─────────────────────────────────────────────────────────────────
@@ -36,7 +36,12 @@ export interface CartItem extends Product {
 }
 
 // ─── Order ────────────────────────────────────────────────────────────────────
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus =
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
 export interface Order {
   id: string;
@@ -62,17 +67,17 @@ export interface Address {
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 export type PageType =
-  | 'home'
-  | 'login'
-  | 'signup'
-  | 'forgotPassword'
-  | 'admin'
-  | 'supervisor'
-  | 'staff'
-  | 'shop'
-  | 'checkout'
-  | 'orders'
-  | 'addresses'
-  | 'settings'
-  | 'wishlist'
-  | 'activity';
+  | "home"
+  | "login"
+  | "signup"
+  | "forgotPassword"
+  | "admin"
+  | "staffsupervisor"
+  | "staff"
+  | "shop"
+  | "checkout"
+  | "orders"
+  | "addresses"
+  | "settings"
+  | "wishlist"
+  | "activity";

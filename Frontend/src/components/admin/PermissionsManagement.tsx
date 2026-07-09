@@ -1,56 +1,86 @@
-import { useState } from 'react';
-import { Search, Shield, Check, X, User } from 'lucide-react';
-import { StaffMember, staffMembers as initialStaffMembers, StaffPermissions } from '../../data/admin';
+import { useState } from "react";
+import { Search, Shield, Check, X, User } from "lucide-react";
+import {
+  StaffMember,
+  staffMembers as initialStaffMembers,
+  StaffPermissions,
+} from "../../data/admin";
 
 export default function PermissionsManagement() {
   const [staff, setStaff] = useState<StaffMember[]>(initialStaffMembers);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'all' | 'admin' | 'staff' | 'delivery'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState<
+    "all" | "admin" | "staff" | "staffsupervisor"
+  >("all");
 
   const filteredStaff = staff.filter((member) => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === 'all' || member.role === selectedRole;
+    const matchesSearch =
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = selectedRole === "all" || member.role === selectedRole;
     return matchesSearch && matchesRole;
   });
 
-  const handlePermissionSelect = (staffId: string, type: 'delivery' | 'supervisor') => {
-    const isDelivery = type === 'delivery';
-    setStaff(staff.map((member) => {
-      if (member.id === staffId) {
-        return {
-          ...member,
-          role: isDelivery ? 'delivery' : 'staff',
-          permissions: {
-            ...member.permissions,
-            canManageOrders: isDelivery,
-            canEditProducts: !isDelivery,
-            canManageStock: !isDelivery,
-            canAddProducts: false,
-            canDeleteProducts: false,
-          }
-        };
-      }
-      return member;
-    }));
+  const handlePermissionSelect = (
+    staffId: string,
+    type: "staff" | "staffsupervisor",
+  ) => {
+    const isStaff = type === "staff";
+    setStaff(
+      staff.map((member) => {
+        if (member.id === staffId) {
+          return {
+            ...member,
+            role: isStaff ? "staff" : "staffsupervisor",
+            permissions: {
+              ...member.permissions,
+              canManageOrders: isStaff,
+              canEditProducts: !isStaff,
+              canManageStock: !isStaff,
+              canAddProducts: false,
+              canDeleteProducts: false,
+            },
+          };
+        }
+        return member;
+      }),
+    );
   };
 
-  const permissionsList: Array<{ key: keyof StaffPermissions; label: string; description: string }> = [
-    { key: 'canManageOrders', label: 'Handle Delivery & Order', description: 'Assigned as Delivery Staff' },
-    { key: 'canEditProducts', label: 'Modify Products & Stock', description: 'Assigned as Supervisor Staff' }
+  const permissionsList: Array<{
+    key: keyof StaffPermissions;
+    label: string;
+    description: string;
+  }> = [
+    {
+      key: "canManageOrders",
+      label: "Handle Orders",
+      description: "Assigned as Staff",
+    },
+    {
+      key: "canEditProducts",
+      label: "Modify Products & Stock",
+      description: "Assigned as Staff Supervisor",
+    },
   ];
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'staff': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'delivery': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case "admin":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      case "staff":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "staffsupervisor":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
   const countActivePermissions = (permissions: StaffPermissions): number => {
-    return [permissions.canManageOrders, permissions.canEditProducts].filter(Boolean).length;
+    return [permissions.canManageOrders, permissions.canEditProducts].filter(
+      Boolean,
+    ).length;
   };
 
   return (
@@ -65,16 +95,24 @@ export default function PermissionsManagement() {
         <div className="flex items-start gap-4">
           <Shield className="w-6 h-6 text-purple-400 mt-1" />
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Permission System Overview</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Permission System Overview
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Manage what each staff member can do in the system. Different roles have different default permissions.
-              Be careful when granting sensitive permissions like "Manage Permissions" or "Delete Products".
+              Manage what each staff member can do in the system. Different
+              roles have different default permissions. Be careful when granting
+              sensitive permissions like "Manage Permissions" or "Delete
+              Products".
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {permissionsList.map((perm) => (
                 <div key={perm.key} className="bg-white/5 p-3 rounded-lg">
-                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{perm.label}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">{perm.description}</div>
+                  <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {perm.label}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    {perm.description}
+                  </div>
                 </div>
               ))}
             </div>
@@ -101,7 +139,7 @@ export default function PermissionsManagement() {
           <option value="all">All Roles</option>
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
-          <option value="delivery">Delivery</option>
+          <option value="staffsupervisor">Staff Supervisor</option>
         </select>
       </div>
 
@@ -117,59 +155,82 @@ export default function PermissionsManagement() {
                   {member.avatar}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{member.name}</h3>
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                    {member.name}
+                  </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{member.email}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs border ${getRoleColor(member.role)}`}>
-                      {member.role === 'delivery' ? 'Delivery' : member.role === 'staff' ? 'Supervisor' : member.role}
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {member.email}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs border ${getRoleColor(member.role)}`}
+                    >
+                      {member.role === "staff"
+                        ? "Staff"
+                        : member.role === "staffsupervisor"
+                          ? "Staff Supervisor"
+                          : member.role}
                     </span>
                   </div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-purple-400">
-                  {countActivePermissions(member.permissions)}/{permissionsList.length}
+                  {countActivePermissions(member.permissions)}/
+                  {permissionsList.length}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Active Permissions</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">
+                  Active Permissions
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {(() => {
                 const activePermission = member.permissions.canManageOrders
-                  ? 'delivery'
+                  ? "staff"
                   : member.permissions.canEditProducts
-                  ? 'supervisor'
-                  : null;
+                    ? "staffsupervisor"
+                    : null;
                 return permissionsList.map((perm) => {
-                  const isDeliveryPerm = perm.key === 'canManageOrders';
-                  const permType = isDeliveryPerm ? 'delivery' : 'supervisor';
+                  const isStaffPerm = perm.key === "canManageOrders";
+                  const permType = isStaffPerm ? "staff" : "staffsupervisor";
                   const isSelected = activePermission === permType;
                   return (
                     <button
                       key={perm.key}
-                      onClick={() => handlePermissionSelect(member.id, permType)}
+                      onClick={() =>
+                        handlePermissionSelect(member.id, permType)
+                      }
                       className={`p-4 rounded-xl border transition-all text-left ${
                         isSelected
                           ? isDeliveryPerm
-                            ? 'bg-cyan-500/10 border-cyan-500/50'
-                            : 'bg-purple-500/10 border-purple-500/50'
-                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                            ? "bg-cyan-500/10 border-cyan-500/50"
+                            : "bg-purple-500/10 border-purple-500/50"
+                          : "bg-white/5 border-white/10 hover:bg-white/10"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{perm.label}</div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">{perm.description}</div>
+                          <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            {perm.label}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            {perm.description}
+                          </div>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          isSelected
-                            ? isDeliveryPerm
-                              ? 'border-cyan-500 bg-cyan-500'
-                              : 'border-purple-500 bg-purple-500'
-                            : 'border-gray-500 bg-transparent'
-                        }`}>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            isSelected
+                              ? isStaffPerm
+                                ? "border-cyan-500 bg-cyan-500"
+                                : "border-purple-500 bg-purple-500"
+                              : "border-gray-500 bg-transparent"
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
                         </div>
                       </div>
                     </button>

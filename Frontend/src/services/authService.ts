@@ -1,4 +1,4 @@
-import api, { storeTokens, clearAuthStorage } from './api';
+import api, { storeTokens, clearAuthStorage } from "./api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'staff' | 'delivery' | 'supervisor' | 'customer';
+  role: "admin" | "staff" | "staffsupervisor" | "customer";
   phone_number?: string;
   email_verified: boolean;
   avatar: string;
@@ -36,36 +36,38 @@ export interface AuthTokens {
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 export const authService = {
-
   async register(payload: RegisterPayload) {
-    const { data } = await api.post('/auth/register', payload);
+    const { data } = await api.post("auth/register", payload);
     return data; // { success, message, data: { user_id, email, requires_verification } }
   },
 
   async verifyEmail(email: string, otp: string) {
-    const { data } = await api.post('/auth/verify-email', { email, otp });
+    const { data } = await api.post("auth/verify-email", { email, otp });
     if (data.success) {
       storeTokens(
         data.data.tokens.access_token,
         data.data.tokens.refresh_token,
-        false // after email verify, default no remember
+        false, // after email verify, default no remember
       );
     }
     return data; // { success, message, data: { user, tokens } }
   },
 
-  async resendOtp(email: string, type: 'email_verification' | 'password_reset') {
-    const { data } = await api.post('/auth/resend-otp', { email, type });
+  async resendOtp(
+    email: string,
+    type: "email_verification" | "password_reset",
+  ) {
+    const { data } = await api.post("auth/resend-otp", { email, type });
     return data;
   },
 
   async login(payload: LoginPayload) {
-    const { data } = await api.post('/auth/login', payload);
+    const { data } = await api.post("auth/login", payload);
     if (data.success) {
       storeTokens(
         data.data.tokens.access_token,
         data.data.tokens.refresh_token,
-        payload.remember_me ?? false
+        payload.remember_me ?? false,
       );
     }
     return data; // { success, message, data: { user, tokens, remember_me } }
@@ -73,7 +75,7 @@ export const authService = {
 
   async logout() {
     try {
-      await api.post('/auth/logout');
+      await api.post("auth/logout");
     } finally {
       clearAuthStorage();
     }
@@ -81,7 +83,7 @@ export const authService = {
 
   async me(): Promise<AuthUser | null> {
     try {
-      const { data } = await api.get('/auth/me');
+      const { data } = await api.get("auth/me");
       return data.data.user;
     } catch {
       return null;
@@ -89,17 +91,22 @@ export const authService = {
   },
 
   async forgotPassword(email: string) {
-    const { data } = await api.post('/auth/forgot-password', { email });
+    const { data } = await api.post("auth/forgot-password", { email });
     return data;
   },
 
   async verifyPasswordResetOtp(email: string, otp: string) {
-    const { data } = await api.post('/auth/verify-reset-otp', { email, otp });
+    const { data } = await api.post("auth/verify-reset-otp", { email, otp });
     return data; // { success, data: { email, reset_token } }
   },
 
-  async resetPassword(email: string, otp: string, password: string, password_confirmation: string) {
-    const { data } = await api.post('/auth/reset-password', {
+  async resetPassword(
+    email: string,
+    otp: string,
+    password: string,
+    password_confirmation: string,
+  ) {
+    const { data } = await api.post("auth/reset-password", {
       email,
       otp,
       password,
