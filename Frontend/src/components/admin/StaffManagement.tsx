@@ -105,12 +105,12 @@ export default function StaffManagement() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold bg-linear-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
           Staff Management
         </h2>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center gap-2"
+          className="px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add Staff Member
@@ -147,7 +147,7 @@ export default function StaffManagement() {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
+                <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
                   {member.avatar}
                 </div>
                 <div>
@@ -454,7 +454,7 @@ function EditStaffModal({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all"
+              className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all"
             >
               Save Changes
             </button>
@@ -747,7 +747,7 @@ function AddStaffModal({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all"
+              className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all"
             >
               Add Staff Member
             </button>

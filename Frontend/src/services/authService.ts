@@ -21,6 +21,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "admin" | "staff" | "staffsupervisor" | "customer";
+  phone?: string;
   phone_number?: string;
   email_verified: boolean;
   avatar: string;

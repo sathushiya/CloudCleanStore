@@ -352,7 +352,7 @@ export default function SupervisorDashboard({
             {/* Header */}
             <div className="p-6 border-b border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -848,7 +848,7 @@ export default function SupervisorDashboard({
                                       );
                                     }
                                   }}
-                                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all font-semibold whitespace-nowrap"
+                                  className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all font-semibold whitespace-nowrap"
                                 >
                                   Add
                                 </button>
@@ -1122,7 +1122,7 @@ export default function SupervisorDashboard({
                                       );
                                     }
                                   }}
-                                  className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-[var(--glow-blue-strong)] transition-all font-semibold whitespace-nowrap"
+                                  className="px-6 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-(--glow-blue-strong) transition-all font-semibold whitespace-nowrap"
                                 >
                                   Add
                                 </button>
@@ -1344,7 +1344,7 @@ export default function SupervisorDashboard({
 
                         <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                           <div className="flex items-start gap-2">
-                            <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5" />
+                            <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0 mt-0.5" />
                             <div>
                               <div className="font-semibold mb-1">
                                 Delivery Address
@@ -1448,7 +1448,7 @@ export default function SupervisorDashboard({
                             onClick={() =>
                               handleConfirmPayment(payment.orderId)
                             }
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold hover:shadow-lg transition-all hover:scale-105"
+                            className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold hover:shadow-lg transition-all hover:scale-105"
                           >
                             <CheckCircle className="w-5 h-5" />
                             Confirm Payment
@@ -1542,7 +1542,7 @@ export default function SupervisorDashboard({
                           </label>
                           <input
                             type="tel"
-                            value={user?.phone || "Not provided"}
+                            value={user?.phone_number || "Not provided"}
                             readOnly
                             className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed"
                           />
@@ -1694,7 +1694,7 @@ export default function SupervisorDashboard({
                         alert("Settings saved successfully!");
                         setActiveTab("overview");
                       }}
-                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:shadow-[var(--glow-purple-strong)] transition-all font-semibold"
+                      className="px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:shadow-(--glow-purple-strong) transition-all font-semibold"
                     >
                       Save Changes
                     </button>

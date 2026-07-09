@@ -40,6 +40,14 @@ interface StaffDashboardProps {
   onLogout: () => void;
 }
 
+type StaffSettings = {
+  notifications: boolean;
+  autoAcceptTasks: boolean;
+  soundAlerts: boolean;
+  showCompleted: boolean;
+  darkMode: boolean;
+};
+
 export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const { user, logout } = useAuth();
   const [tasks, setTasks] = useState<DeliveryTask[]>(initialTasks);
@@ -452,7 +460,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
 
               <div className="flex items-center gap-3 mb-4">
                 <div className="relative">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                  <div className="w-16 h-16 bg-linear-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white font-bold text-2xl">
                     {currentStaff?.avatar ||
                       user?.name?.charAt(0).toUpperCase()}
                   </div>
@@ -811,7 +819,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                         <div className="lg:w-64 space-y-3">
                           <button
                             onClick={() => handleAcceptTask(task.id)}
-                            className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center justify-center gap-2"
+                            className="w-full px-4 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all flex items-center justify-center gap-2"
                           >
                             <CheckCircle className="w-5 h-5" />
                             Accept & Start
@@ -1024,7 +1032,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                           <div className="lg:w-64 space-y-3">
                             <button
                               onClick={() => handleReAcceptTask(task.id)}
-                              className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                              className="w-full px-4 py-3 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
                               style={{
                                 boxShadow: "0 0 20px rgba(22, 163, 74, 0.3)",
                               }}
@@ -1192,7 +1200,7 @@ function EditProfileModal({
                   className="w-32 h-32 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-32 h-32 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
+                <div className="w-32 h-32 bg-linear-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
                   {staff.avatar}
                 </div>
               )}
@@ -1275,7 +1283,7 @@ function EditProfileModal({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center gap-2"
+              className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               Save Changes
@@ -1329,7 +1337,7 @@ function MapViewModal({
         <div className="sticky top-0 glass-effect border-b border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
                 <Map className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -1367,7 +1375,7 @@ function MapViewModal({
 
         <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(95vh-120px)]">
           {/* Enhanced Map Placeholder */}
-          <div className="relative h-[400px] bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-purple-900/20 rounded-xl overflow-hidden border-2 border-purple-200 dark:border-purple-700/30 shadow-2xl">
+          <div className="relative h-100 bg-linear-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-purple-900/20 rounded-xl overflow-hidden border-2 border-purple-200 dark:border-purple-700/30 shadow-2xl">
             {/* Street grid pattern */}
             <div className="absolute inset-0 opacity-20">
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -1436,12 +1444,12 @@ function MapViewModal({
             {/* Destination marker */}
             <div className="absolute right-12 top-12 flex flex-col items-center">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-gray-800">
+                <div className="w-16 h-16 bg-linear-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-gray-800">
                   <MapPin className="w-8 h-8 text-white" />
                 </div>
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-400 rounded-full animate-ping"></div>
               </div>
-              <div className="mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-bold rounded-full shadow-lg max-w-xs text-center">
+              <div className="mt-2 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white text-sm font-bold rounded-full shadow-lg max-w-xs text-center">
                 Delivery Destination
               </div>
             </div>
@@ -1479,7 +1487,7 @@ function MapViewModal({
             </div>
 
             {/* Address banner at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600/95 to-blue-600/95 backdrop-blur-sm p-4">
+            <div className="absolute bottom-0 left-0 right-0 bg-linear-to-r from-purple-600/95 to-blue-600/95 backdrop-blur-sm p-4">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-white mt-0.5" />
                 <div className="flex-1">
@@ -1495,9 +1503,9 @@ function MapViewModal({
           {/* Customer & Order Details */}
           <div className="grid md:grid-cols-3 gap-4">
             {/* Customer Info */}
-            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 p-6 rounded-xl border border-blue-500/20">
+            <div className="bg-linear-to-br from-blue-500/10 to-purple-500/10 p-6 rounded-xl border border-blue-500/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-linear-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -1520,7 +1528,7 @@ function MapViewModal({
             </div>
 
             {/* Order Items */}
-            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-6 rounded-xl border border-purple-500/20">
+            <div className="bg-linear-to-br from-purple-500/10 to-pink-500/10 p-6 rounded-xl border border-purple-500/20">
               <div className="flex items-center gap-2 mb-4">
                 <Package className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 <h4 className="font-bold text-lg">Order Items</h4>
@@ -1541,7 +1549,7 @@ function MapViewModal({
             </div>
 
             {/* Order Summary */}
-            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6 rounded-xl border border-green-500/20">
+            <div className="bg-linear-to-br from-green-500/10 to-emerald-500/10 p-6 rounded-xl border border-green-500/20">
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <h4 className="font-bold text-lg">Order Summary</h4>
@@ -1604,7 +1612,7 @@ function MapViewModal({
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={onStartNavigation}
-              className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-[0_0_40px_rgba(37,99,235,0.6)] transition-all flex items-center justify-center gap-2 font-semibold text-lg"
+              className="px-6 py-4 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-[0_0_40px_rgba(37,99,235,0.6)] transition-all flex items-center justify-center gap-2 font-semibold text-lg"
             >
               <Navigation className="w-6 h-6" />
               Start GPS Navigation
@@ -1615,7 +1623,7 @@ function MapViewModal({
                   window.open("tel:+15551234567");
                 }
               }}
-              className="px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:shadow-[0_0_40px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-2 font-semibold text-lg"
+              className="px-6 py-4 bg-linear-to-r from-green-600 to-green-700 text-white rounded-xl hover:shadow-[0_0_40px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-2 font-semibold text-lg"
             >
               <Phone className="w-6 h-6" />
               Call Customer
@@ -1639,15 +1647,9 @@ function SettingsModal({
   onClose,
   onSave,
 }: {
-  settings: {
-    notifications: boolean;
-    autoAcceptTasks: boolean;
-    soundAlerts: boolean;
-    showCompleted: boolean;
-    darkMode: boolean;
-  };
+  settings: StaffSettings;
   onClose: () => void;
-  onSave: (settings: typeof settings) => void;
+  onSave: (settings: StaffSettings) => void;
 }) {
   const [formData, setFormData] = useState(settings);
 
@@ -1858,7 +1860,7 @@ function SettingsModal({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center gap-2"
+              className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               Save Settings

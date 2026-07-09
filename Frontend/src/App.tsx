@@ -216,7 +216,13 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e]">
+      <div
+        className="min-h-screen flex items-center justify-center bg-purple-50 dark:bg-[#0f0a1e]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to bottom right, rgb(250 245 255), rgb(255 255 255), rgb(243 232 255))",
+        }}
+      >
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-purple-600 dark:text-purple-300 font-medium">
