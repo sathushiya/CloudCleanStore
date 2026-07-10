@@ -622,7 +622,7 @@ function AddStaffModal({
               >
                 <option value="admin">Admin</option>
                 <option value="staff">Staff</option>
-                <option value="delivery">Delivery</option>
+                <option value="staffsupervisor">Staff Supervisor</option>
               </select>
             </div>
             <div>

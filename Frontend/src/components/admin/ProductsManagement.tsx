@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Edit, Trash2, Package, AlertCircle, X, Save } from 'lucide-react';
 import { Product, ProductVariant, categories } from '../../data/products';
-import { productService, toFrontendProduct } from '../../services/productService';
+import { productService, toFrontendProduct, Brand } from '../../services/productService';
 import ImageUploader from './ImageUploader';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 
 export default function ProductsManagement() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,21 +15,28 @@ export default function ProductsManagement() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
+  const loadProducts = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const apiProducts = await productService.adminList();
+      setProducts(apiProducts.map(toFrontendProduct));
+    } catch (err) {
+      setLoadError('Could not load products from the server.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
-    async function loadProducts() {
-      setIsLoading(true);
-      setLoadError(null);
+    (async () => {
       try {
-        const apiProducts = await productService.adminList();
-        if (!cancelled) setProducts(apiProducts.map(toFrontendProduct));
-      } catch (err) {
-        if (!cancelled) setLoadError('Could not load products from the server.');
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
+        const apiBrands = await productService.adminListBrands();
+        if (!cancelled) setBrands(apiBrands);
+      } catch (err) {}
+    })();
 
     loadProducts();
     return () => { cancelled = true; };
@@ -54,20 +62,58 @@ export default function ProductsManagement() {
     }
   };
 
-  // NOTE: Add/Edit still update local state only. Wiring these to
-  // productService.create / productService.update requires the modal form
-  // (below) to select a real brand_id from GET /brands instead of typing a
-  // free-text brand name — that's the next follow-up on this file.
-  const handleSaveProduct = (updatedProduct: Product) => {
-    setProducts(
-      products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
-    setEditingProduct(null);
+  const handleSaveProduct = async (updatedProduct: Product) => {
+    if (!updatedProduct.brandId) {
+      alert('Please select a brand before saving.');
+      return;
+    }
+    try {
+      await productService.update(Number(updatedProduct.id), {
+        brand_id: updatedProduct.brandId,
+        name: updatedProduct.name,
+        category: updatedProduct.category as any,
+        description: updatedProduct.description,
+        image: updatedProduct.image,
+        badge: updatedProduct.badge,
+        variants: updatedProduct.variants.map((v) => ({
+          size: v.size,
+          price: v.price,
+          shop_stock: v.shopStock ?? 0,
+          online_stock: v.onlineStock ?? v.stock,
+        })),
+      });
+      await loadProducts();
+      setEditingProduct(null);
+    } catch (err) {
+      alert('Failed to save product. Please check all fields and try again.');
+    }
   };
 
-  const handleAddProduct = (newProduct: Product) => {
-    setProducts([...products, { ...newProduct, id: `prod-${Date.now()}` }]);
-    setShowAddModal(false);
+  const handleAddProduct = async (newProduct: Product) => {
+    if (!newProduct.brandId) {
+      alert('Please select a brand before adding.');
+      return;
+    }
+    try {
+      await productService.create({
+        brand_id: newProduct.brandId,
+        name: newProduct.name,
+        category: newProduct.category as any,
+        description: newProduct.description,
+        image: newProduct.image,
+        badge: newProduct.badge,
+        variants: newProduct.variants.map((v) => ({
+          size: v.size,
+          price: v.price,
+          shop_stock: v.shopStock ?? 0,
+          online_stock: v.onlineStock ?? v.stock,
+        })),
+      });
+      await loadProducts();
+      setShowAddModal(false);
+    } catch (err) {
+      alert('Failed to add product. Please check all fields and try again.');
+    }
   };
 
   return (
@@ -82,7 +128,7 @@ export default function ProductsManagement() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple)] transition-all flex items-center gap-2"
+          className="px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple) transition-all flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Add Product
@@ -141,7 +187,7 @@ export default function ProductsManagement() {
       {/* Low Stock Alert */}
       {lowStockProducts.length > 0 && (
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/30 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
           <div>
             <h3 className="font-semibold text-orange-900 dark:text-orange-300">Low Stock Alert</h3>
             <p className="text-sm text-orange-700 dark:text-orange-400">
@@ -185,7 +231,6 @@ export default function ProductsManagement() {
                 </div>
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-4 line-clamp-2">{product.name}</h3>
 
-                {/* Clean list with quantities and prices only */}
                 <div className="space-y-2 mb-4">
                   {product.variants.map((variant) => (
                     <div key={variant.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
@@ -235,14 +280,14 @@ export default function ProductsManagement() {
       {editingProduct && (
         <EditProductModal
           product={editingProduct}
+          brands={brands}
           onSave={handleSaveProduct}
           onClose={() => setEditingProduct(null)}
         />
       )}
 
-      {/* Add Product Modal */}
       {showAddModal && (
-        <AddProductModal onAdd={handleAddProduct} onClose={() => setShowAddModal(false)} />
+        <AddProductModal brands={brands} onAdd={handleAddProduct} onClose={() => setShowAddModal(false)} />
       )}
     </div>
   );
@@ -250,11 +295,12 @@ export default function ProductsManagement() {
 
 interface EditProductModalProps {
   product: Product;
+  brands: Brand[];
   onSave: (product: Product) => void;
   onClose: () => void;
 }
 
-function EditProductModal({ product, onSave, onClose }: EditProductModalProps) {
+function EditProductModal({ product, brands, onSave, onClose }: EditProductModalProps) {
   const [formData, setFormData] = useState(product);
 
   const handleVariantChange = (index: number, field: keyof ProductVariant, value: any) => {
@@ -297,12 +343,19 @@ function EditProductModal({ product, onSave, onClose }: EditProductModalProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Brand</label>
-              <input
-                type="text"
-                value={formData.brand}
-                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+              <select
+                value={formData.brandId ?? ''}
+                onChange={(e) => {
+                  const selected = brands.find((b) => b.id === Number(e.target.value));
+                  setFormData({ ...formData, brandId: selected?.id, brand: selected?.name ?? '' });
+                }}
                 className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors text-gray-900 dark:text-white"
-              />
+              >
+                <option value="">Select a brand</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -397,7 +450,7 @@ function EditProductModal({ product, onSave, onClose }: EditProductModalProps) {
           </button>
           <button
             onClick={() => onSave(formData)}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple-strong) transition-all flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5" />
             Save Changes
@@ -409,14 +462,16 @@ function EditProductModal({ product, onSave, onClose }: EditProductModalProps) {
 }
 
 interface AddProductModalProps {
+  brands: Brand[];
   onAdd: (product: Product) => void;
   onClose: () => void;
 }
 
-function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
+function AddProductModal({ brands, onAdd, onClose }: AddProductModalProps) {
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     brand: '',
+    brandId: undefined,
     category: 'bathroom',
     description: '',
     image: '',
@@ -435,8 +490,10 @@ function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
   };
 
   const handleSubmit = () => {
-    if (formData.name && formData.brand && formData.variants && formData.variants.length > 0) {
+    if (formData.name && formData.brandId && formData.variants && formData.variants.length > 0) {
       onAdd(formData as Product);
+    } else {
+      alert('Please fill in the product name, select a brand, and add at least one variant.');
     }
   };
 
@@ -468,13 +525,19 @@ function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Brand"
-              value={formData.brand}
-              onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-            />
+            <select
+              value={formData.brandId ?? ''}
+              onChange={(e) => {
+                const selected = brands.find((b) => b.id === Number(e.target.value));
+                setFormData({ ...formData, brandId: selected?.id, brand: selected?.name ?? '' });
+              }}
+              className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white"
+            >
+              <option value="">Select a brand</option>
+              {brands.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
 
             <select
               value={formData.category}
@@ -497,7 +560,6 @@ function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
             className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
 
-          {/* Variant Details: Size, Price, Quantity */}
           <div className="border-t border-gray-200 dark:border-purple-700/20 pt-4">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Product Variant</h3>
             {formData.variants?.map((variant, index) => (
@@ -546,7 +608,7 @@ function AddProductModal({ onAdd, onClose }: AddProductModalProps) {
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple-strong) transition-all flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Add Product

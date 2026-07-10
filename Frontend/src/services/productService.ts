@@ -139,6 +139,7 @@ export function toFrontendProduct(product: Product): FrontendProduct {
     id: String(product.id),
     name: product.name,
     brand: product.brand?.name ?? '',
+    brandId: product.brand_id,
     category: product.category,
     description: product.description ?? '',
     image: product.image ?? '',
