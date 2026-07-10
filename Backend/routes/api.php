@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Catalog\BrandController;
 use App\Http\Controllers\Api\Catalog\MediaController;
 use App\Http\Controllers\Api\Catalog\ProductController;
+use App\Http\Controllers\Api\Customer\AddressController;
+use App\Http\Controllers\Api\Customer\WishlistController;
 use App\Http\Controllers\Api\Orders\CartController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -67,5 +69,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/orders/checkout', [OrderController::class, 'checkout']);
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
+
+        Route::get('/addresses', [AddressController::class, 'index']);
+        Route::post('/addresses', [AddressController::class, 'store']);
+        Route::put('/addresses/{address}', [AddressController::class, 'update']);
+        Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
+
+        Route::get('/wishlist', [WishlistController::class, 'index']);
+        Route::post('/wishlist', [WishlistController::class, 'store']);
+        Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
     });
 });
