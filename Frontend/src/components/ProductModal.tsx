@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, Star, ShoppingCart, Plus, Minus, Check } from 'lucide-react';
+import { X, Star, ShoppingCart, Plus, Minus, Check, Heart } from 'lucide-react';
 import { Product, ProductVariant } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { wishlistService } from '../services/wishlistService';
 import { ImageWithFallback } from './common/ImageWithFallback';
 
 interface ProductModalProps {
@@ -14,11 +15,30 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const handleAddToCart = () => {
     addToCart(product, selectedVariant, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleToggleWishlist = async () => {
+    setWishlistLoading(true);
+    try {
+      if (wishlisted) {
+        await wishlistService.remove(Number(product.id));
+        setWishlisted(false);
+      } else {
+        await wishlistService.add(Number(product.id));
+        setWishlisted(true);
+      }
+    } catch (err) {
+      alert('Please log in to use the wishlist.');
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const incrementQuantity = () => {
@@ -193,23 +213,32 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  disabled={selectedVariant.stock === 0}
-                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
-                >
-                  {added ? (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Added to Cart!
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-5 h-5" />
-                      Add to Cart
-                    </>
-                  )}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={selectedVariant.stock === 0}
+                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  >
+                    {added ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        Added to Cart!
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        Add to Cart
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleToggleWishlist}
+                    disabled={wishlistLoading}
+                    className="w-14 h-14 flex-shrink-0 rounded-2xl border border-gray-200 dark:border-purple-700/20 flex items-center justify-center hover:border-purple-500 transition-colors disabled:opacity-50"
+                  >
+                    <Heart className={`w-6 h-6 ${wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
