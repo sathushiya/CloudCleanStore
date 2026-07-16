@@ -11,7 +11,6 @@ export const wishlistService = {
   async list() {
     const { data } = await api.get('/customer/wishlist');
     const items = data.data as WishlistApiItem[];
-    // Map each wishlist row to the same frontend Product shape used everywhere else
     return items.map((item) => ({
       wishlistId: item.id,
       product: toFrontendProduct(item.product),
