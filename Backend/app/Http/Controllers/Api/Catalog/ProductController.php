@@ -18,7 +18,7 @@ class ProductController extends Controller
         if ($request->filled('brand_id')) $query->where('brand_id', $request->integer('brand_id'));
         if ($request->filled('search')) $query->where('name', 'like', '%' . $request->string('search') . '%');
 
-        $products = $query->orderByDesc('created_at')->paginate(20);
+        $products = $query->orderByDesc('created_at')->paginate(100);
         return response()->json(['success' => true, 'data' => $products]);
     }
 
