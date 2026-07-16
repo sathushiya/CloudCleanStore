@@ -20,12 +20,14 @@ import {
   CheckCircle,
   XCircle,
   User,
-  Lock
+  Lock,
+  Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { staffMembers, deliveryTasks, notifications } from '../data/admin';
 import { products } from '../data/products';
 import ProductsManagement from '../components/admin/ProductsManagement';
+import BrandManagement from '../components/admin/BrandManagement';
 import StaffManagement from '../components/admin/StaffManagement';
 import OrdersDelivery from '../components/admin/OrdersDelivery';
 import PermissionsManagement from '../components/admin/PermissionsManagement';
@@ -37,8 +39,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'overview' | 'inventory' | 'products' | 'staff' | 'orders' | 'permissions' | 'notifications' | 'performance' | 'settings';
-
+type TabType = 'overview' | 'inventory' | 'products' | 'brands' | 'staff' | 'orders' | 'permissions' | 'notifications' | 'performance' | 'settings';
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -53,6 +54,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview', icon: LayoutDashboard },
     { id: 'products' as TabType, label: 'Products', icon: Package },
+    { id: 'brands' as TabType, label: 'Brands', icon: Tag },
     { id: 'staff' as TabType, label: 'Staff', icon: Users },
     { id: 'orders' as TabType, label: 'Orders & Delivery', icon: Truck },
     { id: 'permissions' as TabType, label: 'Permissions', icon: Shield },
@@ -294,6 +296,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'inventory' && <InventoryView />}
 
             {activeTab === 'products' && <ProductsManagement />}
+
+            {activeTab === 'brands' && <BrandManagement />}
 
             {activeTab === 'staff' && <StaffManagement />}
 
