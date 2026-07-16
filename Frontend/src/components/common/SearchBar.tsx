@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { products, categories } from '../../data/products';
+import { categories } from '../../data/products';
 import type { Product } from '../../data/products';
 
 interface SearchBarProps {
+  products: Product[];
   onProductSelect: (product: Product) => void;
 }
 
-export default function SearchBar({ onProductSelect }: SearchBarProps) {
+export default function SearchBar({ products, onProductSelect }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -40,7 +41,6 @@ export default function SearchBar({ onProductSelect }: SearchBarProps) {
 
   return (
     <div ref={searchRef} className="relative w-full max-w-2xl">
-      {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
@@ -67,7 +67,6 @@ export default function SearchBar({ onProductSelect }: SearchBarProps) {
         )}
       </div>
 
-      {/* Search Results Dropdown */}
       {isOpen && query && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1a1425] border border-gray-200 dark:border-purple-700/20 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
           {filteredProducts.length > 0 ? (
