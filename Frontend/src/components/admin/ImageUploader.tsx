@@ -62,6 +62,16 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
           )}
         </button>
 
+        {value && !isUploading && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/30 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-red-600 dark:text-red-400"
+          >
+            Remove
+          </button>
+        )}
+
         <input
           ref={inputRef}
           type="file"
