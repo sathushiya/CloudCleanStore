@@ -232,7 +232,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                   <button
                     onClick={handleAddToCart}
                     disabled={selectedVariant.stock === 0}
-                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
                   >
                     {added ? (
                       <>
@@ -249,7 +249,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                   <button
                     onClick={handleToggleWishlist}
                     disabled={wishlistLoading}
-                    className="w-14 h-14 flex-shrink-0 rounded-2xl border border-gray-200 dark:border-purple-700/20 flex items-center justify-center hover:border-purple-500 transition-colors disabled:opacity-50"
+                    className="w-14 h-14 shrink-0 rounded-2xl border border-gray-200 dark:border-purple-700/20 flex items-center justify-center hover:border-purple-500 transition-colors disabled:opacity-50"
                   >
                     <Heart className={`w-6 h-6 ${wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                   </button>

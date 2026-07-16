@@ -153,7 +153,7 @@ export default function Shop({ onBack }: ShopProps) {
 
                   {isInStock && (
                     <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-full flex items-center justify-center hover:shadow-[var(--glow-purple)] transition-all hover:scale-110">
+                      <button className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 text-white rounded-full flex items-center justify-center hover:shadow-(--glow-purple) transition-all hover:scale-110">
                         <ShoppingCart className="w-5 h-5" />
                       </button>
                     </div>

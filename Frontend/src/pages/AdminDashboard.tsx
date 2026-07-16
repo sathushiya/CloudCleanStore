@@ -101,7 +101,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {/* Header */}
             <div className="p-6 border-b border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -352,7 +352,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
                       />
                     </div>
-                    <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105">
+                    <button className="w-full py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105">
                       Update Account Information
                     </button>
                   </div>
@@ -391,7 +391,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         placeholder="Confirm new password"
                       />
                     </div>
-                    <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105">
+                    <button className="w-full py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105">
                       Update Password
                     </button>
                   </div>

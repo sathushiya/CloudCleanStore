@@ -46,7 +46,7 @@ export default function BrandManagement() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple)] transition-all flex items-center gap-2"
+          className="px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple) transition-all flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Add Brand
@@ -195,7 +195,7 @@ function BrandFormModal({ brand, onSaved, onClose }: BrandFormModalProps) {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple-strong) transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Save className="w-5 h-5" />
               {saving ? 'Saving...' : 'Save Brand'}
