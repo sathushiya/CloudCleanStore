@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Star, ShoppingCart, Plus, Minus, Check, Heart } from 'lucide-react';
 import { Product, ProductVariant } from '../data/products';
 import { useCart } from '../context/CartContext';
@@ -18,6 +18,24 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
+  // Bug fix: previously this always started as `false`, so the heart never
+  // showed as filled even for products already on the wishlist. Now it checks
+  // the real saved state whenever a different product is opened.
+  useEffect(() => {
+    let cancelled = false;
+    wishlistService.list()
+      .then((items) => {
+        if (!cancelled) {
+          setWishlisted(items.some((item) => item.product.id === product.id));
+        }
+      })
+      .catch(() => {
+        // Not logged in, or request failed -- default to unwishlisted, no error shown
+        // here since this is a background check, not a user-initiated action.
+      });
+    return () => { cancelled = true; };
+  }, [product.id]);
+
   const handleAddToCart = () => {
     addToCart(product, selectedVariant, quantity);
     setAdded(true);
@@ -34,8 +52,12 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
         await wishlistService.add(Number(product.id));
         setWishlisted(true);
       }
-    } catch (err) {
-      alert('Please log in to use the wishlist.');
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        alert('Please log in to use the wishlist.');
+      } else {
+        alert('Something went wrong updating your wishlist. Please try again.');
+      }
     } finally {
       setWishlistLoading(false);
     }
@@ -56,7 +78,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-[#1a1425] rounded-3xl shadow-2xl overflow-hidden">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-10 h-10 bg-white dark:bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-black/70 transition-colors"
@@ -66,7 +87,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 
         <div className="overflow-y-auto max-h-[90vh]">
           <div className="grid md:grid-cols-2 gap-8 p-6 md:p-8">
-            {/* Image Section */}
             <div className="relative">
               <div className="relative h-96 bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
                 <ImageWithFallback
@@ -98,7 +118,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 })()}
               </div>
 
-              {/* Rating */}
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -119,7 +138,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
             </div>
 
-            {/* Info Section */}
             <div className="flex flex-col">
               <div className="text-sm text-purple-600 dark:text-purple-400 font-medium mb-2">
                 {product.brand}
@@ -127,7 +145,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
               <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">{product.description}</p>
 
-              {/* Size Selection */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-3">Select Size:</label>
                 <div className="grid grid-cols-3 gap-3">
@@ -172,7 +189,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 </div>
               </div>
 
-              {/* Quantity Selector */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-3">Quantity:</label>
                 <div className="flex items-center gap-4">
@@ -199,7 +215,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 </div>
               </div>
 
-              {/* Price and Add to Cart */}
               <div className="mt-auto">
                 <div className="flex items-center justify-between mb-4">
                   <div>
