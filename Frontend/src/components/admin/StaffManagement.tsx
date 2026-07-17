@@ -53,9 +53,7 @@ export default function StaffManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState
-    "all" | "admin" | "staff" | "staffsupervisor"
-  >("all");
+  const [selectedRole, setSelectedRole] = useState<"all" | "admin" | "staff" | "staffsupervisor">("all");
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
