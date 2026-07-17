@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Plus,
@@ -17,18 +17,64 @@ import {
 } from "lucide-react";
 import {
   StaffMember,
-  staffMembers as initialStaffMembers,
   StaffPermissions,
 } from "../../data/admin";
+import { staffService, StaffAccount } from "../../services/staffService";
+
+const DEFAULT_PERMISSIONS: StaffPermissions = {
+  canAddProducts: false,
+  canEditProducts: false,
+  canDeleteProducts: false,
+  canManageStock: false,
+  canManageStaff: false,
+  canManageOrders: true,
+  canViewReports: false,
+  canManagePermissions: false,
+};
+
+function toStaffMember(account: StaffAccount): StaffMember {
+  return {
+    id: String(account.id),
+    name: account.name,
+    email: account.email,
+    phone: account.phone_number ?? '',
+    role: account.role,
+    avatar: '',
+    joinDate: account.created_at,
+    status: account.is_active ? 'active' : 'inactive',
+    permissions: DEFAULT_PERMISSIONS,
+    performance: { tasksCompleted: 0, tasksDeclined: 0, points: 0, rating: 0, totalEarnings: 0, currentMonth: { tasks: 0, earnings: 0 } },
+    salary: 0,
+  };
+}
 
 export default function StaffManagement() {
-  const [staff, setStaff] = useState<StaffMember[]>(initialStaffMembers);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState<
+  const [selectedRole, setSelectedRole] = useState
     "all" | "admin" | "staff" | "staffsupervisor"
   >("all");
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const loadStaff = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const accounts = await staffService.list();
+      setStaff(accounts.map(toStaffMember));
+    } catch (err) {
+      setLoadError('Could not load staff accounts.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStaff();
+  }, []);
 
   const filteredStaff = staff.filter((member) => {
     const matchesSearch =
@@ -38,20 +84,51 @@ export default function StaffManagement() {
     return matchesSearch && matchesRole;
   });
 
-  const handleDeleteStaff = (id: string) => {
-    if (confirm("Are you sure you want to remove this staff member?")) {
-      setStaff(staff.filter((s) => s.id !== id));
+  const handleDeleteStaff = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this staff member?")) return;
+    try {
+      await staffService.remove(Number(id));
+      await loadStaff();
+    } catch (err) {
+      alert('Failed to remove staff member. You cannot delete your own account.');
     }
   };
 
-  const handleSaveStaff = (updatedStaff: StaffMember) => {
-    setStaff(staff.map((s) => (s.id === updatedStaff.id ? updatedStaff : s)));
-    setEditingStaff(null);
+  const handleSaveStaff = async (updatedStaff: StaffMember) => {
+    try {
+      await staffService.update(Number(updatedStaff.id), {
+        name: updatedStaff.name,
+        email: updatedStaff.email,
+        phone_number: updatedStaff.phone,
+        role: updatedStaff.role,
+        is_active: updatedStaff.status === 'active',
+      });
+      await loadStaff();
+      setEditingStaff(null);
+    } catch (err) {
+      alert('Failed to save staff member. Please check all fields and try again.');
+    }
   };
 
-  const handleAddStaff = (newStaff: StaffMember) => {
-    setStaff([...staff, newStaff]);
-    setIsAddModalOpen(false);
+  const handleAddStaff = async (newStaff: StaffMember & { password?: string }) => {
+    if (!newStaff.password) {
+      alert('Please set a password for this account.');
+      return;
+    }
+    try {
+      await staffService.create({
+        name: newStaff.name,
+        email: newStaff.email,
+        phone_number: newStaff.phone,
+        role: newStaff.role,
+        password: newStaff.password,
+        is_active: newStaff.status === 'active',
+      });
+      await loadStaff();
+      setIsAddModalOpen(false);
+    } catch (err) {
+      alert('Failed to add staff member. The email may already be in use.');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -116,6 +193,9 @@ export default function StaffManagement() {
           Add Staff Member
         </button>
       </div>
+
+      {isLoading && <div className="text-center py-8 text-gray-400">Loading staff accounts...</div>}
+      {loadError && !isLoading && <div className="text-center py-8 text-red-400">{loadError}</div>}
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -470,7 +550,7 @@ function AddStaffModal({
   onAdd,
 }: {
   onClose: () => void;
-  onAdd: (staff: StaffMember) => void;
+  onAdd: (staff: StaffMember & { password?: string }) => void;
 }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -495,7 +575,7 @@ function AddStaffModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newStaff: StaffMember = {
+    const newStaff: StaffMember & { password?: string } = {
       id: `staff-${Date.now()}`,
       name: formData.name!,
       email: formData.email!,
@@ -522,6 +602,7 @@ function AddStaffModal({
         },
       },
       salary: formData.salary!,
+      password,
     };
     onAdd(newStaff);
   };
