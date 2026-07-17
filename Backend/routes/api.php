@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Customer\WishlistController;
 use App\Http\Controllers\Api\Orders\CartController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Admin\StaffController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -47,6 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/products/variants/{variant}/stock', [ProductController::class, 'updateVariantStock']);
 
         Route::post('/media/upload', [MediaController::class, 'upload']);
+        Route::get('/staff', [StaffController::class, 'index']);
+        Route::post('/staff', [StaffController::class, 'store']);
+        Route::put('/staff/{staff}', [StaffController::class, 'update']);
+        Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
     });
 
     Route::middleware('role:admin,staff,staffsupervisor')->prefix('staff')->group(function () {
