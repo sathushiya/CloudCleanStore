@@ -66,7 +66,7 @@ class ProductCatalogSeeder extends Seeder
             ]],
         ]);
 
-        $this->seedBrand('Cleana', [
+        $this->seedBrand('Clena', [
             ['name' => 'Carpet Shampoo', 'category' => 'floor', 'variants' => [
                 ['size' => '5L', 'price' => 2300],
             ]],
