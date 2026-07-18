@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, X, Save, Tag } from 'lucide-react';
 import { productService, Brand } from '../../services/productService';
 import ImageUploader from './ImageUploader';
+import { validateBrandForm } from '../../utils/productValidation';
 
 export default function BrandManagement() {
   const [brands, setBrands] = useState<Brand[]>([]);
