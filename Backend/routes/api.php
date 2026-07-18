@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Catalog\BrandController;
+use App\Http\Controllers\Api\Catalog\CartController;
 use App\Http\Controllers\Api\Catalog\MediaController;
 use App\Http\Controllers\Api\Catalog\ProductController;
 use App\Http\Controllers\Api\Customer\AddressController;
 use App\Http\Controllers\Api\Customer\WishlistController;
-use App\Http\Controllers\Api\Orders\CartController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\StaffController;
