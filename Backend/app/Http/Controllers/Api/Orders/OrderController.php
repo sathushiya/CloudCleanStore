@@ -73,6 +73,11 @@ class OrderController extends Controller
                     'price' => $cartItem->variant->price,
                     'quantity' => $cartItem->quantity,
                 ]);
+
+                // Decrement online stock now that the order is confirmed.
+                // decrement() is atomic at the DB level, so this is safe even
+                // under concurrent checkouts touching the same variant.
+                $cartItem->variant->decrement('online_stock', $cartItem->quantity);
             }
 
             CartItem::query()->where('user_id', $user->id)->delete();
