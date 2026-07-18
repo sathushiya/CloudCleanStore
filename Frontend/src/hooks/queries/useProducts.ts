@@ -1,9 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { productService, toFrontendProduct, Brand } from '../../services/productService';
+import { productService, toFrontendProduct, Brand, ProductFilters } from '../../services/productService';
 import { Product } from '../../data/products';
 import { queryKeys } from './queryKeys';
 
 // ─── Products ───────────────────────────────────────────────────────────────
+
+export function useProducts(filters: ProductFilters = {}) {
+  return useQuery({
+    queryKey: queryKeys.products.list(filters),
+    queryFn: () => productService.list(filters),
+  });
+}
 
 export function useAdminProducts() {
   return useQuery({

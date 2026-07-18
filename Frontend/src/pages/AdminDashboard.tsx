@@ -24,8 +24,11 @@ import {
   Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { staffMembers, deliveryTasks, notifications } from '../data/admin';
-import { products } from '../data/products';
+import { notifications } from '../data/admin';
+import { useAdminProducts } from '../hooks/queries/useProducts';
+import { useStaffList } from '../hooks/queries/useStaff'; // import staff query hook
+import { useStaffOrders } from '../hooks/queries/useOrders';
+import { StaffAccount } from '../services/staffService';
 import ProductsManagement from '../components/admin/ProductsManagement';
 import BrandManagement from '../components/admin/BrandManagement';
 import StaffManagement from '../components/admin/StaffManagement';
@@ -62,18 +65,27 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'performance' as TabType, label: 'Performance', icon: TrendingUp }
   ];
 
-  // Calculate stats
+  // Real stats, pulled from the same cached queries the Products/Staff/Orders
+  // tabs already use -- no extra network requests fired here since React
+  // Query dedupes identical queries in flight across the whole component tree.
+  const { data: products = [] } = useAdminProducts();
+  const { data: staffMembers = [] } = useStaffList();
+  const { data: orders = [] } = useStaffOrders();
+
   const totalProducts = products.length;
   const totalStaff = staffMembers.length;
-  const activeStaff = staffMembers.filter(s => s.status === 'active').length;
-  const pendingOrders = deliveryTasks.filter(t => t.status === 'pending').length;
-  const assignedOrders = deliveryTasks.filter(t => t.status === 'assigned' || t.status === 'in_progress').length;
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-  const lowStockProducts = products.filter(p => p.variants.some(v => v.stock < 10)).length;
+  const activeStaff = staffMembers.filter((s: StaffAccount) => s.is_active).length;
+  const pendingOrders = orders.filter((o) => o.status === 'pending').length;
+  const assignedOrders = orders.filter((o) => o.status === 'processing' || o.status === 'out_for_delivery').length;
+  // NOTE: Notifications still has no real backend (no notifications table/API
+  // exists yet). Left as static/local for now -- this is next in line for
+  // Phase 6, not faked as "real" here.
+  const unreadNotifications = notifications.filter((n) => !n.read).length;
+  const lowStockProducts = products.filter((p) => p.variants.some((v) => v.stock < 10)).length;
 
-  const totalRevenue = deliveryTasks
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.total, 0);
+  const totalRevenue = orders
+    .filter((o) => o.status === 'delivered')
+    .reduce((sum, o) => sum + o.total, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0a1e]">
@@ -244,10 +256,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
                         <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <span className="text-xs text-green-600 dark:text-green-400">+12%</span>
                     </div>
-                    <div className="text-3xl font-bold mb-1">${totalRevenue.toFixed(0)}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Revenue (Completed)</div>
+                    <div className="text-3xl font-bold mb-1">LKR {totalRevenue.toFixed(0)}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Revenue (Delivered Orders)</div>
                   </div>
                 </div>
 
