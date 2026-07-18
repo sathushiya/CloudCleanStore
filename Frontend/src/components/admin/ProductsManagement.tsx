@@ -4,6 +4,7 @@ import { Product, ProductVariant, categories } from '../../data/products';
 import { productService, toFrontendProduct, Brand } from '../../services/productService';
 import ImageUploader from './ImageUploader';
 import { ImageWithFallback } from '../common/ImageWithFallback';
+import { validateProductForm } from '../../utils/productValidation';
 
 export default function ProductsManagement() {
   const [products, setProducts] = useState<Product[]>([]);
