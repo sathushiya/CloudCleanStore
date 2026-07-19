@@ -92,31 +92,6 @@ export default function Login({
             </p>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl border border-purple-200 dark:border-purple-700/30">
-            <p className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-2">
-              Demo Credentials:
-            </p>
-            <div className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
-              <p>
-                <strong>Admin:</strong> admin@cloudclean.store /
-                Admin@2026!Secure
-              </p>
-              <p>
-                <strong>Staff Supervisor:</strong> supervisor@cloudclean.store /
-                Supervisor@2026!Lead
-              </p>
-              <p>
-                <strong>Staff:</strong> staff@cloudclean.store /
-                Staff@2026!Strong
-              </p>
-              <p>
-                <strong>Customer:</strong> customer@cloudclean.store /
-                Customer@2026!Pass
-              </p>
-            </div>
-          </div>
-
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/30 rounded-2xl flex items-start gap-3">
