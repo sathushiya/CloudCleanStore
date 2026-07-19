@@ -156,7 +156,7 @@ function AppContent() {
     );
 
   // ── Customer pages ──────────────────────────────────────────────────────────
-  if (currentPage === "checkout")
+  if (currentPage === "checkout" && isAuthenticated)
     return (
       <>
         <Checkout
@@ -211,7 +211,7 @@ function AppContent() {
       <div className="min-h-screen">
         <Navbar {...navProps} />
         <div className="pt-20">
-          <Shop onBack={goBack} />
+          <Shop onBack={goBack} onRequireLogin={() => navigate("login")} />
         </div>
         <Footer />
         <ThemeToggle />
