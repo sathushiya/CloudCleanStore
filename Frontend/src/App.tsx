@@ -49,6 +49,16 @@ function AppContent() {
     }
   }, [isAuthenticated, user]);
 
+  // Guests can browse (Shop, product pages) freely, but order-related pages
+  // require an account. Redirect to login rather than silently failing on
+  // 401s from the cart/order API once they get there.
+  const GUEST_BLOCKED_PAGES: PageType[] = ["checkout", "orders", "addresses", "wishlist"];
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && GUEST_BLOCKED_PAGES.includes(currentPage)) {
+      navigate("login");
+    }
+  }, [isAuthenticated, isLoading, currentPage]);
+
   const handleLoginSuccess = () => {
     if (user?.role === "admin") navigate("admin");
     else if (user?.role === "staffsupervisor") navigate("staffsupervisor");
