@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react';
 import { X, Star, ShoppingCart, Plus, Minus, Check, Heart } from 'lucide-react';
 import { Product, ProductVariant } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { wishlistService } from '../services/wishlistService';
 import { ImageWithFallback } from './common/ImageWithFallback';
 
 interface ProductModalProps {
   product: Product;
   onClose: () => void;
+  onRequireLogin: () => void;
 }
 
-export default function ProductModal({ product, onClose }: ProductModalProps) {
+export default function ProductModal({ product, onClose, onRequireLogin }: ProductModalProps) {
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -21,7 +24,12 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   // Bug fix: previously this always started as `false`, so the heart never
   // showed as filled even for products already on the wishlist. Now it checks
   // the real saved state whenever a different product is opened.
+  // Guests never have a wishlist, so skip the (401-bound) request entirely.
   useEffect(() => {
+    if (!isAuthenticated) {
+      setWishlisted(false);
+      return;
+    }
     let cancelled = false;
     wishlistService.list()
       .then((items) => {
@@ -30,19 +38,27 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
         }
       })
       .catch(() => {
-        // Not logged in, or request failed -- default to unwishlisted, no error shown
-        // here since this is a background check, not a user-initiated action.
+        // Request failed -- default to unwishlisted, no error shown here
+        // since this is a background check, not a user-initiated action.
       });
     return () => { cancelled = true; };
-  }, [product.id]);
+  }, [product.id, isAuthenticated]);
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      onRequireLogin();
+      return;
+    }
     addToCart(product, selectedVariant, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleToggleWishlist = async () => {
+    if (!isAuthenticated) {
+      onRequireLogin();
+      return;
+    }
     setWishlistLoading(true);
     try {
       if (wishlisted) {
