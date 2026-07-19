@@ -10,9 +10,10 @@ import BackButton from '../components/common/BackButton';
 
 interface ShopProps {
   onBack: () => void;
+  onRequireLogin?: () => void;
 }
 
-export default function Shop({ onBack }: ShopProps) {
+export default function Shop({ onBack, onRequireLogin }: ShopProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [products, setProducts] = useState<Product[]>([]);
@@ -203,7 +204,7 @@ export default function Shop({ onBack }: ShopProps) {
       </div>
 
       {selectedProduct && (
-        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onRequireLogin={onRequireLogin} />
       )}
 
       <style>{`
