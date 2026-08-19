@@ -34,7 +34,7 @@ Backend/bootstrap/cache/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
-phpunit.result.cache
+.phpunit.result.cache
 
 # OS and editor files
 .DS_Store
