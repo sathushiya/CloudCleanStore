@@ -28,12 +28,13 @@ export interface Order {
 export const orderService = {
   // ─── Customer ───────────────────────────────────────────────────────────────
 
-  async checkout(deliveryAddress: string) {
-    const { data } = await api.post('/customer/orders/checkout', {
-      delivery_address: deliveryAddress,
-    });
-    return data.data as Order;
-  },
+  async checkout(deliveryAddress: string, paymentMethod: 'cash' | 'bank_transfer' = 'cash') {
+  const { data } = await api.post('/customer/orders/checkout', {
+    delivery_address: deliveryAddress,
+    payment_method: paymentMethod,
+  });
+  return data.data as Order;
+},
 
   async myOrders() {
     const { data } = await api.get('/customer/orders');
