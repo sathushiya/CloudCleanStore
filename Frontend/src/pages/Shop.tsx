@@ -24,12 +24,28 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
 
   // Fetch the full unfiltered catalog once, purely to compute real per-category counts
   useEffect(() => {
-    let cancelled = false;
-    productService.list({}).then((paginated) => {
-      if (!cancelled) setAllProducts(paginated.data.map(toFrontendProduct));
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
+  let cancelled = false;
+
+  async function loadProducts() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const paginated = await productService.list(
+        selectedCategory === 'all' ? {} : { category: selectedCategory }
+      );
+      if (!cancelled) {
+        setProducts(paginated.data.map(toFrontendProduct));
+      }
+    } catch (err) {
+      if (!cancelled) setError('Could not load products. Please try again.');
+    } finally {
+      if (!cancelled) setIsLoading(false);
+    }
+  }
+
+  loadProducts();
+  return () => { cancelled = true; };
+}, [selectedCategory]);
 
   const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     acc[cat.id] = allProducts.filter((p) => p.category === cat.id).length;
