@@ -228,7 +228,7 @@ export default function NotificationsCenter() {
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{notif.message}</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className={`px-2 py-0.5 rounded-full text-xs border ${getPriorityColor(notif.priority)}`}>
                       {notif.priority}
                     </span>

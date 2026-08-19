@@ -60,7 +60,7 @@ export default function Brands({ onNavigateToShop }: BrandsProps = {}) {
             {brands.map((brand, index) => (
               <div
                 key={brand.id}
-                className="flex-shrink-0 w-64 bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 p-6 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all hover:shadow-lg"
+                className="shrink-0 w-64 bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 p-6 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all hover:shadow-lg"
               >
                 {brand.logo ? (
                   <img
@@ -70,7 +70,7 @@ export default function Brands({ onNavigateToShop }: BrandsProps = {}) {
                   />
                 ) : (
                   <div
-                    className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${FALLBACK_COLORS[index % FALLBACK_COLORS.length]} flex items-center justify-center mb-4`}
+                    className={`w-20 h-20 rounded-2xl bg-linear-to-br ${FALLBACK_COLORS[index % FALLBACK_COLORS.length]} flex items-center justify-center mb-4`}
                   >
                     <span className="text-white font-bold text-xl">
                       {brand.name.slice(0, 2).toUpperCase()}

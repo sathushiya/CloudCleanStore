@@ -83,7 +83,7 @@ export default function Footer() {
         {/* Contact Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8 border-t border-b border-gray-200 dark:border-purple-700/20 mb-8">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center shrink-0">
               <Phone className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
@@ -93,7 +93,7 @@ export default function Footer() {
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center shrink-0">
               <Mail className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
@@ -103,7 +103,7 @@ export default function Footer() {
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center shrink-0">
               <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>

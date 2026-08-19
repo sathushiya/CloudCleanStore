@@ -76,7 +76,7 @@ export default function InventoryView() {
       {/* Low Stock Alert */}
       {lowStockProducts.length > 0 && (
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/30 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
           <div>
             <h3 className="font-semibold text-orange-900 dark:text-orange-300">Low Stock Alert</h3>
             <p className="text-sm text-orange-700 dark:text-orange-400">

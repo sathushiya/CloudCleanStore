@@ -63,7 +63,7 @@ export default function CartModal({ onClose, onCheckout }: CartModalProps) {
                   className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl"
                 >
                   {/* Product Image */}
-                  <div className="w-20 h-20 flex-shrink-0 bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
+                  <div className="w-20 h-20 shrink-0 bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
                     <ImageWithFallback
                       src={item.product.image}
                       alt={item.product.name}
