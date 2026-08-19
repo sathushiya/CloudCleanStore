@@ -24,8 +24,8 @@ import {
   Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { notifications } from '../data/admin';
 import profileService from '../services/profileService';
+import notificationService, { AdminNotification } from '../services/notificationService';
 import { useAdminProducts } from '../hooks/queries/useProducts';
 import { useStaffList } from '../hooks/queries/useStaff'; // import staff query hook
 import { useStaffOrders } from '../hooks/queries/useOrders';
@@ -48,7 +48,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificationsList, setNotificationsList] = useState(notifications);
+  const [notificationsList, setNotificationsList] = useState<AdminNotification[]>([]);
+
+  useEffect(() => {
+    notificationService.list().then(setNotificationsList).catch(() => {});
+  }, []);
 
   // ── Settings tab: account info, password, notification prefs ──────────────
   const [accountName, setAccountName] = useState(user?.name ?? '');
@@ -174,10 +178,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const activeStaff = staffMembers.filter((s: StaffAccount) => s.is_active).length;
   const pendingOrders = orders.filter((o) => o.status === 'pending').length;
   const assignedOrders = orders.filter((o) => o.status === 'processing' || o.status === 'out_for_delivery').length;
-  // NOTE: Notifications still has no real backend (no notifications table/API
-  // exists yet). Left as static/local for now -- this is next in line for
-  // Phase 6, not faked as "real" here.
-  const unreadNotifications = notifications.filter((n) => !n.read).length;
+  const unreadNotifications = notificationsList.filter((n) => !n.read_at).length;
   const lowStockProducts = products.filter((p) => p.variants.some((v) => v.stock < 10)).length;
 
   const totalRevenue = orders
@@ -363,11 +364,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
                   <h3 className="text-xl font-bold mb-4">Recent Notifications</h3>
                   <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+                    {notificationsList.length === 0 && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">No notifications yet.</p>
+                    )}
                     {notificationsList.slice(0, 20).map((notif) => (
                       <div
                         key={notif.id}
                         className={`p-4 rounded-xl border ${
-                          notif.read
+                          notif.read_at
                             ? 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700'
                             : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700'
                         }`}
@@ -378,9 +382,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             {notif.priority === 'high' && (
                               <AlertCircle className="w-4 h-4 text-red-500" />
                             )}
-                            {!notif.read && (
+                            {!notif.read_at && (
                               <button
-                                onClick={() => {
+                                onClick={async () => {
+                                  await notificationService.markRead(notif.id);
                                   setNotificationsList(notificationsList.filter(n => n.id !== notif.id));
                                 }}
                                 className="text-xs px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
@@ -392,7 +397,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </div>
                         <p className="text-xs text-gray-600 dark:text-gray-400">{notif.message}</p>
                         <div className="text-xs text-gray-500 mt-2">
-                          {new Date(notif.timestamp).toLocaleTimeString()}
+                          {new Date(notif.created_at).toLocaleTimeString()}
                         </div>
                       </div>
                     ))}

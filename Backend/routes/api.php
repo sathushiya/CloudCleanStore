@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Customer\AddressController;
 use App\Http\Controllers\Api\Customer\ProfileController;
 use App\Http\Controllers\Api\Customer\WishlistController;
 use App\Http\Controllers\Api\Admin\StaffController;
+use App\Http\Controllers\Api\Admin\NotificationController;
 use App\Http\Controllers\Api\Catalog\CartController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/staff', [StaffController::class, 'store']);
         Route::put('/staff/{staff}', [StaffController::class, 'update']);
         Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+        Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+        Route::delete('/notifications', [NotificationController::class, 'clearAll']);
     });
 
     Route::middleware('role:admin,staff,staffsupervisor')->prefix('staff')->group(function () {

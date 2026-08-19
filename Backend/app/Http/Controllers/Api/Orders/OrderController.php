@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Orders;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\CheckoutRequest;
 use App\Models\CartItem;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\JsonResponse;
@@ -87,6 +88,13 @@ class OrderController extends Controller
         });
 
         $order->load(['items', 'assignedTo', 'user']);
+
+        Notification::log(
+            'order',
+            'New Order Received',
+            "Order #{$order->order_number} needs delivery assignment.",
+            'high',
+        );
 
         return response()->json([
             'success' => true,
@@ -185,6 +193,13 @@ class OrderController extends Controller
             'payment_proof_url' => $request->payment_proof_url,
             'payment_status' => 'submitted',
         ]);
+
+        Notification::log(
+            'order',
+            'Payment Submitted',
+            "Customer submitted a bank transfer reference for order #{$order->order_number}. Awaiting verification.",
+            'medium',
+        );
 
         return response()->json(['success' => true, 'message' => 'Payment details submitted for verification.', 'data' => $order]);
     }

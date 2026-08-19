@@ -1,44 +1,70 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, Search, CheckCircle, Package, Users, AlertCircle, Settings, Trash2, Check } from 'lucide-react';
-import { Notification, notifications as initialNotifications } from '../../data/admin';
+import notificationService, { AdminNotification } from '../../services/notificationService';
 
 export default function NotificationsCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<'all' | Notification['type']>('all');
+  const [selectedType, setSelectedType] = useState<'all' | AdminNotification['type']>('all');
   const [selectedPriority, setSelectedPriority] = useState<'all' | 'low' | 'medium' | 'high'>('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
+  useEffect(() => {
+    notificationService.list()
+      .then(setNotifications)
+      .catch(() => setError('Failed to load notifications.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredNotifications = notifications.filter((notif) => {
     const matchesSearch = notif.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          notif.message.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || notif.type === selectedType;
     const matchesPriority = selectedPriority === 'all' || notif.priority === selectedPriority;
-    const matchesRead = !showUnreadOnly || !notif.read;
+    const matchesRead = !showUnreadOnly || !notif.read_at;
     return matchesSearch && matchesType && matchesPriority && matchesRead;
   });
 
-  const handleMarkAsRead = (id: string) => {
-    // Remove the notification immediately when marked as read
-    setNotifications(notifications.filter((n) => n.id !== id));
-  };
-
-  const handleMarkAllAsRead = () => {
-    // Remove all unread notifications immediately
-    setNotifications(notifications.filter((n) => n.read));
-  };
-
-  const handleDelete = (id: string) => {
-    setNotifications(notifications.filter((n) => n.id !== id));
-  };
-
-  const handleClearAll = () => {
-    if (confirm('Are you sure you want to clear all notifications?')) {
-      setNotifications([]);
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await notificationService.markRead(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch {
+      setError('Failed to mark notification as read.');
     }
   };
 
-  const getTypeIcon = (type: Notification['type']) => {
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllRead();
+      setNotifications((prev) => prev.filter((n) => n.read_at));
+    } catch {
+      setError('Failed to mark all notifications as read.');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await notificationService.remove(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch {
+      setError('Failed to delete notification.');
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm('Are you sure you want to clear all notifications?')) return;
+    try {
+      await notificationService.clearAll();
+      setNotifications([]);
+    } catch {
+      setError('Failed to clear notifications.');
+    }
+  };
+
+  const getTypeIcon = (type: AdminNotification['type']) => {
     switch (type) {
       case 'order': return <Package className="w-5 h-5" />;
       case 'staff': return <Users className="w-5 h-5" />;
@@ -48,7 +74,7 @@ export default function NotificationsCenter() {
     }
   };
 
-  const getTypeColor = (type: Notification['type']) => {
+  const getTypeColor = (type: AdminNotification['type']) => {
     switch (type) {
       case 'order': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'staff': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
@@ -82,7 +108,15 @@ export default function NotificationsCenter() {
     return date.toLocaleDateString();
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read_at).length;
+
+  if (loading) {
+    return (
+      <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+        Loading notifications...
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -116,6 +150,13 @@ export default function NotificationsCenter() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-400 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="glass-effect p-4 rounded-xl border border-white/10">
@@ -151,7 +192,7 @@ export default function NotificationsCenter() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-green-400">
-                {notifications.filter((n) => n.read).length}
+                {notifications.filter((n) => n.read_at).length}
               </div>
               <div className="text-sm text-gray-400">Read</div>
             </div>
@@ -208,7 +249,7 @@ export default function NotificationsCenter() {
           <div
             key={notif.id}
             className={`glass-effect p-4 rounded-xl border transition-all ${
-              notif.read
+              notif.read_at
                 ? 'border-white/10 opacity-60'
                 : 'border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
             }`}
@@ -222,7 +263,7 @@ export default function NotificationsCenter() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900 dark:text-white">{notif.title}</h3>
-                      {!notif.read && (
+                      {!notif.read_at && (
                         <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
                       )}
                     </div>
@@ -239,10 +280,10 @@ export default function NotificationsCenter() {
                     <span className={`px-2 py-0.5 rounded-full text-xs border ${getTypeColor(notif.type)}`}>
                       {notif.type}
                     </span>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">{formatTimestamp(notif.timestamp)}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">{formatTimestamp(notif.created_at)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!notif.read && (
+                    {!notif.read_at && (
                       <button
                         onClick={() => handleMarkAsRead(notif.id)}
                         className="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-all text-xs flex items-center gap-1"
