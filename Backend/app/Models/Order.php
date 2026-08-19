@@ -13,7 +13,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'order_number', 'total', 'status', 'delivery_address', 'assigned_to'];
+    protected $fillable = ['user_id', 'order_number', 'total', 'status', 'delivery_address', 'assigned_to','payment_method', 'payment_status', 'payment_reference', 'payment_proof_url'];
     protected $casts = ['total' => 'float'];
 
     public function user(): BelongsTo
