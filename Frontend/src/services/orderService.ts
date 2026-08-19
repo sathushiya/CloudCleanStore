@@ -17,6 +17,9 @@ export interface Order {
   status: OrderStatus;
   delivery_address: string;
   assigned_to?: number | null;
+  payment_method?: 'cash' | 'bank_transfer';
+  payment_status?: 'pending' | 'submitted' | 'confirmed' | 'rejected';
+  payment_reference?: string | null;
   items: OrderItem[];
   user?: { id: number; name: string; email: string };
   created_at: string;
@@ -54,8 +57,21 @@ export const orderService = {
     return data.data as Order;
   },
 
-  async assignToSelf(orderId: number) {
+    async assignToSelf(orderId: number) {
     const { data } = await api.patch(`/staff/orders/${orderId}/assign`);
+    return data.data as Order;
+  },
+
+  async submitPayment(orderId: number, paymentReference: string, proofUrl?: string) {
+    const { data } = await api.post(`/customer/orders/${orderId}/submit-payment`, {
+      payment_reference: paymentReference,
+      payment_proof_url: proofUrl,
+    });
+    return data.data as Order;
+  },
+
+  async confirmPayment(orderId: number, approved: boolean) {
+    const { data } = await api.patch(`/staff/orders/${orderId}/confirm-payment`, { approved });
     return data.data as Order;
   },
 };
