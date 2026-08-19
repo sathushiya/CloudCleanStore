@@ -74,7 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:customer')->prefix('customer')->group(function () {
-        Route::get('/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'show']);
+            Route::get('/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'show']);
         Route::put('/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'update']);
         Route::put('/profile/preferences', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'updatePreferences']);
 

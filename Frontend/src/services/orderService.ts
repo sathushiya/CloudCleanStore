@@ -48,20 +48,22 @@ export const orderService = {
 
   // ─── Staff / Delivery (equal-tier — both can manage any order) ─────────────
 
-  async staffList(status?: OrderStatus) {
-    const { data } = await api.get('/staff/orders', { params: status ? { status } : {} });
+  async staffList(status?: OrderStatus, paymentStatus?: string) {
+    const { data } = await api.get('/staff/orders', {
+    params: { ...(status ? { status } : {}), ...(paymentStatus ? { payment_status: paymentStatus } : {}) },
+  });
     return data.data as Order[];
-  },
+},
 
   async updateStatus(orderId: number, status: OrderStatus) {
     const { data } = await api.patch(`/staff/orders/${orderId}/status`, { status });
     return data.data as Order;
   },
 
-    async assignToSelf(orderId: number) {
-    const { data } = await api.patch(`/staff/orders/${orderId}/assign`);
+  async assignToSelf(orderId: number, staffId?: number) {
+    const { data } = await api.patch(`/staff/orders/${orderId}/assign`, staffId ? { staff_id: staffId } : {});
     return data.data as Order;
-  },
+},
 
   async submitPayment(orderId: number, paymentReference: string, proofUrl?: string) {
     const { data } = await api.post(`/customer/orders/${orderId}/submit-payment`, {
