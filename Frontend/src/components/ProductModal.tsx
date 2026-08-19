@@ -59,6 +59,10 @@ export default function ProductModal({ product, onClose, onRequireLogin }: Produ
       onRequireLogin();
       return;
     }
+    if (!isAuthenticated) {
+      onRequireLogin();
+      return;
+    }
     setWishlistLoading(true);
     try {
       if (wishlisted) {
