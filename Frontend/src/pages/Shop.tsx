@@ -30,9 +30,11 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const paginated = await productService.list(
-        selectedCategory === 'all' ? {} : { category: selectedCategory }
-      );
+      const filters: { category?: string; brand_id?: number } = {};
+      if (selectedCategory !== 'all') filters.category = selectedCategory;
+      if (selectedBrandFilter) filters.brand_id = selectedBrandFilter.id;
+
+      const paginated = await productService.list(filters);
       if (!cancelled) {
         setProducts(paginated.data.map(toFrontendProduct));
       }
@@ -45,7 +47,7 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
 
   loadProducts();
   return () => { cancelled = true; };
-}, [selectedCategory]);
+}, [selectedCategory, selectedBrandFilter]);
 
   const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     acc[cat.id] = allProducts.filter((p) => p.category === cat.id).length;
