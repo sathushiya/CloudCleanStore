@@ -70,7 +70,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:customer')->prefix('customer')->group(function () {
-        Route::get('/profile', fn() => response()->json(['message' => 'Customer profile — Phase 2']));
+        Route::get('/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'show']);
+        Route::put('/profile', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'update']);
+        Route::put('/profile/preferences', [\App\Http\Controllers\Api\Customer\ProfileController::class, 'updatePreferences']);
 
         Route::get('/cart', [CartController::class, 'index']);
         Route::post('/cart', [CartController::class, 'store']);
