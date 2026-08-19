@@ -147,4 +147,35 @@ class OrderController extends Controller
 
         return $orderNumber;
     }
+
+        // POST /api/customer/orders/{order}/submit-payment — customer submits bank transfer proof
+    public function submitPayment(Request $request, Order $order): JsonResponse
+    {
+        abort_if($order->user_id !== $request->user()->id, 403, 'This order does not belong to you.');
+
+        $request->validate([
+            'payment_reference' => ['required', 'string', 'max:255'],
+            'payment_proof_url' => ['nullable', 'string'],
+        ]);
+
+        $order->update([
+            'payment_reference' => $request->payment_reference,
+            'payment_proof_url' => $request->payment_proof_url,
+            'payment_status' => 'submitted',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Payment details submitted for verification.', 'data' => $order]);
+    }
+
+    // PATCH /api/staff/orders/{order}/confirm-payment
+    public function confirmPayment(Request $request, Order $order): JsonResponse
+    {
+        $request->validate(['approved' => ['required', 'boolean']]);
+
+        $order->update([
+            'payment_status' => $request->boolean('approved') ? 'confirmed' : 'rejected',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Payment status updated.', 'data' => $order]);
+    }
 }
