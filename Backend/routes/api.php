@@ -92,5 +92,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/wishlist', [WishlistController::class, 'index']);
         Route::post('/wishlist', [WishlistController::class, 'store']);
         Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
+
+        Route::post('/orders/checkout', [OrderController::class, 'checkout']);
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/orders/{order}', [OrderController::class, 'show']);
+        Route::post('/orders/{order}/submit-payment', [OrderController::class, 'submitPayment']);
     });
 });
