@@ -67,6 +67,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [OrderController::class, 'staffIndex']);
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
         Route::patch('/orders/{order}/assign', [OrderController::class, 'assignToSelf']);
+        Route::get('/orders', [OrderController::class, 'staffIndex']);
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+        Route::patch('/orders/{order}/assign', [OrderController::class, 'assignToSelf']);
+        Route::patch('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment']);
     });
 
     Route::middleware('role:customer')->prefix('customer')->group(function () {
