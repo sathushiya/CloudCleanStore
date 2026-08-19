@@ -11,8 +11,8 @@ class BrandController extends Controller
 {
     public function index(): JsonResponse
     {
-        $brands = Brand::where('is_active', true)->orderBy('name')->get();
-        return response()->json(['success' => true, 'data' => $brands]);
+    $brands = Brand::where('is_active', true)->withCount('products')->orderBy('name')->get();
+    return response()->json(['success' => true, 'data' => $brands]);
     }
 
     public function adminIndex(): JsonResponse
