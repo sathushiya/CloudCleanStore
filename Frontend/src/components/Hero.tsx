@@ -15,7 +15,7 @@ export default function Hero({ onNavigateToLogin, onNavigateToShop, isAuthentica
   return (
     <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden" id="home">
       {/* Purple gradient background with glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e]" />
+      <div className="absolute inset-0 bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e]" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full blur-[128px] opacity-20 dark:opacity-30" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600 rounded-full blur-[128px] opacity-20 dark:opacity-30" />
 
@@ -28,7 +28,7 @@ export default function Hero({ onNavigateToLogin, onNavigateToShop, isAuthentica
               Premium Cleaning Products
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-purple-900 dark:from-purple-400 dark:to-purple-200 bg-clip-text text-transparent leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-linear-to-r from-purple-600 to-purple-900 dark:from-purple-400 dark:to-purple-200 bg-clip-text text-transparent leading-tight">
               Fast Home Cleaning Product Delivery
             </h1>
 
@@ -39,7 +39,7 @@ export default function Hero({ onNavigateToLogin, onNavigateToShop, isAuthentica
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <button
                 onClick={handleActionClick}
-                className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-full font-medium hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 flex items-center justify-center gap-2"
+                className="group px-8 py-4 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-full font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 flex items-center justify-center gap-2"
               >
                 Order Now
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -73,7 +73,7 @@ export default function Hero({ onNavigateToLogin, onNavigateToShop, isAuthentica
           <div className="relative h-[400px] md:h-[500px] hidden lg:block">
             {/* Main delivery card */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 backdrop-blur-xl bg-white/70 dark:bg-white/10 rounded-3xl p-6 border border-white/20 dark:border-purple-700/30 shadow-2xl animate-float">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center mb-4 shadow-[var(--glow-purple)]">
+              <div className="w-16 h-16 bg-linear-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center mb-4 shadow-(--glow-purple)">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-2">Lightning Fast</h3>

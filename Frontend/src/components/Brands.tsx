@@ -44,8 +44,8 @@ export default function Brands() {
         {/* Scrollable brands */}
         <div className="relative">
           {/* Gradient overlays for scroll indication */}
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-[#0f0a1e] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-[#0f0a1e] to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-white dark:from-[#0f0a1e] to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-white dark:from-[#0f0a1e] to-transparent z-10 pointer-events-none" />
 
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
             {brands.map((brand, index) => (
@@ -54,7 +54,7 @@ export default function Brands() {
                 className="group flex-shrink-0 w-64 backdrop-blur-xl bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2 cursor-pointer snap-center"
               >
                 {/* Brand logo */}
-                <div className={`w-20 h-20 bg-gradient-to-br ${gradients[index % gradients.length]} rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-20 h-20 bg-linear-to-br ${gradients[index % gradients.length]} rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                   <span className="text-2xl font-bold text-white">{brand.logo}</span>
                 </div>
 

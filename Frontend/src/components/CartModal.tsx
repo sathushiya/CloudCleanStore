@@ -48,7 +48,7 @@ export default function CartModal({ onClose, onCheckout }: CartModalProps) {
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-[var(--glow-purple)] transition-all"
+              className="px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple) transition-all"
             >
               Continue Shopping
             </button>
@@ -154,7 +154,7 @@ export default function CartModal({ onClose, onCheckout }: CartModalProps) {
 
               <button
                 onClick={handleCheckout}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 flex items-center justify-center gap-2"
               >
                 Proceed to Checkout
                 <ArrowRight className="w-5 h-5" />

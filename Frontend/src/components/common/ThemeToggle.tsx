@@ -30,7 +30,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="fixed bottom-8 right-8 z-40 w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-full shadow-lg shadow-purple-500/50 hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-110 flex items-center justify-center"
+      className="fixed bottom-8 right-8 z-40 w-14 h-14 bg-linear-to-br from-purple-600 to-purple-700 text-white rounded-full shadow-lg shadow-purple-500/50 hover:shadow-(--glow-purple-strong) transition-all hover:scale-110 flex items-center justify-center"
       aria-label="Toggle theme"
     >
       {darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}

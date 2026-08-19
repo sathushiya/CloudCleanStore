@@ -155,7 +155,7 @@ export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthen
                   </div>
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-full flex items-center justify-center hover:shadow-[var(--glow-purple)] transition-all hover:scale-110"
+                    className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 text-white rounded-full flex items-center justify-center hover:shadow-(--glow-purple) transition-all hover:scale-110"
                   >
                     <ShoppingCart className="w-5 h-5" />
                   </button>
@@ -169,7 +169,7 @@ export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthen
         <div className="text-center mt-12">
           <button
             onClick={handleViewAllClick}
-            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-full font-medium hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105"
+            className="px-8 py-4 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-full font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105"
           >
             View All Products
           </button>

@@ -112,7 +112,7 @@ export default function Features() {
                 <div key={index} className="relative">
                   {/* Connector line */}
                   {index < deliverySteps.length - 1 && (
-                    <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-purple-300 to-purple-100 dark:from-purple-700 dark:to-purple-900" />
+                    <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-linear-to-r from-purple-300 to-purple-100 dark:from-purple-700 dark:to-purple-900" />
                   )}
 
                   <div className="relative backdrop-blur-xl bg-white dark:bg-white/5 rounded-3xl p-8 border border-gray-200 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all duration-300 hover:shadow-xl">
@@ -122,7 +122,7 @@ export default function Features() {
                     </div>
 
                     {/* Icon */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                    <div className="w-16 h-16 bg-linear-to-br from-purple-600 to-purple-700 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                       <Icon className="w-8 h-8 text-white" />
                     </div>
 
@@ -159,7 +159,7 @@ export default function Features() {
                   key={index}
                   className="backdrop-blur-xl bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                 >
-                  <div className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-4`}>
+                  <div className={`w-14 h-14 bg-linear-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-4`}>
                     <Icon className="w-7 h-7 text-white" />
                   </div>
                   <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
@@ -206,7 +206,7 @@ export default function Features() {
                 </p>
 
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 bg-gradient-to-br ${testimonial.gradient} rounded-full flex items-center justify-center text-white font-bold`}>
+                  <div className={`w-12 h-12 bg-linear-to-br ${testimonial.gradient} rounded-full flex items-center justify-center text-white font-bold`}>
                     {testimonial.avatar}
                   </div>
                   <div>

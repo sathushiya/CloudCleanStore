@@ -28,7 +28,7 @@ export default function PerformanceAnalytics() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold bg-linear-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
           Staff Performance
         </h2>
         <p className="text-sm text-gray-400 mt-1">View staff task completion</p>
@@ -75,7 +75,7 @@ export default function PerformanceAnalytics() {
                   >
                     {idx + 1}
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold">
                     {staff.avatar}
                   </div>
                   <div>

@@ -185,7 +185,7 @@ export default function OrdersDelivery() {
                       <button
                         onClick={() => handleAdvanceStatus(order)}
                         disabled={updatingId === order.id}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple)] transition-all disabled:opacity-50"
+                        className="px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple) transition-all disabled:opacity-50"
                       >
                         {updatingId === order.id
                           ? 'Updating...'

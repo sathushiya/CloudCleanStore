@@ -52,7 +52,7 @@ export default function CustomerWishlist({ onBack }: CustomerWishlistProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] py-8">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <BackButton onBack={onBack} />
@@ -94,7 +94,7 @@ export default function CustomerWishlist({ onBack }: CustomerWishlistProps) {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center gap-2"
+                      className="px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all flex items-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       Add to Cart

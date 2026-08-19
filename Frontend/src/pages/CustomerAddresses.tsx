@@ -95,7 +95,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] py-8">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <BackButton onBack={onBack} />
@@ -239,7 +239,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
                 <button
                   onClick={handleSave}
                   disabled={saving || !formData.label || !formData.street || !formData.city}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-[var(--glow-purple-strong)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-(--glow-purple-strong) transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Save className="w-5 h-5" />
                   {saving ? 'Saving...' : 'Save Address'}

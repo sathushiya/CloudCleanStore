@@ -3,7 +3,7 @@ import Logo from '../common/Logo';
 
 export default function Footer() {
   return (
-    <footer id="footer" className="relative bg-gradient-to-br from-gray-50 to-purple-50 dark:from-[#0f0a1e] dark:to-[#1a1425] border-t border-gray-200 dark:border-purple-700/20">
+    <footer id="footer" className="relative bg-linear-to-br from-gray-50 to-purple-50 dark:from-[#0f0a1e] dark:to-[#1a1425] border-t border-gray-200 dark:border-purple-700/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
           {/* Company Info */}
@@ -72,7 +72,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-[var(--glow-purple)] transition-all text-sm"
+                className="w-full px-4 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple) transition-all text-sm"
               >
                 Subscribe
               </button>

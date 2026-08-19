@@ -41,7 +41,7 @@ export default function OrderNotificationPopup({
       {/* Notification Card */}
       <div className="relative bg-white dark:bg-[#1a1425] rounded-3xl shadow-2xl border-2 border-purple-500 max-w-md w-full mx-4 overflow-hidden animate-slideUp">
         {/* Header with Pulsing Icon */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 relative overflow-hidden">
+        <div className="bg-linear-to-r from-purple-600 to-purple-700 p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
 
@@ -154,7 +154,7 @@ export default function OrderNotificationPopup({
               </button>
               <button
                 onClick={handleAccept}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 flex items-center justify-center gap-2"
               >
                 <CheckCircle className="w-5 h-5" />
                 Accept Order

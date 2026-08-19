@@ -85,7 +85,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
 
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
@@ -101,7 +101,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
 
   if (waiting) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
           <div className="w-24 h-24 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <Clock className="w-12 h-12 text-purple-600 dark:text-purple-400 animate-pulse" />
@@ -121,7 +121,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -134,7 +134,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
         </div>
 
         <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 overflow-hidden mb-4">
-          <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-5 flex items-center gap-3">
+          <div className="bg-linear-to-r from-purple-600 to-purple-800 p-5 flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
               <Building2 className="w-5 h-5 text-white" />
             </div>
@@ -200,7 +200,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
           <button
             onClick={handleTransferDone}
             disabled={submitting}
-            className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            className="flex-1 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
             {submitting ? 'Submitting...' : "I've Completed the Transfer"}
           </button>

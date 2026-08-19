@@ -82,10 +82,10 @@ export default function Categories({ onCategoryClick, onNavigateToSignup, isAuth
                 className="group relative backdrop-blur-xl bg-white/60 dark:bg-white/5 rounded-3xl p-8 border border-white/20 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2 cursor-pointer overflow-hidden"
               >
                 {/* Background gradient glow */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                <div className={`absolute inset-0 bg-linear-to-br ${category.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
 
                 {/* Icon */}
-                <div className={`relative w-16 h-16 bg-gradient-to-br ${category.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`relative w-16 h-16 bg-linear-to-br ${category.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-8 h-8 text-white" />
                 </div>
 
