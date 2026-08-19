@@ -10,7 +10,7 @@ import BackButton from '../components/common/BackButton';
 
 interface ShopProps {
   onBack: () => void;
-  onRequireLogin?: () => void;
+  onRequireLogin: () => void;
 }
 
 export default function Shop({ onBack, onRequireLogin }: ShopProps) {

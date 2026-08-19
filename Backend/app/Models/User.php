@@ -18,6 +18,8 @@ class User extends Authenticatable
         'email',
         'password',
         'phone_number',
+        'phone_verified_at',
+        'has_whatsapp',
         'role',
         'email_verified_at',
         'is_active',
@@ -32,6 +34,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'has_whatsapp' => 'boolean',
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
