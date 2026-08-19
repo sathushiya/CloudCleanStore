@@ -97,10 +97,16 @@ class OrderController extends Controller
 
     public function staffIndex(Request $request): JsonResponse
     {
-        $orders = Order::with(['user', 'items', 'assignedTo'])
-            ->latest()
-            ->get();
+        $query = Order::with(['items', 'user', 'assignedTo']);
 
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->string('payment_status'));
+        }
+
+        $orders = $query->orderByDesc('created_at')->get();
         return response()->json(['success' => true, 'data' => $orders]);
     }
 
