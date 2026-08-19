@@ -262,7 +262,7 @@ function AppContent() {
         onNavigateToShop={handleNavigateToShop}
         isAuthenticated={isAuthenticated}
       />
-      <Brands />
+      <Brands onNavigateToShop={handleNavigateToShop} />
       <Features />
       <Footer />
       <ThemeToggle />
