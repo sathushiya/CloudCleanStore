@@ -17,7 +17,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { productService, toFrontendProduct, Product } from "../services/productService";
+import { productService, toFrontendProduct } from "../services/productService";
+import type { Product } from "../data/products";
 import { orderService, Order } from "../services/orderService";
 import { staffService, StaffAccount } from "../services/staffService";
 import { profileService } from "../services/profileService";
