@@ -39,7 +39,6 @@ function AppContent() {
   const { isAuthenticated, user, isLoading, logout } = useAuth();
   const { currentPage, navigate, goBack, reset } = useNavigation("home");
   const [cartModalOpen, setCartModalOpen] = useState(false);
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState<{ id: number; name: string } | null>(null);
 
   // Auto-redirect staff/admin/staffsupervisor roles on login
   useEffect(() => {

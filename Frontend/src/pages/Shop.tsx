@@ -20,6 +20,7 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
   const [allProducts, setAllProducts] = useState<Product[]>([]); // unfiltered, used only for real category counts
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<{ id: number; name: string } | null>(null);
 
   // Fetch the full unfiltered catalog once, purely to compute real per-category counts
   useEffect(() => {
