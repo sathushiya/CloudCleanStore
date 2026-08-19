@@ -38,12 +38,20 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
 
   // Check for category filter from sessionStorage on mount
   useEffect(() => {
-    const categoryFromSession = sessionStorage.getItem('selectedCategory');
-    if (categoryFromSession) {
-      setSelectedCategory(categoryFromSession);
-      sessionStorage.removeItem('selectedCategory');
-    }
-  }, []);
+  const categoryFromSession = sessionStorage.getItem('selectedCategory');
+  if (categoryFromSession) {
+    setSelectedCategory(categoryFromSession);
+    sessionStorage.removeItem('selectedCategory');
+  }
+
+  const brandIdFromSession = sessionStorage.getItem('selectedBrandId');
+  const brandNameFromSession = sessionStorage.getItem('selectedBrandName');
+  if (brandIdFromSession) {
+    setSelectedBrandFilter({ id: Number(brandIdFromSession), name: brandNameFromSession || '' });
+    sessionStorage.removeItem('selectedBrandId');
+    sessionStorage.removeItem('selectedBrandName');
+  }
+}, []);
 
   // Fetch products whenever the category filter changes
   useEffect(() => {
