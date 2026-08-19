@@ -40,5 +40,15 @@ return [
     'api_key' => env('CLOUDINARY_API_KEY'),
     'api_secret' => env('CLOUDINARY_API_SECRET'),
 ],
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'),
+    ],
+
+    'green_api' => [
+        'instance_id' => env('GREEN_API_INSTANCE_ID'),
+        'token' => env('GREEN_API_TOKEN'),
+    ],
 
 ];

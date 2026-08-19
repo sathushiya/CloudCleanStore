@@ -73,8 +73,68 @@ class OtpService
     /**
      * Send OTP via email
      */
+        /**
+     * Send OTP via email
+     */
     public function sendEmail(string $email, string $otp, string $type): void
     {
         Mail::to($email)->send(new OtpMail($otp, $type));
+    }
+
+    /**
+     * Generate a secure 6-digit OTP for a phone number
+     */
+    public function generateForPhone(string $phone, string $type): string
+    {
+        OtpVerification::where('phone', $phone)
+            ->where('type', $type)
+            ->where('is_used', false)
+            ->delete();
+
+        $otp = str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        OtpVerification::create([
+            'phone' => $phone,
+            'otp' => $otp,
+            'type' => $type,
+            'is_used' => false,
+            'expires_at' => Carbon::now()->addMinutes(
+                (int) env('OTP_EXPIRY_MINUTES', 10)
+            ),
+        ]);
+
+        return $otp;
+    }
+
+    /**
+     * Verify OTP for a phone number
+     * Returns: 'valid' | 'invalid' | 'expired' | 'used'
+     */
+    public function verifyForPhone(string $phone, string $otp, string $type): string
+    {
+        $record = OtpVerification::where('phone', $phone)
+            ->where('type', $type)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$record) {
+            return 'invalid';
+        }
+
+        if ($record->is_used) {
+            return 'used';
+        }
+
+        if ($record->isExpired()) {
+            return 'expired';
+        }
+
+        if ($record->otp !== $otp) {
+            return 'invalid';
+        }
+
+        $record->update(['is_used' => true]);
+
+        return 'valid';
     }
 }

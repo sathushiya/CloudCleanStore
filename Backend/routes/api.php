@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Customer\WishlistController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\StaffController;
+use App\Http\Controllers\Api\Auth\PhoneVerificationController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -31,6 +32,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+    });
+
+    Route::prefix('phone')->group(function () {
+        Route::post('/check-whatsapp', [PhoneVerificationController::class, 'checkWhatsapp']);
+        Route::post('/send-otp', [PhoneVerificationController::class, 'sendOtp']);
+        Route::post('/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
     });
 
     Route::middleware('admin')->prefix('admin')->group(function () {

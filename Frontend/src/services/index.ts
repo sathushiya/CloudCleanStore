@@ -7,3 +7,4 @@ export { default as uploadService } from './uploadService';
 export { default as addressService } from './addressService';
 export { default as wishlistService } from './wishlistService';
 export { default as staffService } from './staffService';
+export { default as phoneService } from './phoneService';
