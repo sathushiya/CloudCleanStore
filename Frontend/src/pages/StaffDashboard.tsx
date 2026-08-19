@@ -35,6 +35,7 @@ import {
   autoAssignDeliveryTask,
 } from "../data/admin";
 import OrderNotificationPopup from "../components/OrderNotificationPopup";
+import DeliveryMap from "../components/staff/DeliveryMap";
 
 interface StaffDashboardProps {
   onLogout: () => void;
@@ -1374,88 +1375,10 @@ function MapViewModal({
         </div>
 
         <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(95vh-120px)]">
-          {/* Enhanced Map Placeholder */}
-          <div className="relative h-100 bg-linear-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-purple-900/20 rounded-xl overflow-hidden border-2 border-purple-200 dark:border-purple-700/30 shadow-2xl">
-            {/* Street grid pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <pattern
-                    id="grid"
-                    width="40"
-                    height="40"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M 40 0 L 0 0 0 40"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="0.5"
-                    />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-              </svg>
-            </div>
-
-            {/* Route visualization */}
-            <svg className="absolute inset-0 w-full h-full">
-              <defs>
-                <linearGradient
-                  id="routeGradient"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
-                  <stop
-                    offset="0%"
-                    style={{ stopColor: "#8b5cf6", stopOpacity: 1 }}
-                  />
-                  <stop
-                    offset="100%"
-                    style={{ stopColor: "#06b6d4", stopOpacity: 1 }}
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 50 350 Q 200 300, 350 250 T 650 150"
-                stroke="url(#routeGradient)"
-                strokeWidth="4"
-                fill="none"
-                strokeDasharray="10,5"
-                className="animate-pulse"
-              />
-            </svg>
-
-            {/* Starting point marker */}
-            <div className="absolute left-12 bottom-12 flex flex-col items-center">
-              <div className="relative">
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white dark:border-gray-800 animate-pulse">
-                  <User className="w-6 h-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
-              </div>
-              <div className="mt-2 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg">
-                Your Location
-              </div>
-            </div>
-
-            {/* Destination marker */}
-            <div className="absolute right-12 top-12 flex flex-col items-center">
-              <div className="relative">
-                <div className="w-16 h-16 bg-linear-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-gray-800">
-                  <MapPin className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-400 rounded-full animate-ping"></div>
-              </div>
-              <div className="mt-2 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white text-sm font-bold rounded-full shadow-lg max-w-xs text-center">
-                Delivery Destination
-              </div>
-            </div>
-
-            {/* Distance and time overlay */}
-            <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          {/* Live delivery map, geocoded from the customer's address (OpenStreetMap) */}
+          <DeliveryMap address={task.customerAddress || task.address}>
+            {/* Estimated time overlay */}
+            <div className="absolute top-4 left-4">
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -1469,19 +1392,6 @@ function MapViewModal({
                     [],
                     { hour: "2-digit", minute: "2-digit" },
                   )}
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-xl border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2 mb-2">
-                  <Navigation className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span className="font-bold text-blue-600 dark:text-blue-400">
-                    Distance
-                  </span>
-                </div>
-                <div className="text-3xl font-bold">2.4 mi</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  via Main St
                 </div>
               </div>
             </div>
@@ -1498,7 +1408,7 @@ function MapViewModal({
                 </div>
               </div>
             </div>
-          </div>
+          </DeliveryMap>
 
           {/* Customer & Order Details */}
           <div className="grid md:grid-cols-3 gap-4">
