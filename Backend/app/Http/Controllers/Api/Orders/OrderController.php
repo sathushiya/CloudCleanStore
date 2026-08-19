@@ -127,14 +127,30 @@ class OrderController extends Controller
         ]);
     }
 
+    // Staff/delivery calling this without a body still just assigns to
+    // themselves (unchanged behavior for the existing "Assign to Me"
+    // button). Supervisors/admins can additionally pass staff_id to assign
+    // the order to a specific staff member instead of themselves -- used by
+    // SupervisorDashboard's "Awaiting Orders" manual assignment dropdown.
     public function assignToSelf(Request $request, Order $order): JsonResponse
     {
         $user = $request->user();
 
         abort_if(!$user->isStaff() && !$user->isAdmin(), 403, 'You cannot assign this order.');
 
+        $request->validate([
+            'staff_id' => ['sometimes', 'integer', 'exists:users,id'],
+        ]);
+
+        $assigneeId = $request->filled('staff_id') ? $request->integer('staff_id') : $user->id;
+
+        // Only a supervisor/admin may assign to someone other than themselves.
+        if ($assigneeId !== $user->id) {
+            abort_if(!$user->isAdmin() && !$user->isSupervisor(), 403, 'Only a supervisor or admin can assign orders to other staff members.');
+        }
+
         $order->update([
-            'assigned_to' => $user->id,
+            'assigned_to' => $assigneeId,
             'status' => 'processing',
         ]);
 
@@ -154,7 +170,7 @@ class OrderController extends Controller
         return $orderNumber;
     }
 
-        // POST /api/customer/orders/{order}/submit-payment — customer submits bank transfer proof
+    // POST /api/customer/orders/{order}/submit-payment — customer submits bank transfer proof
     public function submitPayment(Request $request, Order $order): JsonResponse
     {
         abort_if($order->user_id !== $request->user()->id, 403, 'This order does not belong to you.');
