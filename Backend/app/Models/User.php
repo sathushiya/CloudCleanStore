@@ -23,6 +23,9 @@ class User extends Authenticatable
         'role',
         'email_verified_at',
         'is_active',
+        'notify_push',
+        'notify_email',
+        'notify_sms',
     ];
 
     protected $hidden = [
@@ -38,6 +41,9 @@ class User extends Authenticatable
             'has_whatsapp' => 'boolean',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'notify_push' => 'boolean',
+            'notify_email' => 'boolean',
+            'notify_sms' => 'boolean',
         ];
     }
 

@@ -1,19 +1,24 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE product_variants MODIFY COLUMN shop_stock INT UNSIGNED NULL DEFAULT NULL");
-        DB::statement("ALTER TABLE product_variants MODIFY COLUMN online_stock INT UNSIGNED NULL DEFAULT NULL");
+        Schema::table('product_variants', function (Blueprint $table) {
+            $table->unsignedInteger('shop_stock')->nullable()->default(null)->change();
+            $table->unsignedInteger('online_stock')->nullable()->default(null)->change();
+        });
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE product_variants MODIFY COLUMN shop_stock INT UNSIGNED NOT NULL DEFAULT 0");
-        DB::statement("ALTER TABLE product_variants MODIFY COLUMN online_stock INT UNSIGNED NOT NULL DEFAULT 0");
+        Schema::table('product_variants', function (Blueprint $table) {
+            $table->unsignedInteger('shop_stock')->nullable(false)->default(0)->change();
+            $table->unsignedInteger('online_stock')->nullable(false)->default(0)->change();
+        });
     }
 };
