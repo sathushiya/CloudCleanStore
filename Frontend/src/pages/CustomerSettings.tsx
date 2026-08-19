@@ -1,18 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, Mail, MessageSquare, Moon, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import BackButton from '../components/common/BackButton';
+import profileService from '../services/profileService';
 
 interface CustomerSettingsProps {
   onBack: () => void;
 }
+
+const getInitialDarkMode = () =>
+  localStorage.getItem('theme') === 'dark' ||
+  (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
 export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
   const [settings, setSettings] = useState({
     notifications: true,
     emailUpdates: true,
     smsAlerts: false,
-    darkMode: false
+    darkMode: getInitialDarkMode()
   });
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [prefsError, setPrefsError] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -24,11 +31,42 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const toggleSetting = (key: keyof typeof settings) => {
-    setSettings({ ...settings, [key]: !settings[key] });
+  useEffect(() => {
+    profileService.get()
+      .then((profile) => {
+        setSettings((prev) => ({
+          ...prev,
+          notifications: profile.notify_push,
+          emailUpdates: profile.notify_email,
+          smsAlerts: profile.notify_sms,
+        }));
+      })
+      .catch(() => setPrefsError('Could not load your saved preferences.'))
+      .finally(() => setPrefsLoaded(true));
+  }, []);
+
+  const toggleSetting = async (key: keyof typeof settings) => {
+    const nextValue = !settings[key];
+    setSettings((prev) => ({ ...prev, [key]: nextValue }));
+
+    if (key === 'darkMode') {
+      document.documentElement.classList.toggle('dark', nextValue);
+      localStorage.setItem('theme', nextValue ? 'dark' : 'light');
+      return;
+    }
+
+    const prefKey = { notifications: 'notify_push', emailUpdates: 'notify_email', smsAlerts: 'notify_sms' } as const;
+    setPrefsError('');
+    try {
+      await profileService.updatePreferences({ [prefKey[key]]: nextValue });
+    } catch {
+      // Revert on failure so the toggle doesn't lie about what's saved
+      setSettings((prev) => ({ ...prev, [key]: !nextValue }));
+      setPrefsError('Failed to save that preference. Please try again.');
+    }
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
     setPasswordSuccess(false);
@@ -49,14 +87,23 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await profileService.changePassword(currentPassword, newPassword, confirmPassword);
       setPasswordSuccess(true);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setTimeout(() => setPasswordSuccess(false), 3000);
-    }, 1000);
+    } catch (err: any) {
+      const errors = err.response?.data?.errors;
+      if (errors) {
+        setPasswordError(Object.values(errors)[0] as unknown as string);
+      } else {
+        setPasswordError(err.response?.data?.message || 'Failed to change password. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const settingsConfig = [
@@ -185,7 +232,13 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
         </div>
 
         {/* Settings List */}
-        <div className="space-y-4">
+        {prefsError && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/30 rounded-2xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700 dark:text-red-300">{prefsError}</p>
+          </div>
+        )}
+        <div className={`space-y-4 ${prefsLoaded ? '' : 'opacity-50 pointer-events-none'}`}>
           {settingsConfig.map((setting) => {
             const Icon = setting.icon;
             const isEnabled = settings[setting.key];

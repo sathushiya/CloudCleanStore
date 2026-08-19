@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { notifications } from '../data/admin';
+import profileService from '../services/profileService';
 import { useAdminProducts } from '../hooks/queries/useProducts';
 import { useStaffList } from '../hooks/queries/useStaff'; // import staff query hook
 import { useStaffOrders } from '../hooks/queries/useOrders';
@@ -48,6 +49,102 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsList, setNotificationsList] = useState(notifications);
+
+  // ── Settings tab: account info, password, notification prefs ──────────────
+  const [accountName, setAccountName] = useState(user?.name ?? '');
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountMessage, setAccountMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [notifyPush, setNotifyPush] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState(true);
+  const [notifySms, setNotifySms] = useState(false);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem('theme') === 'dark' ||
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    profileService.get()
+      .then((profile) => {
+        setAccountName(profile.name);
+        setNotifyPush(profile.notify_push);
+        setNotifyEmail(profile.notify_email);
+        setNotifySms(profile.notify_sms);
+      })
+      .finally(() => setPrefsLoaded(true));
+  }, []);
+
+  const handleUpdateAccountInfo = async () => {
+    setAccountSaving(true);
+    setAccountMessage(null);
+    try {
+      await profileService.update(accountName);
+      setAccountMessage({ type: 'success', text: 'Account information updated.' });
+    } catch (err: any) {
+      setAccountMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update account information.' });
+    } finally {
+      setAccountSaving(false);
+    }
+  };
+
+  const handleToggleNotifyPref = async (key: 'notify_push' | 'notify_email' | 'notify_sms') => {
+    const setters = { notify_push: setNotifyPush, notify_email: setNotifyEmail, notify_sms: setNotifySms };
+    const current = { notify_push: notifyPush, notify_email: notifyEmail, notify_sms: notifySms }[key];
+    const next = !current;
+    setters[key](next);
+    try {
+      await profileService.updatePreferences({ [key]: next });
+    } catch {
+      setters[key](current);
+    }
+  };
+
+  const handleToggleDarkMode = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordMessage(null);
+
+    if (!currentPassword) {
+      setPasswordMessage({ type: 'error', text: 'Please enter your current password.' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 8 characters.' });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordMessage({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      await profileService.changePassword(currentPassword, newPassword, confirmNewPassword);
+      setPasswordMessage({ type: 'success', text: 'Password updated successfully.' });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err: any) {
+      const errors = err.response?.data?.errors;
+      const text = errors ? (Object.values(errors)[0] as unknown as string[])[0] : (err.response?.data?.message || 'Failed to change password.');
+      setPasswordMessage({ type: 'error', text });
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -338,12 +435,23 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                     Account Information
                   </h3>
+                  {accountMessage && (
+                    <div className={`mb-4 p-3 rounded-xl text-sm flex items-center gap-2 ${
+                      accountMessage.type === 'success'
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                    }`}>
+                      {accountMessage.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      {accountMessage.text}
+                    </div>
+                  )}
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Full Name</label>
                       <input
                         type="text"
-                        defaultValue={user?.name}
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
                         className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
                       />
                     </div>
@@ -352,19 +460,27 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <input
                         type="email"
                         defaultValue={user?.email}
-                        className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
+                        disabled
+                        title="Email changes aren't supported yet"
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 text-gray-500 cursor-not-allowed"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Phone Number</label>
                       <input
                         type="tel"
-                        defaultValue="+94 71 234 5678"
-                        className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
+                        defaultValue={user?.phone_number || 'Not set'}
+                        disabled
+                        title="Phone changes go through WhatsApp verification, not this form"
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 text-gray-500 cursor-not-allowed"
                       />
                     </div>
-                    <button className="w-full py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105">
-                      Update Account Information
+                    <button
+                      onClick={handleUpdateAccountInfo}
+                      disabled={accountSaving || !accountName.trim()}
+                      className="w-full py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      {accountSaving ? 'Updating...' : 'Update Account Information'}
                     </button>
                   </div>
                 </div>
@@ -377,11 +493,23 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                     Change Password
                   </h3>
+                  {passwordMessage && (
+                    <div className={`mb-4 p-3 rounded-xl text-sm flex items-center gap-2 ${
+                      passwordMessage.type === 'success'
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                    }`}>
+                      {passwordMessage.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      {passwordMessage.text}
+                    </div>
+                  )}
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Current Password</label>
                       <input
                         type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
                         className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
                         placeholder="Enter current password"
                       />
@@ -390,6 +518,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">New Password</label>
                       <input
                         type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
                         className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
                         placeholder="Enter new password"
                       />
@@ -398,18 +528,24 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Confirm New Password</label>
                       <input
                         type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
                         className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
                         placeholder="Confirm new password"
                       />
                     </div>
-                    <button className="w-full py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105">
-                      Update Password
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={passwordSaving}
+                      className="w-full py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      {passwordSaving ? 'Updating...' : 'Update Password'}
                     </button>
                   </div>
                 </div>
 
                 {/* Notification Preferences */}
-                <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                <div className={`bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 ${prefsLoaded ? '' : 'opacity-50 pointer-events-none'}`}>
                   <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-100 dark:bg-purple-900/30">
                       <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -417,31 +553,40 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     Notification Preferences
                   </h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
+                    <div
+                      onClick={() => handleToggleNotifyPref('notify_push')}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5 cursor-pointer"
+                    >
                       <div>
                         <div className="font-medium">Push Notifications</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Receive push notifications for important updates</div>
                       </div>
-                      <div className="w-14 h-7 rounded-full bg-purple-600">
-                        <div className="w-6 h-6 bg-white rounded-full mt-0.5 ml-7 transition-transform" />
+                      <div className={`w-14 h-7 rounded-full transition-colors ${notifyPush ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                        <div className={`w-6 h-6 bg-white rounded-full mt-0.5 transition-transform ${notifyPush ? 'ml-7' : 'ml-0.5'}`} />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
+                    <div
+                      onClick={() => handleToggleNotifyPref('notify_email')}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5 cursor-pointer"
+                    >
                       <div>
                         <div className="font-medium">Email Notifications</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Get email updates about system activities</div>
                       </div>
-                      <div className="w-14 h-7 rounded-full bg-purple-600">
-                        <div className="w-6 h-6 bg-white rounded-full mt-0.5 ml-7 transition-transform" />
+                      <div className={`w-14 h-7 rounded-full transition-colors ${notifyEmail ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                        <div className={`w-6 h-6 bg-white rounded-full mt-0.5 transition-transform ${notifyEmail ? 'ml-7' : 'ml-0.5'}`} />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
+                    <div
+                      onClick={() => handleToggleNotifyPref('notify_sms')}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5 cursor-pointer"
+                    >
                       <div>
                         <div className="font-medium">SMS Alerts</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Receive SMS for critical system alerts</div>
                       </div>
-                      <div className="w-14 h-7 rounded-full bg-gray-300 dark:bg-gray-700">
-                        <div className="w-6 h-6 bg-white rounded-full mt-0.5 ml-0.5 transition-transform" />
+                      <div className={`w-14 h-7 rounded-full transition-colors ${notifySms ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                        <div className={`w-6 h-6 bg-white rounded-full mt-0.5 transition-transform ${notifySms ? 'ml-7' : 'ml-0.5'}`} />
                       </div>
                     </div>
                   </div>
@@ -456,13 +601,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     System Preferences
                   </h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
+                    <div
+                      onClick={handleToggleDarkMode}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-white/5 cursor-pointer"
+                    >
                       <div>
                         <div className="font-medium">Dark Mode</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Enable dark theme</div>
                       </div>
-                      <div className="w-14 h-7 rounded-full bg-purple-600">
-                        <div className="w-6 h-6 bg-white rounded-full mt-0.5 ml-7 transition-transform" />
+                      <div className={`w-14 h-7 rounded-full transition-colors ${darkMode ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                        <div className={`w-6 h-6 bg-white rounded-full mt-0.5 transition-transform ${darkMode ? 'ml-7' : 'ml-0.5'}`} />
                       </div>
                     </div>
                     <div>

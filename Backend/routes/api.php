@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::put('/profile/preferences', [ProfileController::class, 'updatePreferences']);
+    Route::put('/profile/password', [ProfileController::class, 'changePassword']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/dashboard', fn() => response()->json(['message' => 'Admin dashboard — Phase 2']));
