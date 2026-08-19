@@ -18,7 +18,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { cartService } from '../services/cartService';
-import { orderService } from '../services/orderService';
+import { orderService, Order } from '../services/orderService';
 import { ImageWithFallback } from '../components/common/ImageWithFallback';
 import BackButton from '../components/common/BackButton';
 
@@ -51,12 +51,12 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal * 0.08;
   const total = subtotal + deliveryFee;
 
-  // Load addresses from localStorage
   const [addresses, setAddresses] = useState<Address[]>(() => {
     const saved = localStorage.getItem('customerAddresses');
     if (saved) {
@@ -84,7 +84,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
     ];
   });
 
-  // Save addresses to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('customerAddresses', JSON.stringify(addresses));
   }, [addresses]);
@@ -110,9 +109,15 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
     }
   };
 
-  // Pushes the local cart into the backend cart, then checks out — this is what
-  // actually creates a real Order row (previously this was purely simulated).
-  const submitOrder = async () => {
+  const finishOrder = () => {
+    clearCart();
+    setShowSuccess(true);
+    setTimeout(() => {
+      onOrderPlaced();
+    }, 3000);
+  };
+
+  const handlePlaceOrder = async () => {
     setIsSubmittingOrder(true);
     setOrderError(null);
     try {
@@ -125,13 +130,17 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
         ? `${selectedAddr.address}, ${selectedAddr.city}`
         : 'Address not provided';
 
-      await orderService.checkout(deliveryAddress);
+      const order = await orderService.checkout(
+        deliveryAddress,
+        paymentMethod === 'banking' ? 'bank_transfer' : 'cash'
+      );
+      setCreatedOrder(order);
 
-      clearCart();
-      setShowSuccess(true);
-      setTimeout(() => {
-        onOrderPlaced();
-      }, 3000);
+      if (paymentMethod === 'banking') {
+        setShowBankTransfer(true);
+      } else {
+        finishOrder();
+      }
     } catch (err) {
       setOrderError('We could not place your order. Please check your connection and try again.');
     } finally {
@@ -139,21 +148,12 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
     }
   };
 
-  const handlePlaceOrder = () => {
-    if (paymentMethod === 'banking') {
-      setShowBankTransfer(true);
-      return;
-    }
-    submitOrder();
-  };
-
-  if (showBankTransfer) {
-    const orderId = `ORD-${Date.now()}`;
+  if (showBankTransfer && createdOrder) {
     const selectedAddr = addresses.find(a => a.id === selectedAddress) || addresses[0];
     return (
       <BankTransfer
         total={total}
-        orderId={orderId}
+        orderId={String(createdOrder.id)}
         orderDetails={{
           customerName: user?.name || selectedAddr?.name || 'Customer',
           address: selectedAddr ? `${selectedAddr.address}, ${selectedAddr.city}` : 'N/A',
@@ -161,7 +161,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
           deliveryTime,
         }}
         onBack={() => setShowBankTransfer(false)}
-        onConfirm={submitOrder}
+        onConfirm={finishOrder}
       />
     );
   }
@@ -188,7 +188,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0a1e]">
-      {/* Header */}
       <div className="bg-white dark:bg-[#1a1425] border-b border-gray-200 dark:border-purple-700/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
@@ -205,9 +204,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Checkout Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Delivery Address */}
             <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
@@ -281,7 +278,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
                   </div>
                 ))}
 
-                {/* Add New Address Button */}
                 <button
                   onClick={() => {
                     setEditingAddress(null);
@@ -295,7 +291,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
               </div>
             </div>
 
-            {/* Delivery Time */}
             <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
@@ -351,7 +346,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
               </div>
             </div>
 
-            {/* Payment Method */}
             <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
@@ -412,7 +406,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
             </div>
           </div>
 
-          {/* Right Column - Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 sticky top-24">
               <div className="flex items-center gap-3 mb-6">
@@ -422,7 +415,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
                 <h2 className="text-xl font-bold">Order Summary</h2>
               </div>
 
-              {/* Items */}
               <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
                 {items.map((item) => (
                   <div key={`${item.product.id}-${item.variant.id}`} className="flex gap-3">
@@ -446,7 +438,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
                 ))}
               </div>
 
-              {/* Totals */}
               <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-purple-700/20">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
@@ -468,7 +459,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
                 </div>
               )}
 
-              {/* Place Order Button */}
               <button
                 onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder || items.length === 0}
@@ -481,7 +471,6 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
         </div>
       </div>
 
-      {/* Add/Edit Address Modal */}
       {showAddressModal && (
         <AddressModal
           address={editingAddress}
@@ -535,7 +524,6 @@ function AddressModal({
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-[#1a1425] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-purple-700/20">
-        {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-[#1a1425] border-b border-gray-200 dark:border-purple-700/20 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
@@ -545,100 +533,3 @@ function AddressModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Address Label *</label>
-            <input
-              type="text"
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              placeholder="e.g., Home, Office, Grandma's House"
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
-              required
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Give this address a name to identify it easily
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2">Full Name *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Recipient's name"
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2">Street Address *</label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Street address, apartment, suite, unit, etc."
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2">City, State & ZIP *</label>
-            <input
-              type="text"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              placeholder="e.g., New York, NY 10001"
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="flex text-sm font-semibold mb-2 items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              Delivery Instructions (Optional)
-            </label>
-            <textarea
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              placeholder="Add any special instructions for the delivery person..."
-              rows={3}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400 resize-none"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              e.g., "Ring the doorbell twice", "Leave at the back door", "Call when you arrive"
-            </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-purple-700/20">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105"
-            >
-              {address ? 'Update Address' : 'Add Address'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
