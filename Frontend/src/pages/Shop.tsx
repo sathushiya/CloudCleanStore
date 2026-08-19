@@ -16,62 +16,44 @@ interface ShopProps {
 export default function Shop({ onBack, onRequireLogin }: ShopProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<{ id: number; name: string } | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]); // unfiltered, used only for real category counts
+  const [allProducts, setAllProducts] = useState<Product[]>([]); // unfiltered, used only for real category counts + search
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedBrandFilter, setSelectedBrandFilter] = useState<{ id: number; name: string } | null>(null);
 
-  // Fetch the full unfiltered catalog once, purely to compute real per-category counts
+  // Read any category/brand filter that was set on the landing page before
+  // navigating here (Categories.tsx / Brands.tsx write to sessionStorage,
+  // this reads it once on mount and clears it).
   useEffect(() => {
-  let cancelled = false;
-
-  async function loadProducts() {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const filters: { category?: string; brand_id?: number } = {};
-      if (selectedCategory !== 'all') filters.category = selectedCategory;
-      if (selectedBrandFilter) filters.brand_id = selectedBrandFilter.id;
-
-      const paginated = await productService.list(filters);
-      if (!cancelled) {
-        setProducts(paginated.data.map(toFrontendProduct));
-      }
-    } catch (err) {
-      if (!cancelled) setError('Could not load products. Please try again.');
-    } finally {
-      if (!cancelled) setIsLoading(false);
+    const categoryFromSession = sessionStorage.getItem('selectedCategory');
+    if (categoryFromSession) {
+      setSelectedCategory(categoryFromSession);
+      sessionStorage.removeItem('selectedCategory');
     }
-  }
 
-  loadProducts();
-  return () => { cancelled = true; };
-}, [selectedCategory, selectedBrandFilter]);
+    const brandIdFromSession = sessionStorage.getItem('selectedBrandId');
+    const brandNameFromSession = sessionStorage.getItem('selectedBrandName');
+    if (brandIdFromSession) {
+      setSelectedBrandFilter({ id: Number(brandIdFromSession), name: brandNameFromSession || '' });
+      sessionStorage.removeItem('selectedBrandId');
+      sessionStorage.removeItem('selectedBrandName');
+    }
+  }, []);
 
-  const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
-    acc[cat.id] = allProducts.filter((p) => p.category === cat.id).length;
-    return acc;
-  }, {});
-
-  // Check for category filter from sessionStorage on mount
+  // Fetch the full unfiltered catalog once, purely to compute real
+  // per-category counts and to feed the search bar.
   useEffect(() => {
-  const categoryFromSession = sessionStorage.getItem('selectedCategory');
-  if (categoryFromSession) {
-    setSelectedCategory(categoryFromSession);
-    sessionStorage.removeItem('selectedCategory');
-  }
+    let cancelled = false;
+    productService.list({}).then((paginated) => {
+      if (!cancelled) setAllProducts(paginated.data.map(toFrontendProduct));
+    }).catch(() => {
+      // Non-fatal -- category counts just show 0 and search has nothing to search
+    });
+    return () => { cancelled = true; };
+  }, []);
 
-  const brandIdFromSession = sessionStorage.getItem('selectedBrandId');
-  const brandNameFromSession = sessionStorage.getItem('selectedBrandName');
-  if (brandIdFromSession) {
-    setSelectedBrandFilter({ id: Number(brandIdFromSession), name: brandNameFromSession || '' });
-    sessionStorage.removeItem('selectedBrandId');
-    sessionStorage.removeItem('selectedBrandName');
-  }
-}, []);
-
-  // Fetch products whenever the category filter changes
+  // Fetch the actual displayed product list whenever category or brand filter changes
   useEffect(() => {
     let cancelled = false;
 
@@ -79,9 +61,11 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const paginated = await productService.list(
-          selectedCategory === 'all' ? {} : { category: selectedCategory }
-        );
+        const filters: { category?: string; brand_id?: number } = {};
+        if (selectedCategory !== 'all') filters.category = selectedCategory;
+        if (selectedBrandFilter) filters.brand_id = selectedBrandFilter.id;
+
+        const paginated = await productService.list(filters);
         if (!cancelled) {
           setProducts(paginated.data.map(toFrontendProduct));
         }
@@ -94,7 +78,12 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
 
     loadProducts();
     return () => { cancelled = true; };
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedBrandFilter]);
+
+  const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
+    acc[cat.id] = allProducts.filter((p) => p.category === cat.id).length;
+    return acc;
+  }, {});
 
   const filteredProducts = products;
 
@@ -134,6 +123,18 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
             </button>
           ))}
         </div>
+
+        {selectedBrandFilter && (
+          <div className="mb-6 flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Filtered by brand:</span>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium">
+              {selectedBrandFilter.name}
+              <button onClick={() => setSelectedBrandFilter(null)} className="hover:text-purple-900 dark:hover:text-purple-100">
+                ×
+              </button>
+            </span>
+          </div>
+        )}
 
         {isLoading && (
           <div className="text-center py-16 text-gray-500">Loading products...</div>
