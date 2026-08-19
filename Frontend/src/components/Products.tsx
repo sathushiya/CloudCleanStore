@@ -42,12 +42,8 @@ export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthen
     return () => { cancelled = true; };
   }, [isAuthenticated]);
 
-  const handleViewAllClick = () => {
-    if (isAuthenticated) {
-      onNavigateToShop?.();
-    } else {
-      onNavigateToLogin?.();
-    }
+    const handleViewAllClick = () => {
+    onNavigateToShop?.();
   };
 
   const handleAddToCart = (product: Product) => {

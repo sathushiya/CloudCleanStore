@@ -10,13 +10,7 @@ interface HeroProps {
 
 export default function Hero({ onNavigateToLogin, onNavigateToShop, isAuthenticated }: HeroProps = {}) {
   const handleActionClick = () => {
-    if (isAuthenticated) {
-      // User is logged in, navigate to shop page
-      onNavigateToShop?.();
-    } else {
-      // Redirect to login
-      onNavigateToLogin?.();
-    }
+    onNavigateToShop?.();
   };
   return (
     <section className="relative pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden" id="home">

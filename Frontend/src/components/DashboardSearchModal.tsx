@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Search, ShoppingCart, Star } from 'lucide-react';
-import { products, categories } from '../data/products';
+import { categories } from '../data/products';
 import { Product } from '../data/products';
+import { productService, toFrontendProduct } from '../services/productService';
 import ProductModal from './ProductModal';
 import { ImageWithFallback } from './common/ImageWithFallback';
 
@@ -13,6 +14,26 @@ export default function DashboardSearchModal({ onClose }: DashboardSearchModalPr
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // This modal is only reachable from inside the authenticated account area,
+  // so a real session should always exist here -- but guard defensively anyway
+  // in case a token expires mid-session while this is open.
+  const handleRequireLogin = () => {
+    onClose();
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    productService.list({}).then((paginated) => {
+      if (!cancelled) setProducts(paginated.data.map(toFrontendProduct));
+    }).finally(() => {
+      if (!cancelled) setIsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredProducts = products.filter((product) => {
     const matchesQuery =
@@ -79,7 +100,9 @@ export default function DashboardSearchModal({ onClose }: DashboardSearchModalPr
 
           {/* Results */}
           <div className="flex-1 overflow-y-auto p-6">
-            {query === '' && selectedCategory === 'all' ? (
+            {isLoading ? (
+              <div className="text-center py-12 text-gray-500">Loading products...</div>
+            ) : query === '' && selectedCategory === 'all' ? (
               <div className="text-center py-12">
                 <Search className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                 <h3 className="text-xl font-bold mb-2">Start searching</h3>
@@ -128,7 +151,7 @@ export default function DashboardSearchModal({ onClose }: DashboardSearchModalPr
 
                         <div className="flex items-center justify-between">
                           <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                            From LKR {product.variants[0].price.toFixed(2)}
+                            From LKR {product.variants[0]?.price.toFixed(2) ?? '0.00'}
                           </div>
                           <button className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors">
                             <ShoppingCart className="w-4 h-4" />
@@ -157,6 +180,7 @@ export default function DashboardSearchModal({ onClose }: DashboardSearchModalPr
         <ProductModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
+          onRequireLogin={handleRequireLogin}
         />
       )}
     </>

@@ -53,11 +53,7 @@ interface CategoriesProps {
 
 export default function Categories({ onCategoryClick, onNavigateToSignup, isAuthenticated }: CategoriesProps = {}) {
   const handleCategoryClick = (categoryId: string) => {
-    if (isAuthenticated) {
-      onCategoryClick?.(categoryId);
-    } else {
-      onNavigateToSignup?.();
-    }
+    onCategoryClick?.(categoryId);
   };
   return (
     <section className="py-16 md:py-24" id="categories">
