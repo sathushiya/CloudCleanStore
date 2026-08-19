@@ -150,7 +150,7 @@ export function toFrontendProduct(product: Product): FrontendProduct {
       id: String(v.id),
       size: v.size,
       price: v.price,
-      stock: v.shop_stock + v.online_stock,
+      stock: (v.shop_stock ?? 0) + (v.online_stock ?? 0),
       shopStock: v.shop_stock,
       onlineStock: v.online_stock,
     })),
