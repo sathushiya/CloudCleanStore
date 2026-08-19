@@ -55,14 +55,15 @@ class OrderController extends Controller
                 return (float) $cartItem->variant->price * $cartItem->quantity;
             });
 
-            $order = Order::create([
-                'user_id' => $user->id,
-                'order_number' => $this->generateOrderNumber(),
-                'total' => $total,
-                'status' => 'pending',
-                'delivery_address' => $request->validated()['delivery_address'],
-                'assigned_to' => null,
-            ]);
+                $order = Order::create([
+                    'user_id' => $user->id,
+                    'order_number' => 'ORD-' . now()->format('Y') . '-' . strtoupper(Str::random(6)),
+                    'total' => $total,
+                    'status' => 'pending',
+                    'delivery_address' => $request->delivery_address,
+                    'payment_method' => $request->input('payment_method', 'cash'),
+                    'payment_status' => 'pending',
+                ]);
 
             foreach ($cartItems as $cartItem) {
                 OrderItem::create([
