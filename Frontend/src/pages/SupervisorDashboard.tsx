@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Package,
   Users,
@@ -7,11 +7,8 @@ import {
   Settings,
   Menu,
   X,
-  Plus,
-  Minus,
   Search,
   Edit,
-  Save,
   UserCheck,
   Bell,
   Clock,
@@ -20,13 +17,10 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { products as initialProducts, Product } from "../data/products";
-import {
-  deliveryTasks as initialTasks,
-  DeliveryTask,
-  staffMembers,
-  StaffMember,
-} from "../data/admin";
+import { productService, toFrontendProduct, Product } from "../services/productService";
+import { orderService, Order } from "../services/orderService";
+import { staffService, StaffAccount } from "../services/staffService";
+import { profileService } from "../services/profileService";
 import { ImageWithFallback } from "../components/common/ImageWithFallback";
 
 interface SupervisorDashboardProps {
@@ -43,192 +37,125 @@ type TabType =
   | "payment-confirmations"
   | "settings";
 
-export default function SupervisorDashboard({
-  onLogout,
-}: SupervisorDashboardProps) {
+export default function SupervisorDashboard({ onLogout }: SupervisorDashboardProps) {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [tasks, setTasks] = useState<DeliveryTask[]>(initialTasks);
+
+  // Real data, replacing every mock source that used to live here
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [paymentSubmissions, setPaymentSubmissions] = useState<Order[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [staffList, setStaffList] = useState<StaffAccount[]>([]);
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [stockAdjustment, setStockAdjustment] = useState<{
-    [key: string]: number;
-  }>({});
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
-  const [onlineInputValues, setOnlineInputValues] = useState<{
-    [key: string]: string;
-  }>({});
+  const [onlineInputValues, setOnlineInputValues] = useState<{ [key: string]: string }>({});
   const [percentSplits, setPercentSplits] = useState<{
     [key: string]: { shop: number; online: number };
   }>({});
-  const [pendingPayments, setPendingPayments] = useState<any[]>(() => {
-    const stored = JSON.parse(localStorage.getItem("pendingPayments") || "[]");
-    if (stored.length === 0) {
-      // Demo entry so the tab is never empty on first load
-      const demo = [
-        {
-          orderId: "ORD-DEMO001",
-          total: 3450.0,
-          customerName: "Amal Perera",
-          address: "45 Galle Road, Colombo 03",
-          products: [
-            { name: "Surface Cleaner 500ml", quantity: 2 },
-            { name: "Floor Polish", quantity: 1 },
-          ],
-          deliveryTime: "express",
-          submittedAt: new Date().toISOString(),
-        },
-      ];
-      localStorage.setItem("pendingPayments", JSON.stringify(demo));
-      return demo;
-    }
-    return stored;
-  });
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
-  const refreshPendingPayments = () => {
-    const stored = JSON.parse(localStorage.getItem("pendingPayments") || "[]");
-    setPendingPayments(stored);
+  // Settings state (real preferences, loaded from the server)
+  const [prefsLoading, setPrefsLoading] = useState(true);
+  const [notifyPush, setNotifyPush] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState(true);
+  const [notifySms, setNotifySms] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+
+  const loadProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const apiProducts = await productService.adminList();
+      setProducts(apiProducts.map(toFrontendProduct));
+    } catch (err) {
+      // handled by empty-state below
+    } finally {
+      setProductsLoading(false);
+    }
   };
 
-  const handleConfirmPayment = (orderId: string) => {
-    // Signal customer's waiting page
-    const confirmations = JSON.parse(
-      localStorage.getItem("paymentConfirmations") || "{}",
-    );
-    confirmations[orderId] = "confirmed";
-    localStorage.setItem("paymentConfirmations", JSON.stringify(confirmations));
-
-    // Build a DeliveryTask and push to staff queue
-    const payment = pendingPayments.find((p) => p.orderId === orderId) as any;
-    if (payment) {
-      const newTask: DeliveryTask = {
-        id: `task-${Date.now()}`,
-        orderId: payment.orderId,
-        customerName: payment.customerName || "Customer",
-        address: payment.address || "N/A",
-        customerAddress: payment.address || "N/A",
-        customerDistrict: "Colombo",
-        shopDistrict: "Colombo",
-        products: payment.products || [],
-        total: payment.total,
-        status: "pending",
-        assignedTo: null,
-        assignedAt: null,
-        completedAt: null,
-        declinedBy: [],
-        priority: "medium",
-        deliveryTime: payment.deliveryTime || "standard",
-        estimatedTime:
-          payment.deliveryTime === "express" ? "30-45 min" : "60-90 min",
-        createdAt: new Date().toISOString(),
-      };
-      // Push to localStorage so StaffDashboard picks it up
-      const existing = JSON.parse(
-        localStorage.getItem("newDeliveryTasks") || "[]",
-      );
-      existing.push(newTask);
-      localStorage.setItem("newDeliveryTasks", JSON.stringify(existing));
-      // Also add to supervisor's own task list (Awaiting Orders tab)
-      setTasks((prev) => [...prev, newTask]);
+  const loadPendingOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const data = await orderService.staffList("pending");
+      setPendingOrders(data);
+    } catch (err) {
+      // handled by empty-state below
+    } finally {
+      setOrdersLoading(false);
     }
-
-    const updated = pendingPayments.filter((p) => p.orderId !== orderId);
-    localStorage.setItem("pendingPayments", JSON.stringify(updated));
-    setPendingPayments(updated);
   };
+
+  const loadPaymentSubmissions = async () => {
+    setPaymentsLoading(true);
+    try {
+      const data = await orderService.staffList(undefined, "submitted");
+      setPaymentSubmissions(data);
+    } catch (err) {
+      // handled by empty-state below
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  const loadStaff = async () => {
+    try {
+      const data = await staffService.list();
+      setStaffList(data.filter((s) => s.is_active && (s.role === "staff" || s.role === "staffsupervisor")));
+    } catch (err) {
+      // dropdown just stays empty
+    }
+  };
+
+  const loadPreferences = async () => {
+    setPrefsLoading(true);
+    try {
+      const profile = await profileService.get();
+      setNotifyPush(profile.notify_push ?? true);
+      setNotifyEmail(profile.notify_email ?? true);
+      setNotifySms(profile.notify_sms ?? false);
+    } catch (err) {
+      // keep defaults
+    } finally {
+      setPrefsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+    loadPendingOrders();
+    loadPaymentSubmissions();
+    loadStaff();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "settings") loadPreferences();
+  }, [activeTab]);
 
   const handleLogout = () => {
     logout();
     onLogout();
   };
 
-  // Filter pending orders (no staff assigned or assigned but not accepted)
-  const pendingOrders = tasks.filter(
-    (t) => t.status === "pending" || t.status === "assigned",
-  );
+  const lowStockProducts = products.filter((p) => p.variants.some((v) => (v.stock ?? 0) < 10));
 
-  // Get low stock products (any variant with stock < 10)
-  const lowStockProducts = products.filter((p) =>
-    p.variants.some((v) => (v.stock || 0) < 10),
-  );
-
-  // Initialize stock split (60% shop, 40% online) if not set
-  const initializeStockSplit = () => {
-    setProducts(
-      products.map((product) => ({
-        ...product,
-        variants: product.variants.map((variant) => ({
-          ...variant,
-          shopStock: variant.shopStock ?? Math.floor(variant.stock * 0.6),
-          onlineStock: variant.onlineStock ?? Math.floor(variant.stock * 0.4),
-        })),
-      })),
-    );
+  // Format stock: "Not set" when the value is genuinely null (never
+  // stocked), or the real number (including 0) otherwise -- distinguishes
+  // "nobody has set this yet" from "confirmed zero stock".
+  const formatStock = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return "Not set";
+    return String(value);
   };
 
-  // Update total stock with dynamic percentage split
-  const handleTotalStockUpdate = (
-    productId: string,
-    variantId: string,
-    totalStock: number,
-    shopPercent: number,
-    onlinePercent: number,
-  ) => {
-    const shopStock = Math.floor(totalStock * (shopPercent / 100));
-    const onlineStock = Math.floor(totalStock * (onlinePercent / 100));
-
-    setProducts(
-      products.map((product) => {
-        if (product.id === productId) {
-          return {
-            ...product,
-            variants: product.variants.map((variant) => {
-              if (variant.id === variantId) {
-                return {
-                  ...variant,
-                  stock: totalStock,
-                  shopStock,
-                  onlineStock,
-                };
-              }
-              return variant;
-            }),
-          };
-        }
-        return product;
-      }),
-    );
-
-    // Clear input after update
-    const key = `${productId}-${variantId}`;
-    setInputValues({ ...inputValues, [key]: "" });
-  };
-
-  // Get percentage split for a variant (default 60/40)
   const getPercentSplit = (productId: string, variantId: string) => {
     const key = `${productId}-${variantId}`;
     return percentSplits[key] || { shop: 60, online: 40 };
   };
 
-  // Format stock value: "-" for non-existent, "0" for null, or actual value
-  const formatStock = (value: number | null | undefined): string | number => {
-    if (value === null || value === undefined) {
-      return 0;
-    }
-    return value;
-  };
-
-  // Format variant stock: "-" if variant doesn't exist, "0" if null, or actual value
-  const formatVariantStock = (variant: any | undefined): string | number => {
-    if (!variant) {
-      return "-";
-    }
-    return formatStock(variant.stock);
-  };
-
-  // Update percentage split (auto-adjust the other percentage)
   const handlePercentChange = (
     productId: string,
     variantId: string,
@@ -248,55 +175,82 @@ export default function SupervisorDashboard({
     });
   };
 
-  // Update only online stock
-  const handleOnlineStockUpdate = (
-    productId: string,
+  // Real backend call -- total stock split into shop/online by percentage,
+  // sent straight to the same PATCH endpoint Admin's Inventory tab uses.
+  const handleTotalStockUpdate = async (
     variantId: string,
-    onlineStock: number,
+    totalStock: number,
+    shopPercent: number,
+    onlinePercent: number,
   ) => {
-    setProducts(
-      products.map((product) => {
-        if (product.id === productId) {
-          return {
-            ...product,
-            variants: product.variants.map((variant) => {
-              if (variant.id === variantId) {
-                const shopStock = variant.shopStock ?? 0;
-                return {
-                  ...variant,
-                  onlineStock,
-                  stock: shopStock + onlineStock,
-                };
-              }
-              return variant;
-            }),
-          };
-        }
-        return product;
-      }),
-    );
+    const shopStock = Math.floor(totalStock * (shopPercent / 100));
+    const onlineStock = Math.floor(totalStock * (onlinePercent / 100));
+    const key = variantId;
 
-    // Clear input after update
-    const key = `${productId}-${variantId}-online`;
-    setOnlineInputValues({ ...onlineInputValues, [key]: "" });
+    setSavingKey(key);
+    try {
+      await productService.updateVariantStock(Number(variantId), {
+        shop_stock: shopStock,
+        online_stock: onlineStock,
+      });
+      await loadProducts();
+      setInputValues((prev) => ({ ...prev, [variantId]: "" }));
+    } catch (err) {
+      alert("Failed to update stock. Please try again.");
+    } finally {
+      setSavingKey(null);
+    }
   };
 
-  // Manual Order Assignment
-  const handleAssignOrder = (taskId: string, staffId: string) => {
-    setTasks(
-      tasks.map((task) => {
-        if (task.id === taskId) {
-          return {
-            ...task,
-            assignedTo: staffId,
-            status: "assigned" as const,
-            assignedAt: new Date().toISOString(),
-            manuallyAssignedBySupervisor: true,
-          };
-        }
-        return task;
-      }),
-    );
+  const handleOnlineStockUpdate = async (variantId: string, onlineStock: number) => {
+    setSavingKey(variantId);
+    try {
+      await productService.updateVariantStock(Number(variantId), { online_stock: onlineStock });
+      await loadProducts();
+      setOnlineInputValues((prev) => ({ ...prev, [`${variantId}-online`]: "" }));
+    } catch (err) {
+      alert("Failed to update online stock. Please try again.");
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  // Real assignment -- calls the backend, which now accepts an optional
+  // staff_id so a supervisor can assign to any staff member, not just self.
+  const handleAssignOrder = async (orderId: number, staffId: string) => {
+    if (!staffId) return;
+    try {
+      await orderService.assignToSelf(orderId, Number(staffId));
+      await loadPendingOrders();
+    } catch (err) {
+      alert("Failed to assign order. Please try again.");
+    }
+  };
+
+  const handleConfirmPayment = async (orderId: number, approved: boolean) => {
+    try {
+      await orderService.confirmPayment(orderId, approved);
+      await loadPaymentSubmissions();
+      await loadPendingOrders();
+    } catch (err) {
+      alert("Failed to update payment status. Please try again.");
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    setSavingPrefs(true);
+    try {
+      await profileService.updatePreferences({
+        notify_push: notifyPush,
+        notify_email: notifyEmail,
+        notify_sms: notifySms,
+      });
+      setActiveTab("overview");
+    } catch (err) {
+      alert("Failed to save settings. Please try again.");
+    } finally {
+      setSavingPrefs(false);
+    }
   };
 
   const filteredProducts = products.filter(
@@ -307,17 +261,9 @@ export default function SupervisorDashboard({
 
   const tabs = [
     { id: "overview" as TabType, label: "Overview", icon: Package },
-    {
-      id: "inventory-view" as TabType,
-      label: "Inventory Management",
-      icon: Package,
-    },
+    { id: "inventory-view" as TabType, label: "Inventory Management", icon: Package },
     { id: "update-inventory" as TabType, label: "Update Stock", icon: Edit },
-    {
-      id: "payment-confirmations" as TabType,
-      label: "Payment Confirmations",
-      icon: CheckCircle,
-    },
+    { id: "payment-confirmations" as TabType, label: "Payment Confirmations", icon: CheckCircle },
   ];
 
   return (
@@ -325,18 +271,12 @@ export default function SupervisorDashboard({
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#1a1425] border-b border-gray-200 dark:border-purple-700/20 px-4 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Supervisor Dashboard
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Supervisor Dashboard</h1>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300"
           >
-            {sidebarOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
@@ -349,22 +289,16 @@ export default function SupervisorDashboard({
           }`}
         >
           <div className="h-full flex flex-col">
-            {/* Header */}
             <div className="p-6 border-b border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-gray-900 dark:text-white">
-                    Staff Supervisor
-                  </h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {user?.name}
-                  </p>
+                  <h2 className="font-bold text-gray-900 dark:text-white">Staff Supervisor</h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{user?.name}</p>
                 </div>
               </div>
-              {/* Settings and Logout at Top */}
               <div className="flex gap-2">
                 <button
                   onClick={() => setActiveTab("settings")}
@@ -383,22 +317,18 @@ export default function SupervisorDashboard({
               </div>
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
-                const hasPending =
-                  tab.id === "pending-orders" && pendingOrders.length > 0;
-                const hasPayments =
-                  tab.id === "payment-confirmations" &&
-                  pendingPayments.length > 0;
+                const hasPending = tab.id === "pending-orders" && pendingOrders.length > 0;
+                const hasPayments = tab.id === "payment-confirmations" && paymentSubmissions.length > 0;
 
                 return (
                   <button
                     key={tab.id}
                     onClick={() => {
-                      if (tab.id === "payment-confirmations")
-                        refreshPendingPayments();
+                      if (tab.id === "payment-confirmations") loadPaymentSubmissions();
+                      if (tab.id === "pending-orders") loadPendingOrders();
                       setActiveTab(tab.id);
                       setSidebarOpen(false);
                     }}
@@ -417,7 +347,7 @@ export default function SupervisorDashboard({
                     )}
                     {hasPayments && (
                       <span className="ml-auto w-6 h-6 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {pendingPayments.length}
+                        {paymentSubmissions.length}
                       </span>
                     )}
                   </button>
@@ -425,7 +355,6 @@ export default function SupervisorDashboard({
               })}
             </nav>
 
-            {/* Footer */}
             <div className="p-4 border-t border-gray-200 dark:border-purple-700/20">
               <button
                 onClick={handleLogout}
@@ -441,84 +370,58 @@ export default function SupervisorDashboard({
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
           <div className="max-w-7xl mx-auto">
-            {/* Overview Tab */}
+            {/* Overview */}
             {activeTab === "overview" && (
               <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">
-                      Welcome, {user?.name}
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Manage inventory and orders
-                    </p>
-                  </div>
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Welcome, {user?.name}</h1>
+                  <p className="text-gray-600 dark:text-gray-400">Manage inventory and orders</p>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <button
-                    onClick={() => setActiveTab("inventory-view")}
-                    className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-purple-500 dark:hover:border-purple-500 transition-all hover:shadow-lg text-left"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                {(productsLoading || ordersLoading) && (
+                  <div className="text-center py-8 text-gray-500">Loading dashboard...</div>
+                )}
+
+                {!productsLoading && !ordersLoading && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <button
+                      onClick={() => setActiveTab("inventory-view")}
+                      className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-purple-500 transition-all hover:shadow-lg text-left"
+                    >
+                      <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-4">
                         <Package className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                       </div>
-                    </div>
-                    <div className="text-3xl font-bold mb-1">
-                      {products.length}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Total Products
-                    </div>
-                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-2">
-                      Click to view →
-                    </div>
-                  </button>
+                      <div className="text-3xl font-bold mb-1">{products.length}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Total Products</div>
+                      <div className="text-xs text-purple-600 dark:text-purple-400 mt-2">Click to view →</div>
+                    </button>
 
-                  <button
-                    onClick={() => setActiveTab("low-stock")}
-                    className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:shadow-lg text-left"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                    <button
+                      onClick={() => setActiveTab("low-stock")}
+                      className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-orange-500 transition-all hover:shadow-lg text-left"
+                    >
+                      <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mb-4">
                         <AlertCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                       </div>
-                    </div>
-                    <div className="text-3xl font-bold mb-1">
-                      {lowStockProducts.length}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Low Stock Items
-                    </div>
-                    <div className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-                      Click to view →
-                    </div>
-                  </button>
+                      <div className="text-3xl font-bold mb-1">{lowStockProducts.length}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Low Stock Items</div>
+                      <div className="text-xs text-orange-600 dark:text-orange-400 mt-2">Click to view →</div>
+                    </button>
 
-                  <button
-                    onClick={() => setActiveTab("pending-orders")}
-                    className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-red-500 dark:hover:border-red-500 transition-all hover:shadow-lg text-left"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                    <button
+                      onClick={() => setActiveTab("pending-orders")}
+                      className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-red-500 transition-all hover:shadow-lg text-left"
+                    >
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mb-4">
                         <Bell className="w-6 h-6 text-red-600 dark:text-red-400" />
                       </div>
-                    </div>
-                    <div className="text-3xl font-bold mb-1">
-                      {pendingOrders.length}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Awaiting Orders
-                    </div>
-                    <div className="text-xs text-red-600 dark:text-red-400 mt-2">
-                      Click to view →
-                    </div>
-                  </button>
-                </div>
+                      <div className="text-3xl font-bold mb-1">{pendingOrders.length}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Awaiting Orders</div>
+                      <div className="text-xs text-red-600 dark:text-red-400 mt-2">Click to view →</div>
+                    </button>
+                  </div>
+                )}
 
-                {/* Quick Actions */}
                 <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
                   <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -527,12 +430,9 @@ export default function SupervisorDashboard({
                       className="p-4 border-2 border-purple-300 dark:border-purple-600 rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-left"
                     >
                       <Edit className="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
-                      <div className="font-semibold">
-                        Update Inventory Management
-                      </div>
+                      <div className="font-semibold">Update Inventory Management</div>
                       <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        Update total stock with auto-split (60% Shop, 40%
-                        Online)
+                        Update total stock with a shop/online split
                       </div>
                     </button>
 
@@ -541,9 +441,7 @@ export default function SupervisorDashboard({
                       className="p-4 border-2 border-purple-300 dark:border-purple-600 rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-left"
                     >
                       <ShoppingCart className="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
-                      <div className="font-semibold">
-                        Update Online Inventory Management
-                      </div>
+                      <div className="font-semibold">Update Online Inventory Management</div>
                       <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         Update online stock quantities independently
                       </div>
@@ -553,152 +451,39 @@ export default function SupervisorDashboard({
               </div>
             )}
 
-            {/* Inventory View Tab (Read-Only) */}
+            {/* Inventory View (read-only) */}
             {activeTab === "inventory-view" && (
               <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
-                      ← Back to Overview
-                    </button>
-                    <h1 className="text-3xl font-bold mb-2">
-                      Inventory Management
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Read-only view of all inventory
-                    </p>
-                  </div>
+                <TabHeader
+                  title="Inventory Management"
+                  subtitle="Read-only view of all real inventory"
+                  onBack={() => setActiveTab("overview")}
+                  onSettings={() => setActiveTab("settings")}
+                  onLogout={handleLogout}
+                />
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-                  {/* Top Right Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveTab("settings")}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Settings"
-                    >
-                      <Settings className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Settings
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Logout
-                      </span>
-                    </button>
-                  </div>
-                </div>
+                {productsLoading && <div className="text-center py-8 text-gray-500">Loading products...</div>}
 
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Products List - Mirroring Update Inventory Layout */}
                 <div className="space-y-4">
                   {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20"
-                    >
-                      <div className="flex items-start gap-4 mb-4">
-                        <ImageWithFallback
-                          src={product.image}
-                          alt={product.name}
-                          className="w-20 h-20 rounded-2xl object-cover"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-1">
-                            {product.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {product.brand}
-                          </p>
-                        </div>
-                      </div>
-
+                    <div key={product.id} className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                      <ProductHeader product={product} />
                       <div className="space-y-3">
-                        {product.variants.map((variant) => {
-                          const stockValue = variant.stock ?? 0;
-                          const shopStock =
-                            variant.shopStock ?? Math.floor(stockValue * 0.6);
-                          const onlineStock =
-                            variant.onlineStock ?? Math.floor(stockValue * 0.4);
-
-                          return (
-                            <div
-                              key={variant.id}
-                              className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl"
-                            >
-                              {/* Size and Total Stock */}
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="font-semibold text-lg">
-                                  {variant.size}
-                                </div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                  Total Stock:{" "}
-                                  <span className="font-bold text-purple-600 dark:text-purple-400">
-                                    {formatStock(variant.stock)}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Stock Distribution Grid */}
-                              <div className="grid grid-cols-2 gap-4">
-                                {/* Shop Stock */}
-                                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/30 rounded-lg">
-                                  <div className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">
-                                    Shop Stock
-                                  </div>
-                                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                    {shopStock}
-                                  </div>
-                                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                    {stockValue > 0
-                                      ? Math.round(
-                                          (shopStock / stockValue) * 100,
-                                        )
-                                      : 0}
-                                    % of total
-                                  </div>
-                                </div>
-
-                                {/* Online Stock */}
-                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 rounded-lg">
-                                  <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
-                                    Online Stock
-                                  </div>
-                                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                    {onlineStock}
-                                  </div>
-                                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                    {stockValue > 0
-                                      ? Math.round(
-                                          (onlineStock / stockValue) * 100,
-                                        )
-                                      : 0}
-                                    % of total
-                                  </div>
-                                </div>
+                        {product.variants.map((variant) => (
+                          <div key={variant.id} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="font-semibold text-lg">{variant.size}</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Total Stock: <span className="font-bold text-purple-600 dark:text-purple-400">{formatStock(variant.stock)}</span>
                               </div>
                             </div>
-                          );
-                        })}
+                            <div className="grid grid-cols-2 gap-4">
+                              <StockBox label="Shop Stock" value={variant.shopStock} color="green" />
+                              <StockBox label="Online Stock" value={variant.onlineStock} color="blue" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -706,278 +491,73 @@ export default function SupervisorDashboard({
               </div>
             )}
 
-            {/* Update Inventory Management Tab */}
+            {/* Update Inventory Management */}
             {activeTab === "update-inventory" && (
               <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
-                      ← Back to Overview
-                    </button>
-                    <h1 className="text-3xl font-bold mb-2">
-                      Update Inventory Management
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Update total stock with dynamic percentage allocation
-                    </p>
-                  </div>
+                <TabHeader
+                  title="Update Inventory Management"
+                  subtitle="Update total stock with a shop/online percentage split"
+                  onBack={() => setActiveTab("overview")}
+                  onSettings={() => setActiveTab("settings")}
+                  onLogout={handleLogout}
+                />
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-                  {/* Top Right Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveTab("settings")}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Settings"
-                    >
-                      <Settings className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Settings
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Logout
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Products List */}
                 <div className="space-y-4">
                   {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20"
-                    >
-                      <div className="flex items-start gap-4 mb-4">
-                        <ImageWithFallback
-                          src={product.image}
-                          alt={product.name}
-                          className="w-20 h-20 rounded-2xl object-cover"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-1">
-                            {product.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {product.brand}
-                          </p>
-                        </div>
-                      </div>
-
+                    <div key={product.id} className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                      <ProductHeader product={product} />
                       <div className="space-y-3">
                         {product.variants.map((variant) => {
-                          const stockValue = variant.stock ?? 0;
-                          const shopStock =
-                            variant.shopStock ?? Math.floor(stockValue * 0.6);
-                          const onlineStock =
-                            variant.onlineStock ?? Math.floor(stockValue * 0.4);
-                          const key = `${product.id}-${variant.id}`;
-                          const percentSplit = getPercentSplit(
-                            product.id,
-                            variant.id,
-                          );
+                          const key = variant.id;
+                          const percentSplit = getPercentSplit(product.id, variant.id);
+                          const isSaving = savingKey === key;
 
                           return (
-                            <div
-                              key={variant.id}
-                              className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl space-y-4"
-                            >
-                              {/* Current Stock Display */}
-                              <div className="flex items-center gap-4">
-                                <div className="flex-1">
-                                  <div className="font-semibold mb-2">
-                                    {variant.size}
-                                  </div>
-                                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    Current: {formatStock(variant.stock)} total
-                                    ({shopStock} shop, {onlineStock} online)
-                                  </div>
-                                </div>
+                            <div key={variant.id} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl space-y-4">
+                              <div className="font-semibold mb-1">{variant.size}</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Current: {formatStock(variant.stock)} total ({formatStock(variant.shopStock)} shop, {formatStock(variant.onlineStock)} online)
                               </div>
 
-                              {/* Quantity Input with Add Button */}
                               <div className="flex items-center gap-3">
-                                <label className="text-sm font-medium whitespace-nowrap">
-                                  Total Quantity:
-                                </label>
+                                <label className="text-sm font-medium whitespace-nowrap">Total Quantity:</label>
                                 <input
                                   type="number"
                                   min="0"
                                   placeholder="e.g., 100"
                                   value={inputValues[key] || ""}
-                                  onChange={(e) =>
-                                    setInputValues({
-                                      ...inputValues,
-                                      [key]: e.target.value,
-                                    })
-                                  }
+                                  onChange={(e) => setInputValues({ ...inputValues, [key]: e.target.value })}
                                   className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600"
                                 />
                                 <button
+                                  disabled={isSaving}
                                   onClick={() => {
-                                    const value =
-                                      parseInt(inputValues[key]) || 0;
+                                    const value = parseInt(inputValues[key]) || 0;
                                     if (value > 0) {
-                                      handleTotalStockUpdate(
-                                        product.id,
-                                        variant.id,
-                                        value,
-                                        percentSplit.shop,
-                                        percentSplit.online,
-                                      );
+                                      handleTotalStockUpdate(variant.id, value, percentSplit.shop, percentSplit.online);
                                     }
                                   }}
-                                  className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all font-semibold whitespace-nowrap"
+                                  className="px-6 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-(--glow-purple-strong) transition-all font-semibold whitespace-nowrap disabled:opacity-50"
                                 >
-                                  Add
+                                  {isSaving ? "Saving..." : "Save"}
                                 </button>
                               </div>
 
-                              {/* Dynamic Percentage Allocation */}
                               <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                {/* Shop Percentage */}
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-green-600 dark:text-green-400">
-                                    Shop Stock %
-                                  </label>
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      value={percentSplit.shop}
-                                      onChange={(e) =>
-                                        handlePercentChange(
-                                          product.id,
-                                          variant.id,
-                                          "shop",
-                                          parseInt(e.target.value) || 0,
-                                        )
-                                      }
-                                      className="w-20 px-3 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-center"
-                                    />
-                                    <span className="text-sm">%</span>
-                                    <input
-                                      type="range"
-                                      min="0"
-                                      max="100"
-                                      value={percentSplit.shop}
-                                      onChange={(e) =>
-                                        handlePercentChange(
-                                          product.id,
-                                          variant.id,
-                                          "shop",
-                                          parseInt(e.target.value),
-                                        )
-                                      }
-                                      className="flex-1"
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Online Percentage */}
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                                    Online Stock %
-                                  </label>
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      value={percentSplit.online}
-                                      onChange={(e) =>
-                                        handlePercentChange(
-                                          product.id,
-                                          variant.id,
-                                          "online",
-                                          parseInt(e.target.value) || 0,
-                                        )
-                                      }
-                                      className="w-20 px-3 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-center"
-                                    />
-                                    <span className="text-sm">%</span>
-                                    <input
-                                      type="range"
-                                      min="0"
-                                      max="100"
-                                      value={percentSplit.online}
-                                      onChange={(e) =>
-                                        handlePercentChange(
-                                          product.id,
-                                          variant.id,
-                                          "online",
-                                          parseInt(e.target.value),
-                                        )
-                                      }
-                                      className="flex-1"
-                                    />
-                                  </div>
-                                </div>
+                                <PercentSlider
+                                  label="Shop Stock %"
+                                  color="green"
+                                  value={percentSplit.shop}
+                                  onChange={(v) => handlePercentChange(product.id, variant.id, "shop", v)}
+                                />
+                                <PercentSlider
+                                  label="Online Stock %"
+                                  color="blue"
+                                  value={percentSplit.online}
+                                  onChange={(v) => handlePercentChange(product.id, variant.id, "online", v)}
+                                />
                               </div>
-
-                              {/* Preview Calculation */}
-                              {inputValues[key] &&
-                                parseInt(inputValues[key]) > 0 && (
-                                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/30 rounded-lg p-3">
-                                    <div className="text-sm font-semibold mb-2 text-purple-700 dark:text-purple-300">
-                                      Preview Distribution:
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3 text-sm">
-                                      <div>
-                                        <div className="text-gray-600 dark:text-gray-400">
-                                          Total
-                                        </div>
-                                        <div className="font-bold">
-                                          {inputValues[key]}
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <div className="text-green-600 dark:text-green-400">
-                                          Shop ({percentSplit.shop}%)
-                                        </div>
-                                        <div className="font-bold text-green-600 dark:text-green-400">
-                                          {Math.floor(
-                                            parseInt(inputValues[key]) *
-                                              (percentSplit.shop / 100),
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <div className="text-blue-600 dark:text-blue-400">
-                                          Online ({percentSplit.online}%)
-                                        </div>
-                                        <div className="font-bold text-blue-600 dark:text-blue-400">
-                                          {Math.floor(
-                                            parseInt(inputValues[key]) *
-                                              (percentSplit.online / 100),
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
                             </div>
                           );
                         })}
@@ -988,143 +568,51 @@ export default function SupervisorDashboard({
               </div>
             )}
 
-            {/* Update Online Inventory Management Tab */}
+            {/* Update Online Inventory Management */}
             {activeTab === "update-online-inventory" && (
               <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
-                      ← Back to Overview
-                    </button>
-                    <h1 className="text-3xl font-bold mb-2">
-                      Update Online Inventory Management
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Update online stock quantities independently
-                    </p>
-                  </div>
+                <TabHeader
+                  title="Update Online Inventory Management"
+                  subtitle="Update online stock quantities independently"
+                  onBack={() => setActiveTab("overview")}
+                  onSettings={() => setActiveTab("settings")}
+                  onLogout={handleLogout}
+                />
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-                  {/* Top Right Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveTab("settings")}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Settings"
-                    >
-                      <Settings className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Settings
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Logout
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Products List */}
                 <div className="space-y-4">
                   {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20"
-                    >
-                      <div className="flex items-start gap-4 mb-4">
-                        <ImageWithFallback
-                          src={product.image}
-                          alt={product.name}
-                          className="w-20 h-20 rounded-2xl object-cover"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-1">
-                            {product.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {product.brand}
-                          </p>
-                        </div>
-                      </div>
-
+                    <div key={product.id} className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                      <ProductHeader product={product} />
                       <div className="space-y-3">
                         {product.variants.map((variant) => {
-                          const stockValue = variant.stock ?? 0;
-                          const onlineStock =
-                            variant.onlineStock ?? Math.floor(stockValue * 0.4);
-                          const key = `${product.id}-${variant.id}-online`;
-                          const currentOnlineStock =
-                            variant.onlineStock ?? onlineStock;
-
+                          const key = `${variant.id}-online`;
+                          const isSaving = savingKey === variant.id;
                           return (
-                            <div
-                              key={variant.id}
-                              className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-700/30"
-                            >
-                              <div className="flex items-center gap-4 mb-3">
-                                <div className="flex-1">
-                                  <div className="font-semibold mb-2">
-                                    {variant.size}
-                                  </div>
-                                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    Current Online Stock:{" "}
-                                    {formatStock(currentOnlineStock)}
-                                  </div>
-                                </div>
+                            <div key={variant.id} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-700/30">
+                              <div className="font-semibold mb-2">{variant.size}</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                Current Online Stock: {formatStock(variant.onlineStock)}
                               </div>
-
                               <div className="flex items-center gap-3">
-                                <label className="text-sm font-medium whitespace-nowrap">
-                                  Update Online Stock:
-                                </label>
+                                <label className="text-sm font-medium whitespace-nowrap">Update Online Stock:</label>
                                 <input
                                   type="number"
                                   min="0"
-                                  placeholder={`e.g., ${Math.max(currentOnlineStock + 10, 20)}`}
+                                  placeholder="e.g., 20"
                                   value={onlineInputValues[key] || ""}
-                                  onChange={(e) =>
-                                    setOnlineInputValues({
-                                      ...onlineInputValues,
-                                      [key]: e.target.value,
-                                    })
-                                  }
+                                  onChange={(e) => setOnlineInputValues({ ...onlineInputValues, [key]: e.target.value })}
                                   className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600"
                                 />
                                 <button
+                                  disabled={isSaving}
                                   onClick={() => {
-                                    const value =
-                                      parseInt(onlineInputValues[key]) || 0;
-                                    if (value >= 0) {
-                                      handleOnlineStockUpdate(
-                                        product.id,
-                                        variant.id,
-                                        value,
-                                      );
-                                    }
+                                    const value = parseInt(onlineInputValues[key]) || 0;
+                                    handleOnlineStockUpdate(variant.id, value);
                                   }}
-                                  className="px-6 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-(--glow-blue-strong) transition-all font-semibold whitespace-nowrap"
+                                  className="px-6 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg transition-all font-semibold whitespace-nowrap disabled:opacity-50"
                                 >
-                                  Add
+                                  {isSaving ? "Saving..." : "Save"}
                                 </button>
                               </div>
                             </div>
@@ -1137,69 +625,27 @@ export default function SupervisorDashboard({
               </div>
             )}
 
-            {/* Low Stock Items Tab */}
+            {/* Low Stock Items */}
             {activeTab === "low-stock" && (
               <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
-                      ← Back to Overview
-                    </button>
-                    <h1 className="text-3xl font-bold mb-2">Low Stock Items</h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Products with quantity less than 10
-                    </p>
-                  </div>
+                <TabHeader
+                  title="Low Stock Items"
+                  subtitle="Products with quantity less than 10 (or not yet stocked)"
+                  onBack={() => setActiveTab("overview")}
+                  onSettings={() => setActiveTab("settings")}
+                  onLogout={handleLogout}
+                />
 
-                  {/* Top Right Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveTab("settings")}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Settings"
-                    >
-                      <Settings className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Settings
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Logout
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Low Stock Table */}
                 <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-orange-50 dark:bg-orange-900/20">
                         <tr>
-                          <th className="px-6 py-4 text-left text-sm font-semibold">
-                            Product Name
-                          </th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold">
-                            Brand
-                          </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold">
-                            Variant
-                          </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold">
-                            Stock Level
-                          </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold">
-                            Status
-                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold">Product Name</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold">Brand</th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold">Variant</th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold">Stock Level</th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -1207,23 +653,12 @@ export default function SupervisorDashboard({
                           product.variants
                             .filter((v) => (v.stock ?? 0) < 10)
                             .map((variant) => (
-                              <tr
-                                key={`${product.id}-${variant.id}`}
-                                className="hover:bg-orange-50 dark:hover:bg-orange-900/10"
-                              >
-                                <td className="px-6 py-4 font-semibold">
-                                  {product.name}
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                                  {product.brand}
-                                </td>
+                              <tr key={`${product.id}-${variant.id}`} className="hover:bg-orange-50 dark:hover:bg-orange-900/10">
+                                <td className="px-6 py-4 font-semibold">{product.name}</td>
+                                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{product.brand}</td>
+                                <td className="px-6 py-4 text-center">{variant.size}</td>
                                 <td className="px-6 py-4 text-center">
-                                  {variant.size}
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                  <span className="font-bold text-orange-600 dark:text-orange-400">
-                                    {formatStock(variant.stock)}
-                                  </span>
+                                  <span className="font-bold text-orange-600 dark:text-orange-400">{formatStock(variant.stock)}</span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">
@@ -1238,105 +673,55 @@ export default function SupervisorDashboard({
                   </div>
                 </div>
 
-                {lowStockProducts.length === 0 && (
+                {lowStockProducts.length === 0 && !productsLoading && (
                   <div className="text-center py-12">
                     <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                    <h3 className="text-xl font-bold mb-2">
-                      No Low Stock Items
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      All products have sufficient stock levels.
-                    </p>
+                    <h3 className="text-xl font-bold mb-2">No Low Stock Items</h3>
+                    <p className="text-gray-600 dark:text-gray-400">All products have sufficient stock levels.</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Awaiting Orders Tab */}
+            {/* Awaiting Orders */}
             {activeTab === "pending-orders" && (
               <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
-                      ← Back to Overview
-                    </button>
-                    <h1 className="text-3xl font-bold mb-2">Awaiting Orders</h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Manually assign orders to staff members
-                    </p>
-                  </div>
+                <TabHeader
+                  title="Awaiting Orders"
+                  subtitle="Manually assign real customer orders to staff members"
+                  onBack={() => setActiveTab("overview")}
+                  onSettings={() => setActiveTab("settings")}
+                  onLogout={handleLogout}
+                />
 
-                  {/* Top Right Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setActiveTab("settings")}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Settings"
-                    >
-                      <Settings className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Settings
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Logout
-                      </span>
-                    </button>
-                  </div>
-                </div>
+                {ordersLoading && <div className="text-center py-8 text-gray-500">Loading orders...</div>}
 
-                {pendingOrders.length === 0 ? (
+                {!ordersLoading && pendingOrders.length === 0 ? (
                   <div className="bg-white dark:bg-white/5 rounded-3xl p-12 border border-gray-200 dark:border-purple-700/20 text-center">
                     <CheckCircle className="w-16 h-16 text-green-600 dark:text-green-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2">
-                      All Orders Assigned!
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      There are no pending orders at the moment.
-                    </p>
+                    <h3 className="text-xl font-bold mb-2">All Orders Assigned!</h3>
+                    <p className="text-gray-600 dark:text-gray-400">There are no pending orders at the moment.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {pendingOrders.map((task) => (
-                      <div
-                        key={task.id}
-                        className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20"
-                      >
+                    {pendingOrders.map((order) => (
+                      <div key={order.id} className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-bold text-lg">
-                                Order #{task.orderId}
-                              </span>
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                  task.status === "pending"
-                                    ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                                }`}
-                              >
-                                {task.status === "pending"
-                                  ? "Unassigned"
-                                  : "Awaiting Acceptance"}
+                              <span className="font-bold text-lg">{order.order_number}</span>
+                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+                                {order.assigned_to ? "Awaiting Acceptance" : "Unassigned"}
                               </span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                               <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                {new Date(task.createdAt).toLocaleString()}
+                                {new Date(order.created_at).toLocaleString()}
                               </div>
                               <div className="flex items-center gap-1">
                                 <ShoppingCart className="w-4 h-4" />
-                                LKR {task.total.toFixed(2)}
+                                LKR {order.total.toFixed(2)}
                               </div>
                             </div>
                           </div>
@@ -1346,12 +731,11 @@ export default function SupervisorDashboard({
                           <div className="flex items-start gap-2">
                             <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0 mt-0.5" />
                             <div>
-                              <div className="font-semibold mb-1">
-                                Delivery Address
-                              </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                {task.customerAddress}
-                              </div>
+                              <div className="font-semibold mb-1">Delivery Address</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">{order.delivery_address}</div>
+                              {order.user && (
+                                <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">Customer: {order.user.name}</div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1359,23 +743,16 @@ export default function SupervisorDashboard({
                         <div className="flex items-center gap-3">
                           <label className="font-semibold">Assign to:</label>
                           <select
-                            value={task.assignedTo || ""}
-                            onChange={(e) =>
-                              handleAssignOrder(task.id, e.target.value)
-                            }
+                            defaultValue=""
+                            onChange={(e) => handleAssignOrder(order.id, e.target.value)}
                             className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
                           >
                             <option value="">Select staff member...</option>
-                            {staffMembers
-                              .filter(
-                                (s) =>
-                                  s.status === "active" && s.role === "staff",
-                              )
-                              .map((staff) => (
-                                <option key={staff.id} value={staff.id}>
-                                  {staff.name} - {staff.role}
-                                </option>
-                              ))}
+                            {staffList.map((staff) => (
+                              <option key={staff.id} value={staff.id}>
+                                {staff.name} — {staff.role === "staffsupervisor" ? "Staff Supervisor" : "Staff"}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -1385,74 +762,68 @@ export default function SupervisorDashboard({
               </div>
             )}
 
-            {/* Payment Confirmations Tab */}
+            {/* Payment Confirmations */}
             {activeTab === "payment-confirmations" && (
               <div className="space-y-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
+                    <button onClick={() => setActiveTab("overview")} className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3">
                       ← Back to Overview
                     </button>
-                    <h1 className="text-3xl font-bold mb-2">
-                      Payment Confirmations
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Review and confirm online banking payments from customers
-                    </p>
+                    <h1 className="text-3xl font-bold mb-2">Payment Confirmations</h1>
+                    <p className="text-gray-600 dark:text-gray-400">Review and confirm real bank transfer submissions</p>
                   </div>
                   <button
-                    onClick={refreshPendingPayments}
+                    onClick={loadPaymentSubmissions}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors text-sm font-medium"
                   >
                     Refresh
                   </button>
                 </div>
 
-                {pendingPayments.length === 0 ? (
+                {paymentsLoading && <div className="text-center py-8 text-gray-500">Loading...</div>}
+
+                {!paymentsLoading && paymentSubmissions.length === 0 ? (
                   <div className="bg-white dark:bg-white/5 rounded-3xl p-12 border border-gray-200 dark:border-purple-700/20 text-center">
                     <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
                     <h3 className="text-xl font-bold mb-2">All Caught Up!</h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      No pending payment confirmations at the moment.
-                    </p>
+                    <p className="text-gray-500 dark:text-gray-400">No pending payment confirmations at the moment.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {pendingPayments.map((payment) => (
-                      <div
-                        key={payment.orderId}
-                        className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20"
-                      >
+                    {paymentSubmissions.map((order) => (
+                      <div key={order.id} className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
                         <div className="flex items-center justify-between flex-wrap gap-4">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-lg">
-                                {payment.orderId}
-                              </span>
+                              <span className="font-bold text-lg">{order.order_number}</span>
                               <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full font-medium">
                                 Awaiting Confirmation
                               </span>
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              Submitted:{" "}
-                              {new Date(payment.submittedAt).toLocaleString()}
-                            </div>
-                            <div className="text-purple-600 dark:text-purple-400 font-bold">
-                              LKR {payment.total.toFixed(2)}
-                            </div>
+                            {order.user && (
+                              <div className="text-sm text-gray-600 dark:text-gray-400">Customer: {order.user.name}</div>
+                            )}
+                            {order.payment_reference && (
+                              <div className="text-sm text-gray-500 dark:text-gray-500">Reference: {order.payment_reference}</div>
+                            )}
+                            <div className="text-purple-600 dark:text-purple-400 font-bold">LKR {order.total.toFixed(2)}</div>
                           </div>
-                          <button
-                            onClick={() =>
-                              handleConfirmPayment(payment.orderId)
-                            }
-                            className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold hover:shadow-lg transition-all hover:scale-105"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                            Confirm Payment
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleConfirmPayment(order.id, true)}
+                              className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold hover:shadow-lg transition-all hover:scale-105"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => handleConfirmPayment(order.id, false)}
+                              className="flex items-center gap-2 px-6 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                            >
+                              Reject
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1461,250 +832,245 @@ export default function SupervisorDashboard({
               </div>
             )}
 
-            {/* Settings Tab */}
+            {/* Settings */}
             {activeTab === "settings" && (
               <div className="space-y-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3"
-                    >
+                    <button onClick={() => setActiveTab("overview")} className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3">
                       ← Back to Overview
                     </button>
                     <h1 className="text-3xl font-bold mb-2">Settings</h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Manage your supervisor account settings
-                    </p>
+                    <p className="text-gray-600 dark:text-gray-400">Manage your supervisor account settings</p>
                   </div>
+                  <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors">
+                    <LogOut className="w-5 h-5" />
+                    <span className="hidden sm:inline font-medium">Logout</span>
+                  </button>
+                </div>
 
-                  {/* Top Right Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="hidden sm:inline font-medium">
-                        Logout
-                      </span>
-                    </button>
+                <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <UserCheck className="w-5 h-5" />
+                    Profile Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ReadonlyField label="Full Name" value={user?.name || ""} />
+                    <ReadonlyField label="Email" value={user?.email || ""} />
+                    <ReadonlyField label="Role" value="Staff Supervisor" />
+                    <ReadonlyField label="Phone" value={user?.phone_number || "Not provided"} />
                   </div>
                 </div>
 
-                {/* Settings Sections */}
-                <div className="space-y-6">
-                  {/* Profile Information */}
-                  <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <UserCheck className="w-5 h-5" />
-                      Profile Information
-                    </h2>
+                <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <Bell className="w-5 h-5" />
+                    Notification Preferences
+                  </h2>
+                  {prefsLoading ? (
+                    <div className="text-center py-4 text-gray-500">Loading...</div>
+                  ) : (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Full Name
-                          </label>
-                          <input
-                            type="text"
-                            value={user?.name || ""}
-                            readOnly
-                            className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Email
-                          </label>
-                          <input
-                            type="email"
-                            value={user?.email || ""}
-                            readOnly
-                            className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Role
-                          </label>
-                          <input
-                            type="text"
-                            value="Staff Supervisor"
-                            readOnly
-                            className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Phone
-                          </label>
-                          <input
-                            type="tel"
-                            value={user?.phone_number || "Not provided"}
-                            readOnly
-                            className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed"
-                          />
-                        </div>
-                      </div>
+                      <PrefToggle
+                        title="Push Notifications"
+                        description="Receive push notifications for orders and stock alerts"
+                        checked={notifyPush}
+                        onChange={setNotifyPush}
+                      />
+                      <PrefToggle
+                        title="Email Notifications"
+                        description="Get notified by email for important updates"
+                        checked={notifyEmail}
+                        onChange={setNotifyEmail}
+                      />
+                      <PrefToggle
+                        title="SMS Notifications"
+                        description="Get urgent alerts via SMS"
+                        checked={notifySms}
+                        onChange={setNotifySms}
+                      />
                     </div>
-                  </div>
+                  )}
+                </div>
 
-                  {/* Notifications Settings */}
-                  <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Bell className="w-5 h-5" />
-                      Notification Preferences
-                    </h2>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                        <div>
-                          <div className="font-medium">Low Stock Alerts</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Get notified when product stock falls below 10 units
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-5 h-5 text-purple-600 rounded"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                        <div>
-                          <div className="font-medium">
-                            New Order Notifications
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Receive alerts for new pending orders
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-5 h-5 text-purple-600 rounded"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                        <div>
-                          <div className="font-medium">
-                            Staff Assignment Updates
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Get notified when staff accept or decline tasks
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-5 h-5 text-purple-600 rounded"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Inventory Thresholds */}
-                  <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Package className="w-5 h-5" />
-                      Inventory Thresholds
-                    </h2>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Low Stock Warning Level
-                          </label>
-                          <input
-                            type="number"
-                            defaultValue="10"
-                            min="1"
-                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                          />
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            Alert when stock falls below this number
-                          </p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Critical Stock Level
-                          </label>
-                          <input
-                            type="number"
-                            defaultValue="5"
-                            min="1"
-                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                          />
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            Urgent alert threshold
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Display Preferences */}
-                  <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Settings className="w-5 h-5" />
-                      Display Preferences
-                    </h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Items Per Page
-                        </label>
-                        <select
-                          defaultValue="25"
-                          className="w-full md:w-64 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                        >
-                          <option value="10">10 items</option>
-                          <option value="25">25 items</option>
-                          <option value="50">50 items</option>
-                          <option value="100">100 items</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                        <div>
-                          <div className="font-medium">Show Product Images</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Display product images in inventory lists
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-5 h-5 text-purple-600 rounded"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Save Button */}
-                  <div className="flex justify-end gap-3">
-                    <button
-                      onClick={() => setActiveTab("overview")}
-                      className="px-6 py-3 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => {
-                        alert("Settings saved successfully!");
-                        setActiveTab("overview");
-                      }}
-                      className="px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:shadow-(--glow-purple-strong) transition-all font-semibold"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setActiveTab("overview")}
+                    className="px-6 py-3 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSavePreferences}
+                    disabled={savingPrefs}
+                    className="px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:shadow-(--glow-purple-strong) transition-all font-semibold disabled:opacity-50"
+                  >
+                    {savingPrefs ? "Saving..." : "Save Changes"}
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+// ─── Small shared pieces ────────────────────────────────────────────────────
+
+function TabHeader({
+  title,
+  subtitle,
+  onBack,
+  onSettings,
+  onLogout,
+}: {
+  title: string;
+  subtitle: string;
+  onBack: () => void;
+  onSettings: () => void;
+  onLogout: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between">
+      <div>
+        <button onClick={onBack} className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:underline mb-3">
+          ← Back to Overview
+        </button>
+        <h1 className="text-3xl font-bold mb-2">{title}</h1>
+        <p className="text-gray-600 dark:text-gray-400">{subtitle}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={onSettings} className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Settings">
+          <Settings className="w-5 h-5" />
+          <span className="hidden sm:inline font-medium">Settings</span>
+        </button>
+        <button onClick={onLogout} className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors" title="Logout">
+          <LogOut className="w-5 h-5" />
+          <span className="hidden sm:inline font-medium">Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="relative">
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search products..."
+        className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 focus:outline-none transition-colors"
+      />
+    </div>
+  );
+}
+
+function ProductHeader({ product }: { product: Product }) {
+  return (
+    <div className="flex items-start gap-4 mb-4">
+      <ImageWithFallback src={product.image} alt={product.name} className="w-20 h-20 rounded-2xl object-cover" />
+      <div className="flex-1">
+        <h3 className="font-bold text-lg mb-1">{product.name}</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{product.brand}</p>
+      </div>
+    </div>
+  );
+}
+
+function StockBox({ label, value, color }: { label: string; value: number | null | undefined; color: "green" | "blue" }) {
+  const display = value === null || value === undefined ? "Not set" : String(value);
+  const classes =
+    color === "green"
+      ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700/30 text-green-600 dark:text-green-400"
+      : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700/30 text-blue-600 dark:text-blue-400";
+  return (
+    <div className={`p-3 border rounded-lg ${classes}`}>
+      <div className="text-xs font-medium mb-1">{label}</div>
+      <div className="text-2xl font-bold">{display}</div>
+    </div>
+  );
+}
+
+function PercentSlider({
+  label,
+  color,
+  value,
+  onChange,
+}: {
+  label: string;
+  color: "green" | "blue";
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const labelColor = color === "green" ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400";
+  return (
+    <div className="space-y-2">
+      <label className={`text-sm font-medium ${labelColor}`}>{label}</label>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          min="0"
+          max="100"
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+          className="w-20 px-3 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-center"
+        />
+        <span className="text-sm">%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value))}
+          className="flex-1"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ReadonlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-2">{label}</label>
+      <input
+        type="text"
+        value={value}
+        readOnly
+        className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed"
+      />
+    </div>
+  );
+}
+
+function PrefToggle({
+  title,
+  description,
+  checked,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+      <div>
+        <div className="font-medium">{title}</div>
+        <div className="text-sm text-gray-600 dark:text-gray-400">{description}</div>
+      </div>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-5 h-5 text-purple-600 rounded"
+      />
     </div>
   );
 }
