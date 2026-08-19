@@ -533,3 +533,98 @@ function AddressModal({
           </div>
           <button
             onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div>
+            <label className="block text-sm font-semibold mb-2">Address Label *</label>
+            <input
+              type="text"
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              placeholder="e.g., Home, Office, Grandma's House"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
+              required
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Give this address a name to identify it easily
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">Full Name *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Recipient's name"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">Street Address *</label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Street address, apartment, suite, unit, etc."
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">City, State & ZIP *</label>
+            <input
+              type="text"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              placeholder="e.g., New York, NY 10001"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="flex text-sm font-semibold mb-2 items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              Delivery Instructions (Optional)
+            </label>
+            <textarea
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              placeholder="Add any special instructions for the delivery person..."
+              rows={3}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-purple-700/20 rounded-xl focus:outline-none focus:border-purple-600 dark:focus:border-purple-400 resize-none"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              e.g., "Ring the doorbell twice", "Leave at the back door", "Call when you arrive"
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-purple-700/20">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105"
+            >
+              {address ? 'Update Address' : 'Add Address'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
