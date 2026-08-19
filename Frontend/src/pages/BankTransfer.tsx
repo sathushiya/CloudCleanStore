@@ -1,5 +1,6 @@
 import { Copy, Check, Building2, ArrowLeft, Clock, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { orderService } from '../services/orderService';
 
 interface OrderDetails {
   customerName: string;
@@ -10,7 +11,7 @@ interface OrderDetails {
 
 interface BankTransferProps {
   total: number;
-  orderId: string;
+  orderId: string; // real numeric order ID (as a string) -- see note below if this is actually the order_number
   orderDetails: OrderDetails;
   onBack: () => void;
   onConfirm: () => void;
@@ -20,6 +21,8 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
   const [copied, setCopied] = useState<string | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const bankDetails = {
     bank: 'Bank of Ceylon (BOC)',
@@ -29,25 +32,36 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
     swiftCode: 'BCEYLKLX',
   };
 
-  // Poll localStorage for supervisor confirmation
+  const numericOrderId = Number(orderId);
+
   useEffect(() => {
     if (!waiting) return;
-    const interval = setInterval(() => {
-      const confirmations = JSON.parse(localStorage.getItem('paymentConfirmations') || '{}');
-      if (confirmations[orderId] === 'confirmed') {
-        setConfirmed(true);
-        clearInterval(interval);
-        setTimeout(() => onConfirm(), 2500);
+    const interval = setInterval(async () => {
+      try {
+        const order = await orderService.myOrder(numericOrderId);
+        if (order.payment_status === 'confirmed') {
+          setConfirmed(true);
+          clearInterval(interval);
+          setTimeout(() => onConfirm(), 2500);
+        }
+      } catch (err) {
+        // Transient network error -- just try again on the next tick
       }
-    }, 1500);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [waiting, orderId, onConfirm]);
+  }, [waiting, numericOrderId, onConfirm]);
 
-  const handleTransferDone = () => {
-    const pending = JSON.parse(localStorage.getItem('pendingPayments') || '[]');
-    pending.push({ orderId, total, submittedAt: new Date().toISOString(), ...orderDetails });
-    localStorage.setItem('pendingPayments', JSON.stringify(pending));
-    setWaiting(true);
+  const handleTransferDone = async () => {
+    setSubmitError('');
+    setSubmitting(true);
+    try {
+      await orderService.submitPayment(numericOrderId, orderId);
+      setWaiting(true);
+    } catch (err: any) {
+      setSubmitError(err.response?.data?.message || 'Failed to submit payment confirmation. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const copyToClipboard = (value: string, field: string) => {
@@ -69,7 +83,6 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
     </button>
   );
 
-  // — Order Confirmed screen —
   if (confirmed) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
@@ -86,7 +99,6 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
     );
   }
 
-  // — Waiting for confirmation screen —
   if (waiting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
@@ -108,7 +120,6 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
     );
   }
 
-  // — Bank details screen —
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-[#0f0a1e] dark:via-[#1a1425] dark:to-[#2d1b4e] flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
@@ -172,6 +183,12 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
           </p>
         </div>
 
+        {submitError && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/30 rounded-2xl text-sm text-red-700 dark:text-red-300">
+            {submitError}
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             onClick={onBack}
@@ -182,9 +199,10 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
           </button>
           <button
             onClick={handleTransferDone}
-            className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105"
+            disabled={submitting}
+            className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-semibold hover:shadow-[var(--glow-purple-strong)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
-            I've Completed the Transfer
+            {submitting ? 'Submitting...' : "I've Completed the Transfer"}
           </button>
         </div>
       </div>
