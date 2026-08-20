@@ -15,8 +15,7 @@ class StaffController extends Controller
     {
         $staff = User::whereIn('role', ['admin', 'staff', 'staffsupervisor'])
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'phone_number', 'role', 'is_active', 'created_at']);
-
+            ->get(['id', 'name', 'email', 'phone_number', 'role', 'is_active', 'is_available', 'created_at']);
         return response()->json(['success' => true, 'data' => $staff]);
     }
 
