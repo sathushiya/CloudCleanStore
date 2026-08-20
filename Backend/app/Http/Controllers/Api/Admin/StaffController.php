@@ -65,12 +65,31 @@ class StaffController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, User $staff): JsonResponse
+        public function destroy(Request $request, User $staff): JsonResponse
     {
         abort_if($staff->id === $request->user()->id, 422, 'You cannot delete your own account.');
 
         $staff->delete();
 
         return response()->json(['success' => true, 'message' => 'Staff account removed.']);
+    }
+
+    // PATCH /api/staff/availability -- the authenticated staff/staffsupervisor
+    // toggles their own online/offline status. Deliberately self-only (no
+    // user_id param) since only the person clocking themselves in/out should
+    // be able to change this, unlike order assignment which a supervisor can
+    // do on someone else's behalf.
+    public function updateAvailability(Request $request): JsonResponse
+    {
+        $request->validate(['is_available' => ['required', 'boolean']]);
+
+        $user = $request->user();
+        $user->update(['is_available' => $request->boolean('is_available')]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $user->is_available ? 'You are now available for deliveries.' : 'You are now offline.',
+            'data' => ['is_available' => $user->is_available],
+        ]);
     }
 }
