@@ -37,9 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('phone')->group(function () {
-        Route::post('/check-whatsapp', [PhoneVerificationController::class, 'checkWhatsapp']);
-        Route::post('/send-otp', [PhoneVerificationController::class, 'sendOtp']);
-        Route::post('/verify-otp', [PhoneVerificationController::class, 'verifyOtp']);
+        Route::post('/check-whatsapp', [PhoneVerificationController::class, 'checkWhatsapp'])->middleware('throttle:10,1');
+        Route::post('/send-otp', [PhoneVerificationController::class, 'sendOtp'])->middleware('throttle:5,1');
+        Route::post('/verify-otp', [PhoneVerificationController::class, 'verifyOtp'])->middleware('throttle:10,1');
     });
 
     // Available to EVERY authenticated role (customer, staff, staffsupervisor, admin) --
