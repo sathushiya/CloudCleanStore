@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, AlertCircle, Edit2, Check, X } from 'lucide-react';
-import { categories } from '../../data/products';
-import { productService, toFrontendProduct, Product } from '../../services/productService';
+import { categories, Product } from '../../data/products';
+import { productService, toFrontendProduct } from '../../services/productService';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 
 const LOW_STOCK_THRESHOLD = 10;

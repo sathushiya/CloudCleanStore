@@ -11,6 +11,7 @@ export interface Profile {
   notify_push: boolean;
   notify_email: boolean;
   notify_sms: boolean;
+  is_available: boolean | null;
 }
 
 export const profileService = {
