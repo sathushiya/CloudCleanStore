@@ -14,9 +14,9 @@ class ProfileController extends Controller
         $user = $request->user();
         return response()->json([
             'success' => true,
-            'data' => $user->only([
+                'data' => $user->only([
                 'id', 'name', 'email', 'phone_number', 'phone_verified_at', 'has_whatsapp', 'created_at',
-                'notify_push', 'notify_email', 'notify_sms',
+                'notify_push', 'notify_email', 'notify_sms', 'is_available',
             ]),
         ]);
     }
