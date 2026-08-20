@@ -9,6 +9,7 @@ class OtpVerification extends Model
 {
     protected $fillable = [
         'email',
+        'phone',
         'otp',
         'type',
         'is_used',

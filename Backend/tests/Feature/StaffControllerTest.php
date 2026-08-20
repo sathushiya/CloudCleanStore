@@ -100,6 +100,6 @@ class StaffControllerTest extends TestCase
         $response = $this->actingAs($admin, 'sanctum')->deleteJson("/api/admin/staff/{$staff->id}");
 
         $response->assertOk();
-        $this->assertDatabaseMissing('users', ['id' => $staff->id]);
+        $this->assertSoftDeleted('users', ['id' => $staff->id]);
     }
 }
