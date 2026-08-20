@@ -128,6 +128,20 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
           <p className="text-gray-600 dark:text-gray-400">Manage your preferences</p>
         </div>
 
+                {/* Phone / WhatsApp Verification Section */}
+        <div className="mb-8 backdrop-blur-xl bg-white/70 dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-100 dark:bg-purple-900/30">
+              <MessageSquare className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Phone & WhatsApp</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Verify your phone number for order updates</p>
+            </div>
+          </div>
+          <PhoneVerificationStatus />
+        </div>
+
         {/* Change Password Section */}
         <div className="mb-8 backdrop-blur-xl bg-white/70 dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
           <div className="flex items-center gap-3 mb-6">
