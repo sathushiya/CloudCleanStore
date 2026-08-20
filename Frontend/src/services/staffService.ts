@@ -7,6 +7,7 @@ export interface StaffAccount {
   phone_number?: string;
   role: 'admin' | 'staff' | 'staffsupervisor';
   is_active: boolean;
+  is_available?: boolean;
   created_at: string;
 }
 
@@ -37,6 +38,12 @@ export const staffService = {
 
   async remove(id: number) {
     await api.delete(`/admin/staff/${id}`);
+  },
+
+  // Self-only -- the logged-in staff/staffsupervisor toggles their own status
+  async updateAvailability(isAvailable: boolean) {
+    const { data } = await api.patch('/staff/availability', { is_available: isAvailable });
+    return data.data as { is_available: boolean };
   },
 };
 
