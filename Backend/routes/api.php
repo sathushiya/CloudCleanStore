@@ -77,13 +77,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/notifications', [NotificationController::class, 'clearAll']);
     });
 
-    Route::middleware('role:admin,staff,staffsupervisor')->prefix('staff')->group(function () {
+        Route::middleware('role:admin,staff,staffsupervisor')->prefix('staff')->group(function () {
         Route::get('/dashboard', fn() => response()->json(['message' => 'Staff dashboard — Phase 2']));
 
         Route::get('/orders', [OrderController::class, 'staffIndex']);
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
         Route::patch('/orders/{order}/assign', [OrderController::class, 'assignToSelf']);
         Route::patch('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment']);
+        Route::patch('/availability', [StaffController::class, 'updateAvailability']);
     });
 
     Route::middleware('role:customer')->prefix('customer')->group(function () {
