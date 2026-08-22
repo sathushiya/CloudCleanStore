@@ -120,6 +120,10 @@ export default function Signup({ onNavigateToLogin, onSignupSuccess, onBack }: S
     try {
       await phoneService.sendOtp(formData.phone);
       setPhoneOtpSent(true);
+      // A fresh code invalidates whatever was typed for the last one --
+      // clear the boxes so a stale code can't be resubmitted by mistake.
+      setPhoneOtp(['', '', '', '', '', '']);
+      document.getElementById('signup-phone-otp-0')?.focus();
     } catch (err: any) {
       setPhoneOtpError(err.response?.data?.message || 'Failed to send verification code.');
     } finally {
@@ -154,6 +158,8 @@ export default function Signup({ onNavigateToLogin, onSignupSuccess, onBack }: S
       onSignupSuccess();
     } catch (err: any) {
       setPhoneOtpError(err.response?.data?.message || 'Invalid code. Please try again.');
+      setPhoneOtp(['', '', '', '', '', '']);
+      document.getElementById('signup-phone-otp-0')?.focus();
     } finally {
       setPhoneOtpLoading(false);
     }

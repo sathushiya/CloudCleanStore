@@ -40,6 +40,9 @@ export default function PhoneVerificationStatus() {
     try {
       await phoneService.sendOtp(phoneNumber);
       setOtpSent(true);
+      // A fresh code invalidates whatever was typed for the last one --
+      // clear it so a stale code can't be resubmitted by mistake.
+      setOtp('');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to send verification code.');
     } finally {
@@ -58,6 +61,7 @@ export default function PhoneVerificationStatus() {
       await loadStatus();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid code. Please try again.');
+      setOtp('');
     } finally {
       setVerifying(false);
     }
