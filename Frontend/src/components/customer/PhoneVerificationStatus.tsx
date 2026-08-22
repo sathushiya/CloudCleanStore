@@ -104,10 +104,16 @@ export default function PhoneVerificationStatus() {
             disabled={sending}
             className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-medium disabled:opacity-50"
           >
-            {sending ? 'Sending...' : 'Verify Now'}
+            {sending ? 'Sending via WhatsApp...' : 'Verify via WhatsApp'}
           </button>
         )}
       </div>
+
+      {!isVerified && !otpSent && (
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          We'll send a code to this number on WhatsApp -- it needs to be WhatsApp-enabled.
+        </p>
+      )}
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -116,7 +122,7 @@ export default function PhoneVerificationStatus() {
           <input
             type="text"
             maxLength={6}
-            placeholder="6-digit code"
+            placeholder="6-digit WhatsApp code"
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
             className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-purple-700/20 bg-white dark:bg-white/5 text-gray-900 dark:text-white"

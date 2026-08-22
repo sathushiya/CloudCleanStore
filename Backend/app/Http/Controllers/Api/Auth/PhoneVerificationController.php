@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\OtpService;
 use App\Services\PhoneService;
-use App\Services\SmsService;
-use App\Services\WhatsAppCheckService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,9 +13,8 @@ class PhoneVerificationController extends Controller
 {
     public function __construct(
         private PhoneService $phoneService,
-        private WhatsAppCheckService $whatsAppCheckService,
+        private WhatsAppService $whatsAppService,
         private OtpService $otpService,
-        private SmsService $smsService,
     ) {
     }
 
@@ -29,7 +27,7 @@ class PhoneVerificationController extends Controller
             return response()->json(['success' => false, 'message' => $validation['message']], 422);
         }
 
-        $hasWhatsapp = $this->whatsAppCheckService->check($validation['formatted']);
+        $hasWhatsapp = $this->whatsAppService->check($validation['formatted']);
 
         return response()->json([
             'success' => true,
@@ -49,10 +47,31 @@ class PhoneVerificationController extends Controller
             return response()->json(['success' => false, 'message' => $validation['message']], 422);
         }
 
-        $otp = $this->otpService->generateForPhone($validation['formatted'], 'phone_verification');
-        $this->smsService->sendOtp($validation['formatted'], $otp);
+        // Verification is WhatsApp-only -- the OTP can't be delivered any
+        // other way, so a number that doesn't have WhatsApp can't proceed.
+        $hasWhatsapp = $this->whatsAppService->check($validation['formatted']);
+        if ($hasWhatsapp === false) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This number does not appear to have WhatsApp. Please use a WhatsApp-enabled number.',
+            ], 422);
+        }
 
-        return response()->json(['success' => true, 'message' => 'Verification code sent.']);
+        $otp = $this->otpService->generateForPhone($validation['formatted'], 'phone_verification');
+        $sent = $this->whatsAppService->sendOtp($validation['formatted'], $otp);
+
+        if (!$sent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send the WhatsApp message. Please try again in a moment.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code sent via WhatsApp.',
+            'data' => ['has_whatsapp' => $hasWhatsapp],
+        ]);
     }
 
     public function verifyOtp(Request $request): JsonResponse
@@ -78,7 +97,7 @@ class PhoneVerificationController extends Controller
             return response()->json(['success' => false, 'message' => $messages[$result] ?? 'Verification failed.'], 422);
         }
 
-        $hasWhatsapp = $this->whatsAppCheckService->check($validation['formatted']);
+        $hasWhatsapp = $this->whatsAppService->check($validation['formatted']);
 
         $user = $request->user();
         $user->update([

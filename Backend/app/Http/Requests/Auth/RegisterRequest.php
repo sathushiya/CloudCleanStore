@@ -28,7 +28,12 @@ class RegisterRequest extends FormRequest
                 'regex:/[0-9]/',          // must have number
                 'regex:/[!@#$%^&*(),.?":{}|<>]/', // must have special char
             ],
-            'phone_number' => ['nullable', 'string', 'max:20'],
+            // Required now that account verification is WhatsApp-only -- there's
+            // no other channel to reach the customer through. Format itself
+            // (country code, digit count) is checked by PhoneService in the
+            // controller, which also tolerates spaces/dashes the way the
+            // frontend's own client-side check does.
+            'phone_number' => ['required', 'string', 'max:20'],
         ];
     }
 
@@ -43,6 +48,7 @@ class RegisterRequest extends FormRequest
             'password.min' => 'Password must be at least 8 characters',
             'password.confirmed' => 'Passwords do not match',
             'password.regex' => 'Password must include uppercase, lowercase, number, and special character',
+            'phone_number.required' => 'Phone number is required for WhatsApp verification',
         ];
     }
 

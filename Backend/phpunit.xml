@@ -33,5 +33,11 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Tests must never depend on (or accidentally call out to) whatever
+             real third-party credentials happen to be in a developer's local
+             .env, so these are forced blank; WhatsAppService always runs in
+             its "not configured" fallback path during the suite. -->
+        <env name="GREEN_API_INSTANCE_ID" value=""/>
+        <env name="GREEN_API_TOKEN" value=""/>
     </php>
 </phpunit>
