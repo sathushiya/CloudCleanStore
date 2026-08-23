@@ -37,31 +37,44 @@ class WhatsAppService
     }
 
     /**
-     * Send the OTP as a WhatsApp message. Returns true if the message was
-     * (or, in local dev without Green API configured, would have been) sent;
-     * false only when Green API is configured but actively rejected it --
-     * that's the one case worth surfacing to the user as a real failure.
+     * Send the OTP as a WhatsApp message.
      */
     public function sendOtp(string $phone, string $otp): bool
     {
+        return $this->sendMessage(
+            $phone,
+            "Your CloudCleanStore verification code is: {$otp}\n\nThis code expires in " . (int) env('OTP_EXPIRY_MINUTES', 10) . ' minutes.',
+            'OTP',
+        );
+    }
+
+    /**
+     * Send a plain WhatsApp text message (order/payment updates, etc).
+     * Returns true if the message was (or, in local dev without Green API
+     * configured, would have been) sent; false only when Green API is
+     * configured but actively rejected it -- that's the one case worth
+     * surfacing to the caller as a real failure. Never throws.
+     */
+    public function sendMessage(string $phone, string $message, string $logLabel = 'message'): bool
+    {
         if (!$this->configured()) {
-            Log::info("[WhatsApp OTP - Green API not configured, logging instead] To: {$phone} | Code: {$otp}");
+            Log::info("[WhatsApp {$logLabel} - Green API not configured, logging instead] To: {$phone} | Message: {$message}");
             return true;
         }
 
         try {
             $response = Http::timeout(10)->post($this->endpoint('sendMessage'), [
                 'chatId' => $this->cleanPhone($phone) . '@c.us',
-                'message' => "Your CloudCleanStore verification code is: {$otp}\n\nThis code expires in " . (int) env('OTP_EXPIRY_MINUTES', 10) . ' minutes.',
+                'message' => $message,
             ]);
 
             if (!$response->successful()) {
-                Log::error('WhatsApp OTP send failed: ' . $response->body());
+                Log::error("WhatsApp {$logLabel} send failed: " . $response->body());
             }
 
             return $response->successful();
         } catch (\Exception $e) {
-            Log::error('WhatsApp OTP send failed: ' . $e->getMessage());
+            Log::error("WhatsApp {$logLabel} send failed: " . $e->getMessage());
             return false;
         }
     }

@@ -8,6 +8,7 @@ use App\Models\CartItem;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,10 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    public function __construct(private WhatsAppService $whatsAppService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $orders = $request->user()
@@ -201,6 +206,15 @@ class OrderController extends Controller
             'medium',
         );
 
+        $customer = $order->user;
+        if ($customer?->phone_number) {
+            $this->whatsAppService->sendMessage(
+                $customer->phone_number,
+                "Hi {$customer->name}! We've received your bank transfer submission for order #{$order->order_number} (LKR " . number_format($order->total, 2) . "). Please reply here with your payment receipt so we can verify it -- we'll confirm your order as soon as it's checked.",
+                'payment submitted',
+            );
+        }
+
         return response()->json(['success' => true, 'message' => 'Payment details submitted for verification.', 'data' => $order]);
     }
 
@@ -209,9 +223,17 @@ class OrderController extends Controller
     {
         $request->validate(['approved' => ['required', 'boolean']]);
 
-        $order->update([
-            'payment_status' => $request->boolean('approved') ? 'confirmed' : 'rejected',
-        ]);
+        $approved = $request->boolean('approved');
+        $order->update(['payment_status' => $approved ? 'confirmed' : 'rejected']);
+
+        $customer = $order->user;
+        if ($customer?->phone_number) {
+            $message = $approved
+                ? "Great news, {$customer->name}! Your payment for order #{$order->order_number} has been verified. Your order is confirmed and will be delivered soon."
+                : "Hi {$customer->name}, we couldn't verify your payment for order #{$order->order_number}. Please reply here with your payment receipt, or contact us for help.";
+
+            $this->whatsAppService->sendMessage($customer->phone_number, $message, 'payment ' . ($approved ? 'confirmed' : 'rejected'));
+        }
 
         return response()->json(['success' => true, 'message' => 'Payment status updated.', 'data' => $order]);
     }

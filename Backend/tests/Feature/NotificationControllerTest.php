@@ -98,4 +98,25 @@ class NotificationControllerTest extends TestCase
         $response->assertOk();
         $this->assertDatabaseCount('notifications', 0);
     }
+
+    // Supervisor owns Payment Confirmations but couldn't see the "Payment
+    // Submitted" notification before -- it was Admin-only.
+    public function test_staffsupervisor_can_list_notifications(): void
+    {
+        $supervisor = User::factory()->create(['role' => 'staffsupervisor']);
+        Notification::log('order', 'Payment Submitted', 'Customer submitted a bank transfer reference.', 'medium');
+
+        $response = $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/notifications');
+
+        $response->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_plain_staff_still_cannot_access_notifications(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/admin/notifications');
+
+        $response->assertForbidden();
+    }
 }

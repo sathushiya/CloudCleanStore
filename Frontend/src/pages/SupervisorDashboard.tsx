@@ -23,6 +23,7 @@ import type { Product } from "../data/products";
 import { orderService, Order } from "../services/orderService";
 import { staffService, StaffAccount } from "../services/staffService";
 import { profileService } from "../services/profileService";
+import notificationService, { AdminNotification } from "../services/notificationService";
 import { ImageWithFallback } from "../components/common/ImageWithFallback";
 
 interface SupervisorDashboardProps {
@@ -52,6 +53,8 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
   const [paymentSubmissions, setPaymentSubmissions] = useState<Order[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [staffList, setStaffList] = useState<StaffAccount[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [bellOpen, setBellOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
@@ -113,6 +116,24 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     }
   };
 
+  const loadNotifications = async () => {
+    try {
+      const data = await notificationService.list();
+      setNotifications(data);
+    } catch {
+      // bell just stays empty
+    }
+  };
+
+  const handleMarkNotificationRead = async (id: number) => {
+    try {
+      await notificationService.markRead(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch {
+      // leave it in the list, user can retry
+    }
+  };
+
   const loadPreferences = async () => {
     setPrefsLoading(true);
     try {
@@ -132,6 +153,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     loadPendingOrders();
     loadPaymentSubmissions();
     loadStaff();
+    loadNotifications();
   }, []);
 
   useEffect(() => {
@@ -296,12 +318,55 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
           <div className="h-full flex flex-col">
             <div className="p-6 border-b border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center shrink-0">
                   <UserCheck className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <h2 className="font-bold text-gray-900 dark:text-white">Staff Supervisor</h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{user?.name}</p>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-bold text-gray-900 dark:text-white truncate">Staff Supervisor</h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user?.name}</p>
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setBellOpen((v) => !v)}
+                    className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {notifications.length > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {notifications.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {bellOpen && (
+                    <div className="absolute right-0 mt-2 w-80 max-w-[85vw] bg-white dark:bg-[#1a1425] rounded-2xl shadow-2xl border border-gray-200 dark:border-purple-700/20 z-50 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-purple-700/20 font-semibold text-sm">
+                        Notifications
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <p className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">Nothing new.</p>
+                        ) : (
+                          notifications.map((n) => (
+                            <div key={n.id} className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <span className="font-medium text-sm">{n.title}</span>
+                                {n.priority === "high" && <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                              </div>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{n.message}</p>
+                              <button
+                                onClick={() => handleMarkNotificationRead(n.id)}
+                                className="text-xs px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
+                              >
+                                Mark as Read
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">

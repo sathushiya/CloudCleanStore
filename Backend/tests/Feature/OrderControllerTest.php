@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OrderControllerTest extends TestCase
@@ -123,5 +124,77 @@ class OrderControllerTest extends TestCase
         ]);
 
         $response->assertUnprocessable();
+    }
+
+    // ─── WhatsApp payment updates ──────────────────────────────────────────
+    // The bank transfer page tells the customer they'll be messaged on
+    // WhatsApp for verification -- these confirm that's actually true now.
+
+    public function test_submitting_payment_notifies_the_customer_on_whatsapp(): void
+    {
+        config(['services.green_api.instance_id' => 'test-instance', 'services.green_api.token' => 'test-token']);
+        Http::fake(['api.green-api.com/*/sendMessage/*' => Http::response(['idMessage' => 'abc'])]);
+
+        $customer = User::factory()->create(['phone_number' => '+94771234567']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_method' => 'bank_transfer']);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson("/api/customer/orders/{$order->id}/submit-payment", [
+            'payment_reference' => 'REF123',
+        ]);
+
+        $response->assertOk();
+        Http::assertSent(function ($request) use ($order) {
+            return str_contains($request->url(), 'sendMessage')
+                && $request['chatId'] === '94771234567@c.us'
+                && str_contains($request['message'], $order->order_number);
+        });
+    }
+
+    public function test_confirming_payment_notifies_the_customer_it_was_approved(): void
+    {
+        config(['services.green_api.instance_id' => 'test-instance', 'services.green_api.token' => 'test-token']);
+        Http::fake(['api.green-api.com/*/sendMessage/*' => Http::response(['idMessage' => 'abc'])]);
+
+        $customer = User::factory()->create(['phone_number' => '+94771234567']);
+        $staff = User::factory()->create(['role' => 'staffsupervisor']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'submitted']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
+            'approved' => true,
+        ]);
+
+        $response->assertOk();
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['message'], 'confirmed'));
+    }
+
+    public function test_rejecting_payment_notifies_the_customer_it_was_rejected(): void
+    {
+        config(['services.green_api.instance_id' => 'test-instance', 'services.green_api.token' => 'test-token']);
+        Http::fake(['api.green-api.com/*/sendMessage/*' => Http::response(['idMessage' => 'abc'])]);
+
+        $customer = User::factory()->create(['phone_number' => '+94771234567']);
+        $staff = User::factory()->create(['role' => 'staffsupervisor']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'submitted']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
+            'approved' => false,
+        ]);
+
+        $response->assertOk();
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['message'], "couldn't verify"));
+    }
+
+    public function test_payment_update_does_not_fail_when_customer_has_no_phone(): void
+    {
+        $customer = User::factory()->create(['phone_number' => null]);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_method' => 'bank_transfer']);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson("/api/customer/orders/{$order->id}/submit-payment", [
+            'payment_reference' => 'REF123',
+        ]);
+
+        $response->assertOk();
     }
 }

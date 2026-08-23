@@ -72,7 +72,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/staff', [StaffController::class, 'store']);
         Route::put('/staff/{staff}', [StaffController::class, 'update']);
         Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
+    });
 
+    // Notifications (order/payment events) -- also open to staffsupervisor,
+    // who owns Payment Confirmations and otherwise had no way to know a
+    // 'Payment Submitted' notification even existed (it only ever showed
+    // up in Admin's notification center before this).
+    Route::middleware('role:admin,staffsupervisor')->prefix('admin')->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
