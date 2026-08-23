@@ -42,7 +42,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const { isAuthenticated, user, logout, refreshUser } = useAuth();
+  const { isAuthenticated, user, refreshUser } = useAuth();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
 
@@ -112,8 +112,12 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
 
   const handleLogout = () => {
     setMobileMenuOpen(false);
-    logout(); // Call the auth logout function
-    onLogout?.(); // Call the navigation callback
+    // onLogout (App.tsx's handler) already calls AuthContext's logout() and
+    // navigates -- calling logout() here too fired it twice, racing a second
+    // /auth/logout request against already-cleared tokens and causing a
+    // stray 401 that triggered a hard window.location redirect on top of
+    // the normal navigation (felt like the page refreshing twice).
+    onLogout?.();
   };
 
   return (

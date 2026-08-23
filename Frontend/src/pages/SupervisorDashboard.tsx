@@ -40,7 +40,7 @@ type TabType =
   | "settings";
 
 export default function SupervisorDashboard({ onLogout }: SupervisorDashboardProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -138,8 +138,11 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     if (activeTab === "settings") loadPreferences();
   }, [activeTab]);
 
+  // onLogout (App.tsx's handler) already calls AuthContext's logout() and
+  // navigates -- calling logout() here too fired it twice, racing a second
+  // /auth/logout request against already-cleared tokens (stray 401 -> hard
+  // window.location redirect on top of the normal navigation).
   const handleLogout = () => {
-    logout();
     onLogout();
   };
 

@@ -40,7 +40,7 @@ interface AdminDashboardProps {
 
 type TabType = 'overview' | 'inventory' | 'products' | 'brands' | 'staff' | 'orders' | 'permissions' | 'notifications' | 'performance' | 'settings';
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsList, setNotificationsList] = useState<AdminNotification[]>([]);
@@ -145,8 +145,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
+  // onLogout (App.tsx's handler) already calls AuthContext's logout() and
+  // navigates -- calling logout() here too fired it twice, racing a second
+  // /auth/logout request against already-cleared tokens (stray 401 -> hard
+  // window.location redirect on top of the normal navigation).
   const handleLogout = () => {
-    logout();
     onLogout();
   };
 
