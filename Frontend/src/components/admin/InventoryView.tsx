@@ -24,7 +24,7 @@ export default function InventoryView() {
     try {
       const apiProducts = await productService.adminList();
       setProducts(apiProducts.map(toFrontendProduct));
-    } catch (err) {
+    } catch {
       setError('Could not load inventory from the server.');
     } finally {
       setIsLoading(false);
@@ -75,7 +75,7 @@ export default function InventoryView() {
       });
       await loadProducts();
       setEditingVariantId(null);
-    } catch (err) {
+    } catch {
       alert('Failed to update stock. Please try again.');
     } finally {
       setSaving(false);
