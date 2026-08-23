@@ -21,7 +21,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
     try {
       const url = await uploadService.uploadImage(file);
       onChange(url);
-    } catch (err) {
+    } catch {
       setError('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
