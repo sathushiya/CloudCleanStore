@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram } from 'lucide-react';
 import Logo from '../common/Logo';
 
 export default function Footer() {
@@ -13,20 +13,14 @@ export default function Footer() {
               Your trusted partner for premium cleaning products. Fast delivery, quality guaranteed.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 transition-colors">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 transition-colors">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 transition-colors">
+              <a
+                href="https://www.instagram.com/cloud_clean.lk?igsh=Mm01b3M2OXNhYnNw&igsi=Mm01b3M2OXNhYnNw"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Cloud Clean on Instagram"
+                className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 transition-colors"
+              >
                 <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 transition-colors">
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 transition-colors">
-                <Youtube className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -88,7 +82,9 @@ export default function Footer() {
             </div>
             <div>
               <div className="font-semibold mb-1 text-sm">Call Us</div>
-              <div className="text-gray-600 dark:text-gray-400 text-sm">+1 (555) 123-4567</div>
+              <a href="tel:+94765427147" className="text-gray-600 dark:text-gray-400 text-sm hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                076 542 7147
+              </a>
             </div>
           </div>
 
@@ -108,7 +104,14 @@ export default function Footer() {
             </div>
             <div>
               <div className="font-semibold mb-1 text-sm">Visit Us</div>
-              <div className="text-gray-600 dark:text-gray-400 text-sm">123 Clean Street, NY 10001</div>
+              <a
+                href="https://maps.app.goo.gl/bcmSAAUUY3TrCqQW9?g_st=ic"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 dark:text-gray-400 text-sm hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              >
+                Cloud Clean Chemical
+              </a>
             </div>
           </div>
         </div>

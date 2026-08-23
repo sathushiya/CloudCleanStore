@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle, CheckCircle, X, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { validateEmail, validatePassword } from '../utils/auth';
@@ -105,12 +105,25 @@ export default function Signup({ onNavigateToLogin, onSignupSuccess, onBack }: S
     }
   };
 
+  // Verification is WhatsApp-only, so check as soon as this step loads
+  // rather than waiting for the user to click a separate button.
+  useEffect(() => {
+    if (step === 'verify-phone') {
+      handleCheckWhatsapp();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const handleSendPhoneOtp = async () => {
     setSendingPhoneOtp(true);
     setPhoneOtpError('');
     try {
       await phoneService.sendOtp(formData.phone);
       setPhoneOtpSent(true);
+      // A fresh code invalidates whatever was typed for the last one --
+      // clear the boxes so a stale code can't be resubmitted by mistake.
+      setPhoneOtp(['', '', '', '', '', '']);
+      document.getElementById('signup-phone-otp-0')?.focus();
     } catch (err: any) {
       setPhoneOtpError(err.response?.data?.message || 'Failed to send verification code.');
     } finally {
@@ -145,6 +158,8 @@ export default function Signup({ onNavigateToLogin, onSignupSuccess, onBack }: S
       onSignupSuccess();
     } catch (err: any) {
       setPhoneOtpError(err.response?.data?.message || 'Invalid code. Please try again.');
+      setPhoneOtp(['', '', '', '', '', '']);
+      document.getElementById('signup-phone-otp-0')?.focus();
     } finally {
       setPhoneOtpLoading(false);
     }
@@ -316,9 +331,9 @@ export default function Signup({ onNavigateToLogin, onSignupSuccess, onBack }: S
 
             <div className="text-center mb-8">
               <MessageCircle className="w-10 h-10 mx-auto mb-3 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-3xl font-bold mb-2">Verify Your Phone</h1>
+              <h1 className="text-3xl font-bold mb-2">Verify via WhatsApp</h1>
               <p className="text-gray-600 dark:text-gray-400">
-                One last step -- confirm <strong>{formData.phone}</strong> to finish creating your account
+                One last step -- we'll send a code to <strong>{formData.phone}</strong> on WhatsApp to finish creating your account
               </p>
             </div>
 
@@ -331,31 +346,40 @@ export default function Signup({ onNavigateToLogin, onSignupSuccess, onBack }: S
 
             {!phoneOtpSent ? (
               <div className="space-y-4">
-                <button
-                  onClick={handleCheckWhatsapp}
-                  disabled={checkingWhatsapp}
-                  className="w-full py-3 px-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 rounded-2xl font-medium text-gray-700 dark:text-gray-300 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  {checkingWhatsapp ? 'Checking...' : 'Check WhatsApp Availability'}
-                </button>
-
-                {hasWhatsapp === true && (
-                  <p className="text-sm text-green-600 dark:text-green-400 text-center flex items-center justify-center gap-1">
-                    <CheckCircle className="w-4 h-4" /> This number has WhatsApp
-                  </p>
-                )}
-                {hasWhatsapp === false && (
-                  <p className="text-sm text-gray-500 text-center">No WhatsApp detected on this number -- you can still verify by SMS code</p>
+                {checkingWhatsapp && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Checking WhatsApp availability...</p>
                 )}
 
-                <button
-                  onClick={handleSendPhoneOtp}
-                  disabled={sendingPhoneOtp}
-                  className="w-full py-3.5 px-6 bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {sendingPhoneOtp ? 'Sending...' : 'Send Verification Code'}
-                </button>
+                {!checkingWhatsapp && hasWhatsapp === false && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-red-600 dark:text-red-400 text-center flex items-center justify-center gap-1">
+                      <AlertCircle className="w-4 h-4 shrink-0" /> This number doesn't have WhatsApp. We can only verify over WhatsApp.
+                    </p>
+                    <button
+                      onClick={() => setStep('form')}
+                      className="w-full py-3 px-6 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 rounded-2xl font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Use a different number
+                    </button>
+                  </div>
+                )}
+
+                {!checkingWhatsapp && hasWhatsapp !== false && (
+                  <>
+                    {hasWhatsapp === true && (
+                      <p className="text-sm text-green-600 dark:text-green-400 text-center flex items-center justify-center gap-1">
+                        <CheckCircle className="w-4 h-4" /> This number has WhatsApp
+                      </p>
+                    )}
+                    <button
+                      onClick={handleSendPhoneOtp}
+                      disabled={sendingPhoneOtp}
+                      className="w-full py-3.5 px-6 bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {sendingPhoneOtp ? 'Sending...' : 'Send Verification Code'}
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <form onSubmit={handlePhoneOtpVerify}>

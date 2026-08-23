@@ -31,15 +31,12 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
-            // Validate phone number if provided
-            if ($request->phone_number) {
-                $phoneResult = $this->phoneService->validate($request->phone_number);
-                if (!$phoneResult['valid']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $phoneResult['message'],
-                    ], 422);
-                }
+            $phoneResult = $this->phoneService->validate($request->phone_number);
+            if (!$phoneResult['valid']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $phoneResult['message'],
+                ], 422);
             }
 
             // Create user (password auto-hashed by model cast)
@@ -47,9 +44,7 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => $request->password,
-                'phone_number' => $request->phone_number
-                    ? $this->phoneService->validate($request->phone_number)['formatted']
-                    : null,
+                'phone_number' => $phoneResult['formatted'],
                 'role' => 'customer',
             ]);
 
