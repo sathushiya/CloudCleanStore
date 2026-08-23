@@ -27,7 +27,11 @@ interface StaffDashboardProps {
 
 type TabType = "overview" | "available" | "my-deliveries" | "settings";
 
-const STATUS_FLOW: OrderStatus[] = ["pending", "processing", "out_for_delivery", "delivered"];
+// "processing" is dropped from the staff action flow -- accepting an order
+// is enough prep, so the next real milestone worth a manual step is
+// dispatching it. "processing" stays a valid backend status (existing
+// orders, admin tooling) but staff no longer click through it.
+const STATUS_FLOW: OrderStatus[] = ["pending", "out_for_delivery", "delivered"];
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "Pending",
   processing: "Processing",
@@ -37,6 +41,16 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 const POLL_INTERVAL_MS = 8000;
+
+// "processing" isn't a step in STATUS_FLOW anymore, but real orders already
+// sitting in that status shouldn't be left with no action button -- treat
+// it as pre-dispatch, same as "pending": the next real step is still
+// getting it out for delivery.
+function getNextStatus(status: OrderStatus): OrderStatus | undefined {
+  if (status === "processing") return "out_for_delivery";
+  const currentIndex = STATUS_FLOW.indexOf(status);
+  return currentIndex === -1 ? undefined : STATUS_FLOW[currentIndex + 1];
+}
 
 // Persistent bell -- dismissing the big popup shouldn't lose the alert, it
 // should just drop back to this badge/dropdown until accepted.
@@ -60,7 +74,7 @@ function NotificationBell({
       >
         <Bell className="w-6 h-6" />
         {alerts.length > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {alerts.length}
           </span>
         )}
@@ -245,8 +259,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   };
 
   const handleAdvanceStatus = async (order: Order) => {
-    const currentIndex = STATUS_FLOW.indexOf(order.status);
-    const nextStatus = STATUS_FLOW[currentIndex + 1];
+    const nextStatus = getNextStatus(order.status);
     if (!nextStatus) return;
 
     setActioningId(order.id);
@@ -520,7 +533,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 ) : (
                   <div className="space-y-6">
                     {myOrders.map((order) => {
-                      const nextStatus = STATUS_FLOW[STATUS_FLOW.indexOf(order.status) + 1];
+                      const nextStatus = getNextStatus(order.status);
                       return (
                         <div key={order.id} className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 space-y-4">
                           <div className="flex items-start justify-between">

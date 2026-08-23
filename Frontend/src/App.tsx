@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { Truck, X } from "lucide-react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { useNavigation } from "./hooks/useNavigation";
+import orderService from "./services/orderService";
 import type { PageType } from "./types";
 import { useState } from "react";
 
@@ -67,6 +69,62 @@ function AppContent() {
       navigate("login");
     }
   }, [isAuthenticated, isLoading, currentPage, navigate]);
+
+  // Watches the customer's own orders for the moment one goes out for
+  // delivery, wherever they are in the app -- redirects to the landing
+  // page with a toast rather than requiring them to be sitting on My
+  // Orders to notice. Polls rather than pushing since there's no
+  // websocket/SSE layer here.
+  const [deliveryToast, setDeliveryToast] = useState<string | null>(null);
+  const lastKnownStatuses = useRef<Map<number, string> | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== "customer") {
+      lastKnownStatuses.current = null;
+      return;
+    }
+
+    let cancelled = false;
+
+    const checkForDispatch = async () => {
+      try {
+        const orders = await orderService.myOrders();
+        if (cancelled) return;
+
+        if (lastKnownStatuses.current === null) {
+          // First check this session -- just record where things stand.
+          // Don't toast for an order that was already out for delivery
+          // before the app loaded.
+          lastKnownStatuses.current = new Map(orders.map((o) => [o.id, o.status]));
+          return;
+        }
+
+        for (const order of orders) {
+          const previousStatus = lastKnownStatuses.current.get(order.id);
+          if (previousStatus && previousStatus !== "out_for_delivery" && order.status === "out_for_delivery") {
+            setDeliveryToast(`Your order ${order.order_number} is out for delivery!`);
+            reset("home");
+          }
+          lastKnownStatuses.current.set(order.id, order.status);
+        }
+      } catch {
+        // Transient network error -- just try again on the next tick.
+      }
+    };
+
+    checkForDispatch();
+    const interval = setInterval(checkForDispatch, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isAuthenticated, user?.role, reset]);
+
+  useEffect(() => {
+    if (!deliveryToast) return;
+    const timer = setTimeout(() => setDeliveryToast(null), 6000);
+    return () => clearTimeout(timer);
+  }, [deliveryToast]);
 
   const handleLoginSuccess = () => {
     if (user?.role === "admin") navigate("admin");
@@ -276,6 +334,23 @@ function AppContent() {
           onClose={() => setCartModalOpen(false)}
           onCheckout={() => navigate("checkout")}
         />
+      )}
+      {deliveryToast && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-100 w-full max-w-sm px-4">
+          <div className="bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl shadow-2xl p-4 flex items-start gap-3 transition-all duration-300">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+              <Truck className="w-5 h-5" />
+            </div>
+            <p className="flex-1 text-sm font-medium pt-2">{deliveryToast}</p>
+            <button
+              onClick={() => setDeliveryToast(null)}
+              className="p-1 hover:bg-white/20 rounded-full transition-colors shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
