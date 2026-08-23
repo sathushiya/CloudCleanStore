@@ -1,7 +1,12 @@
 import { Mail, Phone, MapPin, Instagram } from 'lucide-react';
 import Logo from '../common/Logo';
+import type { LegalPageType } from '../../pages/Legal';
 
-export default function Footer() {
+interface FooterProps {
+  onNavigateToLegal?: (page: LegalPageType) => void;
+}
+
+export default function Footer({ onNavigateToLegal }: FooterProps = {}) {
   return (
     <footer id="footer" className="relative bg-linear-to-br from-gray-50 to-purple-50 dark:from-[#0f0a1e] dark:to-[#1a1425] border-t border-gray-200 dark:border-purple-700/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -122,15 +127,15 @@ export default function Footer() {
             © 2026 Cloud Clean Store. All rights reserved.
           </div>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <button onClick={() => onNavigateToLegal?.('privacy')} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
               Privacy Policy
-            </a>
-            <a href="#" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            </button>
+            <button onClick={() => onNavigateToLegal?.('terms')} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
               Terms of Service
-            </a>
-            <a href="#" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            </button>
+            <button onClick={() => onNavigateToLegal?.('cookies')} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
               Cookie Policy
-            </a>
+            </button>
           </div>
         </div>
       </div>

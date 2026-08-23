@@ -36,6 +36,7 @@ import CustomerAddresses from "./pages/CustomerAddresses";
 import CustomerSettings from "./pages/CustomerSettings";
 import CustomerWishlist from "./pages/CustomerWishlist";
 import CustomerActivity from "./pages/CustomerActivity";
+import Legal from "./pages/Legal";
 
 // Guests can browse (Shop, product pages) freely, but order-related pages
 // require an account. Redirect to login rather than silently failing on
@@ -272,6 +273,15 @@ function AppContent() {
       </>
     );
 
+  // ── Legal pages -- open to guests too, unlike the customer pages above ──────
+  if (currentPage === "privacy" || currentPage === "terms" || currentPage === "cookies")
+    return (
+      <>
+        <Legal page={currentPage} onBack={goBack} />
+        <ThemeToggle />
+      </>
+    );
+
   // ── Shop page ───────────────────────────────────────────────────────────────
   if (currentPage === "shop")
     return (
@@ -280,7 +290,7 @@ function AppContent() {
         <div className="pt-20">
           <Shop onBack={goBack} onRequireLogin={() => navigate("login")} />
         </div>
-        <Footer />
+        <Footer onNavigateToLegal={(page) => navigate(page)} />
         <ThemeToggle />
         {cartModalOpen && (
           <CartModal
@@ -327,7 +337,7 @@ function AppContent() {
       />
       <Brands onNavigateToShop={handleNavigateToShop} />
       <Features />
-      <Footer />
+      <Footer onNavigateToLegal={(page) => navigate(page)} />
       <ThemeToggle />
       {cartModalOpen && (
         <CartModal

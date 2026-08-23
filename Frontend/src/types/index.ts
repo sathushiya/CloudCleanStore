@@ -80,4 +80,7 @@ export type PageType =
   | "addresses"
   | "settings"
   | "wishlist"
-  | "activity";
+  | "activity"
+  | "privacy"
+  | "terms"
+  | "cookies";
