@@ -69,7 +69,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
   const loadProducts = async () => {
     setProductsLoading(true);
     try {
-      const apiProducts = await productService.adminList();
+      const apiProducts = await productService.staffList();
       setProducts(apiProducts.map(toFrontendProduct));
     } catch {
       // handled by empty-state below
@@ -189,7 +189,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
 
     setSavingKey(key);
     try {
-      await productService.updateVariantStock(Number(variantId), {
+      await productService.staffUpdateVariantStock(Number(variantId), {
         shop_stock: shopStock,
         online_stock: onlineStock,
       });
@@ -205,7 +205,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
   const handleOnlineStockUpdate = async (variantId: string, onlineStock: number) => {
     setSavingKey(variantId);
     try {
-      await productService.updateVariantStock(Number(variantId), { online_stock: onlineStock });
+      await productService.staffUpdateVariantStock(Number(variantId), { online_stock: onlineStock });
       await loadProducts();
       setOnlineInputValues((prev) => ({ ...prev, [`${variantId}-online`]: "" }));
     } catch {

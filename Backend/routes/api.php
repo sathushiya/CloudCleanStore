@@ -88,6 +88,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/availability', [StaffController::class, 'updateAvailability']);
     });
 
+    // Inventory read/update -- supervisors need this to run
+    // SupervisorDashboard's Inventory Management / Update Stock tabs, but
+    // it stays out of plain "staff" (delivery) reach, matching the actual
+    // dashboard boundary (StaffDashboard has no inventory UI at all).
+    Route::middleware('role:admin,staffsupervisor')->prefix('staff')->group(function () {
+        Route::get('/products', [ProductController::class, 'adminIndex']);
+        Route::patch('/products/variants/{variant}/stock', [ProductController::class, 'updateVariantStock']);
+    });
+
     Route::middleware('role:customer')->prefix('customer')->group(function () {
         Route::get('/cart', [CartController::class, 'index']);
         Route::post('/cart', [CartController::class, 'store']);

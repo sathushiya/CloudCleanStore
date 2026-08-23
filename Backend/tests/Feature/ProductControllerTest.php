@@ -117,4 +117,52 @@ class ProductControllerTest extends TestCase
         $response->assertUnprocessable();
         $this->assertDatabaseHas('brands', ['id' => $brand->id]);
     }
+
+    // ─── Staff-scoped inventory routes (SupervisorDashboard) ──────────────────
+    // Regression test: SupervisorDashboard called the admin-only /admin/products
+    // endpoint, which 403'd for staffsupervisor and silently showed zeros
+    // everywhere. These routes exist so that doesn't happen again.
+
+    public function test_staffsupervisor_can_list_products_via_the_staff_route(): void
+    {
+        $supervisor = User::factory()->create(['role' => 'staffsupervisor']);
+        Product::factory()->create();
+
+        $response = $this->actingAs($supervisor, 'sanctum')->getJson('/api/staff/products');
+
+        $response->assertOk()->assertJsonCount(1, 'data');
+    }
+
+    public function test_plain_staff_cannot_list_products_via_the_staff_route(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/staff/products');
+
+        $response->assertForbidden();
+    }
+
+    public function test_customer_cannot_list_products_via_the_staff_route(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+
+        $response = $this->actingAs($customer, 'sanctum')->getJson('/api/staff/products');
+
+        $response->assertForbidden();
+    }
+
+    public function test_staffsupervisor_can_update_variant_stock_via_the_staff_route(): void
+    {
+        $supervisor = User::factory()->create(['role' => 'staffsupervisor']);
+        $product = Product::factory()->create();
+        $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
+
+        $response = $this->actingAs($supervisor, 'sanctum')->patchJson(
+            "/api/staff/products/variants/{$variant->id}/stock",
+            ['shop_stock' => 12, 'online_stock' => 8]
+        );
+
+        $response->assertOk();
+        $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'shop_stock' => 12, 'online_stock' => 8]);
+    }
 }

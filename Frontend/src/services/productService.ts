@@ -86,6 +86,18 @@ export const productService = {
     return data.data as Product[];
   },
 
+  // ─── Staff/supervisor read + stock updates (not full CRUD) ─────────────────
+
+  async staffList() {
+    const { data } = await api.get('/staff/products');
+    return data.data as Product[];
+  },
+
+  async staffUpdateVariantStock(variantId: number, stock: { shop_stock?: number; online_stock?: number }) {
+    const { data } = await api.patch(`/staff/products/variants/${variantId}/stock`, stock);
+    return data.data as ProductVariant;
+  },
+
   async create(payload: ProductInput) {
     const { data } = await api.post('/admin/products', payload);
     return data.data as Product;
