@@ -20,6 +20,13 @@ export interface StaffInput {
   password?: string;
 }
 
+export interface StaffPerformance {
+  id: number;
+  name: string;
+  role: 'admin' | 'staff' | 'staffsupervisor';
+  tasks_completed: number;
+}
+
 export const staffService = {
   async list() {
     const { data } = await api.get('/admin/staff');
@@ -44,6 +51,11 @@ export const staffService = {
   async updateAvailability(isAvailable: boolean) {
     const { data } = await api.patch('/staff/availability', { is_available: isAvailable });
     return data.data as { is_available: boolean };
+  },
+
+  async performance() {
+    const { data } = await api.get('/admin/staff/performance');
+    return data.data as StaffPerformance[];
   },
 };
 
