@@ -67,7 +67,7 @@ export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthen
         await wishlistService.add(Number(product.id));
         setWishlist((prev) => [...prev, product.id]);
       }
-    } catch (err) {
+    } catch {
       // Non-fatal on the landing page -- the full Wishlist page will surface any real issue
     }
   };
