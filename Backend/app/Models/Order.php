@@ -22,7 +22,13 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function assignedTo(): BelongsTo
+    // Named assignedStaff (not assignedTo) deliberately: Eloquent serializes
+    // an eager-loaded relation under the snake_case of its method name, and
+    // a relation literally named "assignedTo" would come out as JSON key
+    // "assigned_to" -- silently overwriting the real assigned_to column
+    // (a plain FK integer) with this full User object. The frontend was
+    // comparing that against a numeric id and always getting false.
+    public function assignedStaff(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }

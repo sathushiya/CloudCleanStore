@@ -197,4 +197,44 @@ class OrderControllerTest extends TestCase
 
         $response->assertOk();
     }
+
+    // ─── assigned_to must stay a plain integer ─────────────────────────────
+    // Regression: the assignedTo() relation used to serialize under the JSON
+    // key "assigned_to" (Eloquent snake_cases the relation method name),
+    // silently overwriting the real assigned_to column -- a plain FK int --
+    // with a full User object wherever the relation was eager-loaded. The
+    // frontend compared order.assigned_to === user.id and always got false,
+    // so "My Deliveries" showed empty for every staff member. Renamed the
+    // relation to assignedStaff() to fix it; this test pins the JSON shape
+    // so it can't quietly regress the same way again.
+
+    public function test_assigned_to_stays_a_plain_integer_when_the_relation_is_eager_loaded(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['assigned_to' => $staff->id, 'status' => 'processing']);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/staff/orders');
+
+        $response->assertOk();
+        $returned = collect($response->json('data'))->firstWhere('id', $order->id);
+        $this->assertSame($staff->id, $returned['assigned_to']);
+    }
+
+    public function test_an_order_assigned_to_someone_else_has_a_distinct_integer_id(): void
+    {
+        $me = User::factory()->create(['role' => 'staff']);
+        $someoneElse = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['assigned_to' => $someoneElse->id, 'status' => 'processing']);
+
+        $response = $this->actingAs($me, 'sanctum')->getJson('/api/staff/orders');
+        $returned = collect($response->json('data'))->firstWhere('id', $order->id);
+
+        // Confirms the comparison StaffDashboard.tsx does client-side
+        // (order.assigned_to === my id) would correctly exclude this order
+        // from "My Deliveries" -- both sides are plain integers, and they
+        // genuinely differ.
+        $this->assertIsInt($returned['assigned_to']);
+        $this->assertNotSame($me->id, $returned['assigned_to']);
+        $this->assertSame($someoneElse->id, $returned['assigned_to']);
+    }
 }

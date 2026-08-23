@@ -17,6 +17,7 @@ export interface Order {
   status: OrderStatus;
   delivery_address: string;
   assigned_to?: number | null;
+  assigned_staff?: { id: number; name: string } | null;
   payment_method?: 'cash' | 'bank_transfer';
   payment_status?: 'pending' | 'submitted' | 'confirmed' | 'rejected';
   payment_reference?: string | null;

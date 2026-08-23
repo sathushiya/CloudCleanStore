@@ -24,7 +24,7 @@ class OrderController extends Controller
     {
         $orders = $request->user()
             ->orders()
-            ->with(['items', 'assignedTo', 'review'])
+            ->with(['items', 'assignedStaff', 'review'])
             ->latest()
             ->get();
 
@@ -35,7 +35,7 @@ class OrderController extends Controller
     {
         abort_if($order->user_id !== $request->user()->id, 403, 'You can only view your own orders.');
 
-        $order->load(['items', 'assignedTo', 'review']);
+        $order->load(['items', 'assignedStaff', 'review']);
 
         return response()->json(['success' => true, 'data' => $order]);
     }
@@ -92,7 +92,7 @@ class OrderController extends Controller
             return $order;
         });
 
-        $order->load(['items', 'assignedTo', 'user']);
+        $order->load(['items', 'assignedStaff', 'user']);
 
         Notification::log(
             'order',
@@ -110,7 +110,7 @@ class OrderController extends Controller
 
     public function staffIndex(Request $request): JsonResponse
     {
-        $query = Order::with(['items', 'user', 'assignedTo']);
+        $query = Order::with(['items', 'user', 'assignedStaff']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
@@ -136,7 +136,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully.',
-            'data' => $order->fresh(['user', 'items', 'assignedTo']),
+            'data' => $order->fresh(['user', 'items', 'assignedStaff']),
         ]);
     }
 
@@ -170,7 +170,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order assigned successfully.',
-            'data' => $order->fresh(['user', 'items', 'assignedTo']),
+            'data' => $order->fresh(['user', 'items', 'assignedStaff']),
         ]);
     }
 
