@@ -15,14 +15,18 @@ use App\Http\Controllers\Api\Catalog\CartController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use Illuminate\Support\Facades\Route;
 
+// Every unauthenticated auth endpoint gets a throttle -- these were
+// previously wide open while /phone/* already had this, letting anyone
+// hammer login (credential stuffing), register (account spam), or the
+// OTP endpoints (email spam / brute-forcing a reset code) with no limit.
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
-    Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/verify-reset-otp', [AuthController::class, 'verifyPasswordResetOtp']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail'])->middleware('throttle:10,1');
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->middleware('throttle:3,1');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:3,1');
+    Route::post('/verify-reset-otp', [AuthController::class, 'verifyPasswordResetOtp'])->middleware('throttle:10,1');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
