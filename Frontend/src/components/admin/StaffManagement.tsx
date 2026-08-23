@@ -19,6 +19,15 @@ import {
 } from "../../data/admin";
 import { staffService, StaffAccount } from "../../services/staffService";
 
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0] ?? '')
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 const DEFAULT_PERMISSIONS: StaffPermissions = {
   canAddProducts: false,
   canEditProducts: false,
@@ -37,7 +46,7 @@ function toStaffMember(account: StaffAccount): StaffMember {
     email: account.email,
     phone: account.phone_number ?? '',
     role: account.role,
-    avatar: '',
+    avatar: initials(account.name),
     joinDate: account.created_at,
     status: account.is_active ? 'active' : 'inactive',
     permissions: DEFAULT_PERMISSIONS,
