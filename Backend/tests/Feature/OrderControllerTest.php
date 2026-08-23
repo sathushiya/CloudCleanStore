@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -222,6 +223,71 @@ class OrderControllerTest extends TestCase
 
         $response->assertOk();
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'processing']);
+    }
+
+    // ─── Order status state machine ────────────────────────────────────────
+
+    public function test_a_delivered_order_cannot_be_moved_back_to_pending(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['status' => 'delivered']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", [
+            'status' => 'pending',
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'delivered']);
+    }
+
+    public function test_a_pending_order_cannot_skip_straight_to_delivered(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['status' => 'pending']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", [
+            'status' => 'delivered',
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'pending']);
+    }
+
+    public function test_a_cancelled_order_cannot_be_reactivated(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['status' => 'cancelled']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", [
+            'status' => 'processing',
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+    }
+
+    // ─── Cancelling returns the reserved stock ─────────────────────────────
+
+    public function test_cancelling_an_order_restocks_its_items(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $variant = ProductVariant::factory()->create(['online_stock' => 3]);
+        $order = Order::factory()->create(['status' => 'processing']);
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_variant_id' => $variant->id,
+            'product_name' => 'Test Product',
+            'variant_size' => '500ml',
+            'price' => 100,
+            'quantity' => 2,
+        ]);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", [
+            'status' => 'cancelled',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'online_stock' => 5]);
     }
 
     public function test_order_status_rejects_invalid_values(): void

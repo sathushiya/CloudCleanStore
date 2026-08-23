@@ -266,8 +266,9 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     try {
       await orderService.updateStatus(order.id, nextStatus);
       await loadOrders();
-    } catch {
-      alert("Failed to update order status. Please try again.");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to update order status. Please try again.");
+      await loadOrders();
     } finally {
       setActioningId(null);
     }

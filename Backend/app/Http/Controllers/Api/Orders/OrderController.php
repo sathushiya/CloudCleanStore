@@ -17,6 +17,20 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    // Which statuses an order can move to from its current one. Delivered
+    // and cancelled are terminal -- nothing transitions out of either.
+    // "pending" can go straight to "out_for_delivery" because that's what
+    // the frontend's "Mark as X" advance button actually sends for an
+    // unassigned pending order (assignToSelf is what normally moves it to
+    // "processing" first, as a separate automatic step, not this endpoint).
+    private const ALLOWED_TRANSITIONS = [
+        'pending' => ['processing', 'out_for_delivery', 'cancelled'],
+        'processing' => ['out_for_delivery', 'cancelled'],
+        'out_for_delivery' => ['delivered', 'cancelled'],
+        'delivered' => [],
+        'cancelled' => [],
+    ];
+
     public function __construct(private WhatsAppService $whatsAppService)
     {
     }
@@ -165,9 +179,29 @@ class OrderController extends Controller
             'status' => ['required', 'in:pending,processing,out_for_delivery,delivered,cancelled'],
         ]);
 
-        $order->update([
-            'status' => $validated['status'],
-        ]);
+        $newStatus = $validated['status'];
+        $allowed = self::ALLOWED_TRANSITIONS[$order->status] ?? [];
+
+        if ($newStatus !== $order->status && !in_array($newStatus, $allowed, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Can't move an order from \"{$order->status}\" to \"{$newStatus}\".",
+            ], 422);
+        }
+
+        DB::transaction(function () use ($order, $newStatus) {
+            if ($newStatus === 'cancelled') {
+                // Stock was reserved (decremented) at checkout -- it was
+                // never actually delivered, so return it rather than
+                // leaving it permanently locked away.
+                $order->loadMissing('items');
+                foreach ($order->items as $item) {
+                    ProductVariant::whereKey($item->product_variant_id)->increment('online_stock', $item->quantity);
+                }
+            }
+
+            $order->update(['status' => $newStatus]);
+        });
 
         return response()->json([
             'success' => true,
