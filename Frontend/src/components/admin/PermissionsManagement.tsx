@@ -1,17 +1,51 @@
-import { useState } from "react";
-import { Search, Shield, Check, X, User } from "lucide-react";
-import {
-  StaffMember,
-  staffMembers as initialStaffMembers,
-  StaffPermissions,
-} from "../../data/admin";
+import { useEffect, useState } from "react";
+import { Search, Shield, User } from "lucide-react";
+import { staffService, StaffAccount } from "../../services/staffService";
+
+// This screen is really a role switcher dressed up as "permissions": a
+// staff account's capabilities in this app are entirely determined by its
+// role (staff vs staffsupervisor), so "granting a permission" here just
+// means changing that account's role via the existing staff update endpoint.
+type StaffRole = "staff" | "staffsupervisor";
+
+const ROLE_PRESETS: Array<{ role: StaffRole; label: string; description: string }> = [
+  { role: "staff", label: "Handle Orders", description: "Assigned as Staff" },
+  { role: "staffsupervisor", label: "Modify Products & Stock", description: "Assigned as Staff Supervisor" },
+];
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0] ?? '')
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
 
 export default function PermissionsManagement() {
-  const [staff, setStaff] = useState<StaffMember[]>(initialStaffMembers);
+  const [staff, setStaff] = useState<StaffAccount[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState<
-    "all" | "admin" | "staff" | "staffsupervisor"
-  >("all");
+  const [selectedRole, setSelectedRole] = useState<"all" | "admin" | StaffRole>("all");
+
+  const loadStaff = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await staffService.list();
+      setStaff(data);
+    } catch {
+      setError("Could not load staff accounts.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStaff();
+  }, []);
 
   const filteredStaff = staff.filter((member) => {
     const matchesSearch =
@@ -21,48 +55,24 @@ export default function PermissionsManagement() {
     return matchesSearch && matchesRole;
   });
 
-  const handlePermissionSelect = (
-    staffId: string,
-    type: "staff" | "staffsupervisor",
-  ) => {
-    const isStaff = type === "staff";
-    setStaff(
-      staff.map((member) => {
-        if (member.id === staffId) {
-          return {
-            ...member,
-            role: isStaff ? "staff" : "staffsupervisor",
-            permissions: {
-              ...member.permissions,
-              canManageOrders: isStaff,
-              canEditProducts: !isStaff,
-              canManageStock: !isStaff,
-              canAddProducts: false,
-              canDeleteProducts: false,
-            },
-          };
-        }
-        return member;
-      }),
-    );
+  const handleRoleChange = async (member: StaffAccount, newRole: StaffRole) => {
+    if (member.role === newRole) return;
+    setSavingId(member.id);
+    try {
+      const updated = await staffService.update(member.id, {
+        name: member.name,
+        email: member.email,
+        phone_number: member.phone_number,
+        role: newRole,
+        is_active: member.is_active,
+      });
+      setStaff((prev) => prev.map((m) => (m.id === member.id ? { ...m, ...updated } : m)));
+    } catch {
+      alert("Failed to update this staff member's role. Please try again.");
+    } finally {
+      setSavingId(null);
+    }
   };
-
-  const permissionsList: Array<{
-    key: keyof StaffPermissions;
-    label: string;
-    description: string;
-  }> = [
-    {
-      key: "canManageOrders",
-      label: "Handle Orders",
-      description: "Assigned as Staff",
-    },
-    {
-      key: "canEditProducts",
-      label: "Modify Products & Stock",
-      description: "Assigned as Staff Supervisor",
-    },
-  ];
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -75,12 +85,6 @@ export default function PermissionsManagement() {
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
-  };
-
-  const countActivePermissions = (permissions: StaffPermissions): number => {
-    return [permissions.canManageOrders, permissions.canEditProducts].filter(
-      Boolean,
-    ).length;
   };
 
   return (
@@ -99,19 +103,17 @@ export default function PermissionsManagement() {
               Permission System Overview
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Manage what each staff member can do in the system. Different
-              roles have different default permissions. Be careful when granting
-              sensitive permissions like "Manage Permissions" or "Delete
-              Products".
+              A staff member's access level in this app is determined by their role.
+              Switching a role here updates their account immediately.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {permissionsList.map((perm) => (
-                <div key={perm.key} className="bg-white/5 p-3 rounded-lg">
+              {ROLE_PRESETS.map((preset) => (
+                <div key={preset.role} className="bg-white/5 p-3 rounded-lg">
                   <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    {perm.label}
+                    {preset.label}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">
-                    {perm.description}
+                    {preset.description}
                   </div>
                 </div>
               ))}
@@ -133,7 +135,7 @@ export default function PermissionsManagement() {
         </div>
         <select
           value={selectedRole}
-          onChange={(e) => setSelectedRole(e.target.value as any)}
+          onChange={(e) => setSelectedRole(e.target.value as "all" | "admin" | StaffRole)}
           className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 transition-colors"
         >
           <option value="all">All Roles</option>
@@ -143,109 +145,100 @@ export default function PermissionsManagement() {
         </select>
       </div>
 
-      <div className="space-y-4">
-        {filteredStaff.map((member) => (
-          <div
-            key={member.id}
-            className="glass-effect p-6 rounded-xl border border-white/10 hover:border-purple-500/30 transition-all"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
-                  {member.avatar}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
-                    {member.name}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {member.email}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs border ${getRoleColor(member.role)}`}
-                    >
-                      {member.role === "staff"
-                        ? "Staff"
-                        : member.role === "staffsupervisor"
-                          ? "Staff Supervisor"
-                          : member.role}
-                    </span>
+      {isLoading && <div className="text-center py-12 text-gray-400">Loading staff...</div>}
+      {error && !isLoading && <div className="text-center py-12 text-red-400">{error}</div>}
+
+      {!isLoading && !error && (
+        <div className="space-y-4">
+          {filteredStaff.map((member) => (
+            <div
+              key={member.id}
+              className="glass-effect p-6 rounded-xl border border-white/10 hover:border-purple-500/30 transition-all"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
+                    {initials(member.name)}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                      {member.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {member.email}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs border ${getRoleColor(member.role)}`}
+                      >
+                        {member.role === "staff"
+                          ? "Staff"
+                          : member.role === "staffsupervisor"
+                            ? "Staff Supervisor"
+                            : "Admin"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-purple-400">
-                  {countActivePermissions(member.permissions)}/
-                  {permissionsList.length}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Active Permissions
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {(() => {
-                const activePermission = member.permissions.canManageOrders
-                  ? "staff"
-                  : member.permissions.canEditProducts
-                    ? "staffsupervisor"
-                    : null;
-                return permissionsList.map((perm) => {
-                  const isStaffPerm = perm.key === "canManageOrders";
-                  const permType = isStaffPerm ? "staff" : "staffsupervisor";
-                  const isSelected = activePermission === permType;
-                  return (
-                    <button
-                      key={perm.key}
-                      onClick={() =>
-                        handlePermissionSelect(member.id, permType)
-                      }
-                      className={`p-4 rounded-xl border transition-all text-left ${
-                        isSelected
-                          ? isStaffPerm
-                            ? "bg-cyan-500/10 border-cyan-500/50"
-                            : "bg-purple-500/10 border-purple-500/50"
-                          : "bg-white/5 border-white/10 hover:bg-white/10"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            {perm.label}
+              {member.role === "admin" ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  Admin accounts have full access and don't use role presets.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {ROLE_PRESETS.map((preset) => {
+                    const isSelected = member.role === preset.role;
+                    const isStaffPreset = preset.role === "staff";
+                    return (
+                      <button
+                        key={preset.role}
+                        onClick={() => handleRoleChange(member, preset.role)}
+                        disabled={savingId === member.id}
+                        className={`p-4 rounded-xl border transition-all text-left disabled:opacity-50 ${
+                          isSelected
+                            ? isStaffPreset
+                              ? "bg-cyan-500/10 border-cyan-500/50"
+                              : "bg-purple-500/10 border-purple-500/50"
+                            : "bg-white/5 border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                              {preset.label}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {preset.description}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">
-                            {perm.description}
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                              isSelected
+                                ? isStaffPreset
+                                  ? "border-cyan-500 bg-cyan-500"
+                                  : "border-purple-500 bg-purple-500"
+                                : "border-gray-500 bg-transparent"
+                            }`}
+                          >
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                           </div>
                         </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                            isSelected
-                              ? isStaffPerm
-                                ? "border-cyan-500 bg-cyan-500"
-                                : "border-purple-500 bg-purple-500"
-                              : "border-gray-500 bg-transparent"
-                          }`}
-                        >
-                          {isSelected && (
-                            <div className="w-2 h-2 rounded-full bg-white" />
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                });
-              })()}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
 
-      {filteredStaff.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>No staff members found</p>
+          {filteredStaff.length === 0 && (
+            <div className="text-center py-12 text-gray-400">
+              <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>No staff members found</p>
+            </div>
+          )}
         </div>
       )}
     </div>
