@@ -22,7 +22,7 @@ export default function ProductsManagement() {
     try {
       const apiProducts = await productService.adminList();
       setProducts(apiProducts.map(toFrontendProduct));
-    } catch (err) {
+    } catch {
       setLoadError('Could not load products from the server.');
     } finally {
       setIsLoading(false);
@@ -36,7 +36,9 @@ export default function ProductsManagement() {
       try {
         const apiBrands = await productService.adminListBrands();
         if (!cancelled) setBrands(apiBrands);
-      } catch (err) {}
+      } catch {
+        // Non-fatal -- brand filter dropdown just stays empty
+      }
     })();
 
     loadProducts();
@@ -58,16 +60,18 @@ export default function ProductsManagement() {
     try {
       await productService.remove(Number(productId));
       setProducts(products.filter((p) => p.id !== productId));
-    } catch (err) {
+    } catch {
       alert('Failed to delete product. Please try again.');
     }
   };
 
   const handleSaveProduct = async (updatedProduct: Product) => {
-    if (!updatedProduct.brandId) {
-      alert('Please select a brand before saving.');
+    const validationErrors = validateProductForm(updatedProduct);
+    if (validationErrors.length > 0) {
+      alert(validationErrors[0]);
       return;
     }
+    if (!updatedProduct.brandId) return; // validateProductForm already guarantees this; narrows the type below
     try {
       await productService.update(Number(updatedProduct.id), {
         brand_id: updatedProduct.brandId,
@@ -85,16 +89,18 @@ export default function ProductsManagement() {
       });
       await loadProducts();
       setEditingProduct(null);
-    } catch (err) {
+    } catch {
       alert('Failed to save product. Please check all fields and try again.');
     }
   };
 
   const handleAddProduct = async (newProduct: Product) => {
-    if (!newProduct.brandId) {
-      alert('Please select a brand before adding.');
+    const validationErrors = validateProductForm(newProduct);
+    if (validationErrors.length > 0) {
+      alert(validationErrors[0]);
       return;
     }
+    if (!newProduct.brandId) return; // validateProductForm already guarantees this; narrows the type below
     try {
       await productService.create({
         brand_id: newProduct.brandId,
@@ -112,7 +118,7 @@ export default function ProductsManagement() {
       });
       await loadProducts();
       setShowAddModal(false);
-    } catch (err) {
+    } catch {
       alert('Failed to add product. Please check all fields and try again.');
     }
   };
