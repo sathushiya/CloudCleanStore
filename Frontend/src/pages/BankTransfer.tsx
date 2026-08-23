@@ -1,4 +1,4 @@
-import { Copy, Check, Building2, ArrowLeft, Clock, CheckCircle } from 'lucide-react';
+import { Copy, Check, Building2, ArrowLeft, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { orderService } from '../services/orderService';
 
@@ -21,6 +21,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
   const [copied, setCopied] = useState<string | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [rejected, setRejected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
@@ -43,6 +44,14 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
           setConfirmed(true);
           clearInterval(interval);
           setTimeout(() => onConfirm(), 2500);
+        } else if (order.payment_status === 'rejected') {
+          // Drop back to the form rather than leaving the customer staring
+          // at "please wait" forever with no idea anything went wrong --
+          // the backend allows resubmitting after a rejection specifically
+          // so this has somewhere to go.
+          setRejected(true);
+          setWaiting(false);
+          clearInterval(interval);
         }
       } catch {
         // Transient network error -- just try again on the next tick
@@ -56,6 +65,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
     setSubmitting(true);
     try {
       await orderService.submitPayment(numericOrderId, orderId);
+      setRejected(false);
       setWaiting(true);
     } catch (err: any) {
       setSubmitError(err.response?.data?.message || 'Failed to submit payment confirmation. Please try again.');
@@ -132,6 +142,16 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
             Transfer your payment to this bank account
           </p>
         </div>
+
+        {rejected && (
+          <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/30 rounded-2xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-orange-800 dark:text-orange-300">
+              We couldn't verify your last payment reference. Please double-check it against your bank
+              transfer receipt and submit it again below.
+            </p>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 p-5 mb-4">
           <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">

@@ -281,6 +281,19 @@ class OrderController extends Controller
     {
         abort_if($order->user_id !== $request->user()->id, 403, 'This order does not belong to you.');
 
+        // Confirmed is the one terminal state here -- a customer resubmitting
+        // could otherwise silently revert an already-verified payment back
+        // to "submitted". Resubmitting from "rejected" is deliberately
+        // allowed (it's the retry path -- see confirmPayment below), and so
+        // is resubmitting from "submitted" itself (correcting a typo'd
+        // reference before staff has reviewed it yet).
+        if ($order->payment_status === 'confirmed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order has already been paid and confirmed.',
+            ], 422);
+        }
+
         $request->validate([
             'payment_reference' => ['required', 'string', 'max:255'],
             'payment_proof_url' => ['nullable', 'string'],
@@ -316,8 +329,29 @@ class OrderController extends Controller
     {
         $request->validate(['approved' => ['required', 'boolean']]);
 
+        // Confirmed is terminal from here too -- once payment is verified,
+        // this endpoint can't flip it back to rejected. (If a confirmed
+        // payment genuinely turns out to be wrong, that's a rare enough
+        // case to handle manually rather than build a whole reversal flow
+        // for.)
+        if ($order->payment_status === 'confirmed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This payment is already confirmed.',
+            ], 422);
+        }
+
         $approved = $request->boolean('approved');
-        $order->update(['payment_status' => $approved ? 'confirmed' : 'rejected']);
+        $newStatus = $approved ? 'confirmed' : 'rejected';
+
+        // Already in that exact state (e.g. a double-click, or two staff
+        // reviewing the same submission) -- a harmless no-op, not an error,
+        // and skips re-sending the WhatsApp message a second time.
+        if ($order->payment_status === $newStatus) {
+            return response()->json(['success' => true, 'message' => 'Payment status unchanged.', 'data' => $order]);
+        }
+
+        $order->update(['payment_status' => $newStatus]);
 
         $customer = $order->user;
         if ($customer?->phone_number) {

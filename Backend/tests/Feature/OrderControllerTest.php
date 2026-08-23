@@ -374,6 +374,65 @@ class OrderControllerTest extends TestCase
         $response->assertOk();
     }
 
+    // ─── Payment actions are idempotent, and rejection isn't a dead end ────
+
+    public function test_customer_cannot_resubmit_payment_on_an_already_confirmed_order(): void
+    {
+        $customer = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'confirmed']);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson("/api/customer/orders/{$order->id}/submit-payment", [
+            'payment_reference' => 'NEW-REF',
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'confirmed']);
+    }
+
+    public function test_customer_can_resubmit_payment_after_a_rejection(): void
+    {
+        // The retry path: a rejected order isn't a dead end -- the customer
+        // can submit a corrected reference and it goes back to "submitted".
+        $customer = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'rejected']);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson("/api/customer/orders/{$order->id}/submit-payment", [
+            'payment_reference' => 'CORRECTED-REF',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'submitted', 'payment_reference' => 'CORRECTED-REF']);
+    }
+
+    public function test_staff_cannot_change_an_already_confirmed_payment(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['payment_status' => 'confirmed']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
+            'approved' => false,
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'confirmed']);
+    }
+
+    public function test_confirming_an_already_confirmed_payment_is_a_harmless_noop(): void
+    {
+        // Not reachable through the guard above in the same call, but
+        // covers the "two staff reviewed it near-simultaneously" case
+        // where the state already matches what's being requested.
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['payment_status' => 'rejected']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
+            'approved' => false,
+        ]);
+
+        $response->assertOk()->assertJsonPath('message', 'Payment status unchanged.');
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'rejected']);
+    }
+
     // ─── assigned_to must stay a plain integer ─────────────────────────────
     // Regression: the assignedTo() relation used to serialize under the JSON
     // key "assigned_to" (Eloquent snake_cases the relation method name),
