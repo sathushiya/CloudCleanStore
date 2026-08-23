@@ -28,12 +28,23 @@ class CartController extends Controller
     {
         $variant = ProductVariant::findOrFail($request->product_variant_id);
 
-        $item = CartItem::updateOrCreate(
-            ['user_id' => $request->user()->id, 'product_variant_id' => $variant->id],
-            []
+        $item = CartItem::firstOrNew(
+            ['user_id' => $request->user()->id, 'product_variant_id' => $variant->id]
         );
 
-        $item->quantity = $item->wasRecentlyCreated ? $request->quantity : $item->quantity + $request->quantity;
+        $requestedQuantity = ($item->exists ? $item->quantity : 0) + $request->quantity;
+        $available = $variant->online_stock ?? 0;
+
+        if ($requestedQuantity > $available) {
+            return response()->json([
+                'success' => false,
+                'message' => $available > 0
+                    ? "Only {$available} left in stock."
+                    : 'This item is out of stock.',
+            ], 422);
+        }
+
+        $item->quantity = $requestedQuantity;
         $item->save();
 
         return response()->json(['success' => true, 'message' => 'Item added to cart.', 'data' => $item->load('variant.product')], 201);
@@ -43,6 +54,17 @@ class CartController extends Controller
     {
         $this->authorizeOwner($request, $cartItem);
         $request->validate(['quantity' => ['required', 'integer', 'min:1']]);
+
+        $available = $cartItem->variant->online_stock ?? 0;
+        if ($request->quantity > $available) {
+            return response()->json([
+                'success' => false,
+                'message' => $available > 0
+                    ? "Only {$available} left in stock."
+                    : 'This item is out of stock.',
+            ], 422);
+        }
+
         $cartItem->update(['quantity' => $request->quantity]);
 
         return response()->json(['success' => true, 'message' => 'Cart item updated.', 'data' => $cartItem]);

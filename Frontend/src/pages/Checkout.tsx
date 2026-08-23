@@ -155,8 +155,12 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
       } else {
         finishOrder();
       }
-    } catch {
-      setOrderError('We could not place your order. Please check your connection and try again.');
+    } catch (err: any) {
+      // Surface the real reason when the backend gives us one -- most
+      // commonly a stock check failing (either syncing the cart or at
+      // checkout itself), which needs a specific message, not a generic
+      // "check your connection" that makes it sound like a network blip.
+      setOrderError(err.response?.data?.message || 'We could not place your order. Please check your connection and try again.');
     } finally {
       setIsSubmittingOrder(false);
     }

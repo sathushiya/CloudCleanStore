@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -42,6 +43,28 @@ class OrderControllerTest extends TestCase
 
         $this->assertDatabaseCount('cart_items', 0);
         $this->assertDatabaseHas('orders', ['user_id' => $customer->id, 'status' => 'pending', 'total' => 1000]);
+    }
+
+    public function test_checkout_rejects_a_cart_that_now_exceeds_stock(): void
+    {
+        // Simulates stock dropping between "added to cart" and "checked out"
+        // (e.g. someone else's checkout ran in between) -- the cart-level
+        // check in CartController can't catch this, only the re-check
+        // inside checkout's own transaction can.
+        $customer = User::factory()->create(['role' => 'customer']);
+        $variant = ProductVariant::factory()->create(['online_stock' => 5]);
+        CartItem::create(['user_id' => $customer->id, 'product_variant_id' => $variant->id, 'quantity' => 5]);
+        $variant->update(['online_stock' => 1]);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson('/api/customer/orders/checkout', [
+            'delivery_address' => '123 Main St',
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseCount('orders', 0);
+        // Cart is untouched -- nothing was decremented, nothing was cleared.
+        $this->assertDatabaseHas('cart_items', ['user_id' => $customer->id, 'quantity' => 5]);
+        $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'online_stock' => 1]);
     }
 
     public function test_checkout_decrements_online_stock(): void

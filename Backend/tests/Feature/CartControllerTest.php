@@ -26,7 +26,7 @@ class CartControllerTest extends TestCase
     public function test_customer_can_add_item_to_cart(): void
     {
         $customer = $this->customer();
-        $variant = ProductVariant::factory()->create(['price' => 500]);
+        $variant = ProductVariant::factory()->create(['price' => 500, 'online_stock' => 100]);
 
         $response = $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
             'product_variant_id' => $variant->id,
@@ -44,7 +44,7 @@ class CartControllerTest extends TestCase
     public function test_adding_the_same_variant_twice_increments_quantity_not_duplicates_row(): void
     {
         $customer = $this->customer();
-        $variant = ProductVariant::factory()->create();
+        $variant = ProductVariant::factory()->create(['online_stock' => 100]);
 
         $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
             'product_variant_id' => $variant->id,
@@ -62,7 +62,7 @@ class CartControllerTest extends TestCase
     public function test_cart_total_is_calculated_correctly(): void
     {
         $customer = $this->customer();
-        $variant = ProductVariant::factory()->create(['price' => 250]);
+        $variant = ProductVariant::factory()->create(['price' => 250, 'online_stock' => 100]);
 
         $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
             'product_variant_id' => $variant->id,
@@ -78,7 +78,7 @@ class CartControllerTest extends TestCase
     {
         $customerA = $this->customer();
         $customerB = $this->customer();
-        $variant = ProductVariant::factory()->create();
+        $variant = ProductVariant::factory()->create(['online_stock' => 100]);
 
         $addResponse = $this->actingAs($customerA, 'sanctum')->postJson('/api/customer/cart', [
             'product_variant_id' => $variant->id,
@@ -91,11 +91,66 @@ class CartControllerTest extends TestCase
         $response->assertForbidden();
     }
 
+    // ─── Stock limits ───────────────────────────────────────────────────────
+
+    public function test_cannot_add_more_than_available_stock(): void
+    {
+        $customer = $this->customer();
+        $variant = ProductVariant::factory()->create(['online_stock' => 3]);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
+            'product_variant_id' => $variant->id,
+            'quantity' => 4,
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseCount('cart_items', 0);
+    }
+
+    public function test_adding_in_two_steps_cannot_exceed_stock_either(): void
+    {
+        $customer = $this->customer();
+        $variant = ProductVariant::factory()->create(['online_stock' => 3]);
+
+        $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ])->assertCreated();
+
+        // 2 already in cart + 2 more would be 4, over the limit of 3.
+        $response = $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('cart_items', ['product_variant_id' => $variant->id, 'quantity' => 2]);
+    }
+
+    public function test_cannot_update_cart_quantity_above_available_stock(): void
+    {
+        $customer = $this->customer();
+        $variant = ProductVariant::factory()->create(['online_stock' => 3]);
+
+        $addResponse = $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', [
+            'product_variant_id' => $variant->id,
+            'quantity' => 1,
+        ]);
+        $cartItemId = $addResponse->json('data.id');
+
+        $response = $this->actingAs($customer, 'sanctum')->patchJson("/api/customer/cart/{$cartItemId}", [
+            'quantity' => 5,
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('cart_items', ['id' => $cartItemId, 'quantity' => 1]);
+    }
+
     public function test_customer_can_clear_entire_cart(): void
     {
         $customer = $this->customer();
-        $variant1 = ProductVariant::factory()->create();
-        $variant2 = ProductVariant::factory()->create();
+        $variant1 = ProductVariant::factory()->create(['online_stock' => 100]);
+        $variant2 = ProductVariant::factory()->create(['online_stock' => 100]);
 
         $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', ['product_variant_id' => $variant1->id, 'quantity' => 1]);
         $this->actingAs($customer, 'sanctum')->postJson('/api/customer/cart', ['product_variant_id' => $variant2->id, 'quantity' => 1]);

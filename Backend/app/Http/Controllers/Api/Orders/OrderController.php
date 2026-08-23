@@ -8,6 +8,7 @@ use App\Models\CartItem;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\ProductVariant;
 use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,10 +57,30 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $order = DB::transaction(function () use ($user, $cartItems, $request) {
-            $total = $cartItems->sum(function (CartItem $cartItem) {
-                return (float) $cartItem->variant->price * $cartItem->quantity;
-            });
+        try {
+            $order = DB::transaction(function () use ($user, $cartItems, $request) {
+                // Re-check stock under a row lock, inside the transaction --
+                // decrement() alone is atomic but doesn't stop the quantity
+                // from going negative. lockForUpdate() blocks a second
+                // concurrent checkout touching the same variant until this
+                // one commits (or rolls back), so it re-reads the true
+                // post-decrement stock rather than racing against a stale
+                // read. Cart-time checks (CartController) catch the common
+                // case early; this is the real backstop.
+                foreach ($cartItems as $cartItem) {
+                    $variant = ProductVariant::whereKey($cartItem->product_variant_id)->lockForUpdate()->first();
+                    $available = $variant->online_stock ?? 0;
+
+                    if (!$variant || $available < $cartItem->quantity) {
+                        throw new \RuntimeException(
+                            "Sorry, {$cartItem->variant->product->name} ({$cartItem->variant->size}) only has {$available} left in stock. Please update your cart."
+                        );
+                    }
+                }
+
+                $total = $cartItems->sum(function (CartItem $cartItem) {
+                    return (float) $cartItem->variant->price * $cartItem->quantity;
+                });
 
                 $order = Order::create([
                     'user_id' => $user->id,
@@ -71,26 +92,26 @@ class OrderController extends Controller
                     'payment_status' => 'pending',
                 ]);
 
-            foreach ($cartItems as $cartItem) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_variant_id' => $cartItem->product_variant_id,
-                    'product_name' => $cartItem->variant->product->name,
-                    'variant_size' => $cartItem->variant->size,
-                    'price' => $cartItem->variant->price,
-                    'quantity' => $cartItem->quantity,
-                ]);
+                foreach ($cartItems as $cartItem) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_variant_id' => $cartItem->product_variant_id,
+                        'product_name' => $cartItem->variant->product->name,
+                        'variant_size' => $cartItem->variant->size,
+                        'price' => $cartItem->variant->price,
+                        'quantity' => $cartItem->quantity,
+                    ]);
 
-                // Decrement online stock now that the order is confirmed.
-                // decrement() is atomic at the DB level, so this is safe even
-                // under concurrent checkouts touching the same variant.
-                $cartItem->variant->decrement('online_stock', $cartItem->quantity);
-            }
+                    $cartItem->variant->decrement('online_stock', $cartItem->quantity);
+                }
 
-            CartItem::query()->where('user_id', $user->id)->delete();
+                CartItem::query()->where('user_id', $user->id)->delete();
 
-            return $order;
-        });
+                return $order;
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
         $order->load(['items', 'assignedStaff', 'user']);
 
