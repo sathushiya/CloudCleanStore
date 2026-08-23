@@ -1,8 +1,30 @@
-import { useState } from 'react';
-import { Menu, X, ShoppingCart, User, Search, Settings, LogOut, Camera, Heart, MapPin, Package, Clock, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Menu, X, ShoppingCart, User, Search, Settings, LogOut, Camera, Heart, MapPin, Package, Clock, Bell, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import Logo from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import orderService, { Order, OrderStatus } from '../../services/orderService';
+import profileService from '../../services/profileService';
+
+const ORDER_STATUS_COPY: Record<OrderStatus, { title: string; message: (n: string) => string; icon: typeof Package }> = {
+  pending: { title: 'Order Received', message: (n) => `Order ${n} is waiting to be processed.`, icon: Clock },
+  processing: { title: 'Order Processing', message: (n) => `Order ${n} is being prepared.`, icon: Package },
+  out_for_delivery: { title: 'Out for Delivery', message: (n) => `Order ${n} is on its way!`, icon: Truck },
+  delivered: { title: 'Order Delivered', message: (n) => `Order ${n} has been delivered.`, icon: CheckCircle },
+  cancelled: { title: 'Order Cancelled', message: (n) => `Order ${n} was cancelled.`, icon: AlertCircle },
+};
+
+const formatRelativeTime = (isoDate: string): string => {
+  const diffMs = Date.now() - new Date(isoDate).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(isoDate).toLocaleDateString();
+};
 
 interface NavbarProps {
   onNavigateToLogin?: () => void;
@@ -20,12 +42,59 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, refreshUser } = useAuth();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
 
-  // Mock notification count - can be replaced with real data later
-  const notificationCount = 3;
+  // Real notifications, derived from the customer's own orders -- not a
+  // separate stored notification, just their live order status.
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
+  const [readIds, setReadIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    orderService.myOrders()
+      .then(setOrders)
+      .catch(() => {})
+      .finally(() => setOrdersLoaded(true));
+  }, [isAuthenticated]);
+
+  const orderNotifications = orders
+    .filter((o) => o.status !== 'cancelled')
+    .slice(0, 10);
+  const unreadCount = orderNotifications.filter((o) => !readIds.has(o.id)).length;
+
+  const handleMarkAllRead = () => {
+    setReadIds(new Set(orderNotifications.map((o) => o.id)));
+  };
+
+  // Profile drawer -- name is the only field the backend lets a user edit
+  // themselves; email/phone stay read-only here (phone goes through the
+  // WhatsApp re-verification flow in Settings, not a plain text edit).
+  const [profileName, setProfileName] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  useEffect(() => {
+    setProfileName(user?.name || '');
+  }, [user?.name]);
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) return;
+    setSavingProfile(true);
+    setProfileSaved(false);
+    try {
+      await profileService.update(profileName.trim());
+      await refreshUser();
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2000);
+    } catch {
+      // form stays open so the user can retry
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const scrollToProducts = () => {
     const productsSection = document.getElementById('products');
@@ -76,9 +145,9 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                   className="p-2 hover:bg-accent rounded-full transition-colors relative"
                 >
                   <Bell className="w-5 h-5" />
-                  {notificationCount > 0 && (
+                  {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1">
-                      {notificationCount}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
@@ -301,73 +370,64 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                 </button>
               </div>
 
-              {/* Notifications List */}
+              {/* Notifications List -- derived from the customer's own orders */}
               <div className="flex-1 overflow-y-auto space-y-3">
-                {/* Notification Item 1 */}
-                <div className="bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                      <Package className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-semibold text-sm mb-1">Order Shipped</h3>
-                      <p className="text-white/60 text-xs mb-2">Your order #ORD-2024-003 has been shipped and is on its way!</p>
-                      <p className="text-white/40 text-xs">2 hours ago</p>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
-                  </div>
-                </div>
+                {!ordersLoaded && (
+                  <p className="text-white/60 text-sm text-center py-8">Loading...</p>
+                )}
 
-                {/* Notification Item 2 */}
-                <div className="bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center shrink-0">
-                      <Heart className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-semibold text-sm mb-1">Wishlist Item on Sale</h3>
-                      <p className="text-white/60 text-xs mb-2">Premium Floor Polish is now 20% off! Get it before the sale ends.</p>
-                      <p className="text-white/40 text-xs">5 hours ago</p>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
+                {ordersLoaded && orderNotifications.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Bell className="w-16 h-16 text-white/20 mb-4" />
+                    <h3 className="text-white font-semibold text-lg mb-2">No Notifications</h3>
+                    <p className="text-white/60 text-sm">You're all caught up!</p>
                   </div>
-                </div>
+                )}
 
-                {/* Notification Item 3 */}
-                <div className="bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-                      <Bell className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-semibold text-sm mb-1">New Products Available</h3>
-                      <p className="text-white/60 text-xs mb-2">Check out our latest eco-friendly cleaning products!</p>
-                      <p className="text-white/40 text-xs">1 day ago</p>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
-                  </div>
-                </div>
-
-                {/* Empty State - Hidden when there are notifications */}
-                {/* <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Bell className="w-16 h-16 text-white/20 mb-4" />
-                  <h3 className="text-white font-semibold text-lg mb-2">No Notifications</h3>
-                  <p className="text-white/60 text-sm">You're all caught up!</p>
-                </div> */}
+                {orderNotifications.map((order) => {
+                  const copy = ORDER_STATUS_COPY[order.status];
+                  const Icon = copy.icon;
+                  const isUnread = !readIds.has(order.id);
+                  return (
+                    <button
+                      key={order.id}
+                      onClick={() => {
+                        setReadIds((prev) => new Set(prev).add(order.id));
+                        setNotificationModalOpen(false);
+                        onNavigateToOrders?.();
+                      }}
+                      className="w-full text-left bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-white font-semibold text-sm mb-1">{copy.title}</h3>
+                          <p className="text-white/60 text-xs mb-2">{copy.message(order.order_number)}</p>
+                          <p className="text-white/40 text-xs">{formatRelativeTime(order.created_at)}</p>
+                        </div>
+                        {isUnread && <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Footer Action */}
-              <div className="mt-6 pt-4 border-t border-white/20">
-                <button
-                  onClick={() => {
-                    console.log('Mark all as read');
-                    setNotificationModalOpen(false);
-                  }}
-                  className="w-full px-6 py-3 rounded-lg bg-white text-purple-900 font-semibold hover:bg-gray-100 transition-colors"
-                >
-                  Mark All as Read
-                </button>
-              </div>
+              {orderNotifications.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-white/20">
+                  <button
+                    onClick={() => {
+                      handleMarkAllRead();
+                      setNotificationModalOpen(false);
+                    }}
+                    className="w-full px-6 py-3 rounded-lg bg-white text-purple-900 font-semibold hover:bg-gray-100 transition-colors"
+                  >
+                    Mark All as Read
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -421,7 +481,8 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                   <label className="block text-white font-semibold mb-2">Full Name</label>
                   <input
                     type="text"
-                    defaultValue={user?.name || ''}
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
                     placeholder="Enter your full name"
                     className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
                   />
@@ -431,9 +492,10 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                   <label className="block text-white font-semibold mb-2">Email</label>
                   <input
                     type="email"
-                    defaultValue={user?.email || ''}
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
+                    value={user?.email || ''}
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/60 cursor-not-allowed"
                   />
                 </div>
 
@@ -441,11 +503,17 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                   <label className="block text-white font-semibold mb-2">Phone Number</label>
                   <input
                     type="tel"
-                    defaultValue={user?.phone_number || ''}
-                    placeholder="Enter your phone number"
-                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
+                    value={user?.phone_number || 'Not set'}
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/60 cursor-not-allowed"
                   />
+                  <p className="text-white/40 text-xs mt-1.5">Verify or change your phone number from Settings.</p>
                 </div>
+
+                {profileSaved && (
+                  <p className="text-green-400 text-sm text-center">Profile updated.</p>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -457,13 +525,11 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    console.log('Profile saved');
-                    setProfileModalOpen(false);
-                  }}
-                  className="flex-1 px-6 py-3 rounded-lg bg-white text-purple-900 font-semibold hover:bg-gray-100 transition-colors"
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile || !profileName.trim()}
+                  className="flex-1 px-6 py-3 rounded-lg bg-white text-purple-900 font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Changes
+                  {savingProfile ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
