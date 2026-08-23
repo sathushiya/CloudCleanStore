@@ -3,7 +3,22 @@ import { Truck, Package, CheckCircle, Clock, XCircle, User } from 'lucide-react'
 import { orderService, Order, OrderStatus } from '../../services/orderService';
 import { useAuth } from '../../context/AuthContext';
 
-const STATUS_FLOW: OrderStatus[] = ['pending', 'processing', 'out_for_delivery', 'delivered'];
+// Used for the filter tabs -- keeps "Processing" browsable for any legacy
+// order still sitting in that status, even though it's no longer a step
+// staff manually advance through (see getNextStatus below).
+const FILTER_STATUSES: OrderStatus[] = ['pending', 'processing', 'out_for_delivery', 'delivered'];
+
+// "processing" isn't a manual step anymore -- accepting an order is enough
+// prep, so the next real milestone worth a click is dispatching it. A
+// legacy order already sitting in "processing" is treated as pre-dispatch,
+// same as "pending", so it still gets a working action instead of being
+// stranded with none.
+function getNextStatus(status: OrderStatus): OrderStatus | undefined {
+  if (status === 'processing') return 'out_for_delivery';
+  const flow: OrderStatus[] = ['pending', 'out_for_delivery', 'delivered'];
+  const currentIndex = flow.indexOf(status);
+  return currentIndex === -1 ? undefined : flow[currentIndex + 1];
+}
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: 'Pending',
@@ -67,8 +82,7 @@ export default function OrdersDelivery() {
   };
 
   const handleAdvanceStatus = async (order: Order) => {
-    const currentIndex = STATUS_FLOW.indexOf(order.status);
-    const nextStatus = STATUS_FLOW[currentIndex + 1];
+    const nextStatus = getNextStatus(order.status);
     if (!nextStatus) return;
 
     setUpdatingId(order.id);
@@ -103,7 +117,7 @@ export default function OrdersDelivery() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {(['all', ...STATUS_FLOW, 'cancelled'] as const).map((status) => (
+        {(['all', ...FILTER_STATUSES, 'cancelled'] as const).map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status as OrderStatus | 'all')}
@@ -181,7 +195,7 @@ export default function OrdersDelivery() {
                       </button>
                     )}
 
-                    {canAdvance && (
+                    {canAdvance && getNextStatus(order.status) && (
                       <button
                         onClick={() => handleAdvanceStatus(order)}
                         disabled={updatingId === order.id}
@@ -189,7 +203,7 @@ export default function OrdersDelivery() {
                       >
                         {updatingId === order.id
                           ? 'Updating...'
-                          : `Mark as ${STATUS_LABELS[STATUS_FLOW[STATUS_FLOW.indexOf(order.status) + 1]]}`}
+                          : `Mark as ${STATUS_LABELS[getNextStatus(order.status)!]}`}
                       </button>
                     )}
 

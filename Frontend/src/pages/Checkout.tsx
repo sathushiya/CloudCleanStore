@@ -51,6 +51,10 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  // Snapshot of what was actually ordered, taken right before the cart is
+  // cleared -- the bank transfer summary still needs to show these items
+  // after the live cart (and its localStorage-backed items) is emptied.
+  const [orderedProducts, setOrderedProducts] = useState<{ name: string; quantity: number }[]>([]);
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal * 0.08;
@@ -135,6 +139,17 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
       );
       setCreatedOrder(order);
 
+      // The backend already empties the cart the moment the order is
+      // created (checkout), regardless of payment method -- clear the
+      // local cart right here too, rather than waiting for the bank
+      // transfer flow's payment-confirmed callback. That callback only
+      // fires if the customer is still sitting on that exact screen when
+      // admin confirms payment, which in practice most people aren't --
+      // they close the tab and check back later, leaving the old cart
+      // sitting in localStorage indefinitely otherwise.
+      setOrderedProducts(items.map(i => ({ name: i.product.name, quantity: i.quantity })));
+      clearCart();
+
       if (paymentMethod === 'banking') {
         setShowBankTransfer(true);
       } else {
@@ -156,7 +171,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
         orderDetails={{
           customerName: user?.name || selectedAddr?.name || 'Customer',
           address: selectedAddr ? `${selectedAddr.address}, ${selectedAddr.city}` : 'N/A',
-          products: items.map(i => ({ name: i.product.name, quantity: i.quantity })),
+          products: orderedProducts,
           deliveryTime,
         }}
         onBack={() => setShowBankTransfer(false)}
