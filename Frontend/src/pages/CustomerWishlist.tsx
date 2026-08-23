@@ -26,7 +26,7 @@ export default function CustomerWishlist({ onBack }: CustomerWishlistProps) {
     try {
       const data = await wishlistService.list();
       setItems(data);
-    } catch (err) {
+    } catch {
       setError('Could not load your wishlist.');
     } finally {
       setIsLoading(false);
@@ -41,7 +41,7 @@ export default function CustomerWishlist({ onBack }: CustomerWishlistProps) {
     try {
       await wishlistService.remove(Number(productId));
       setItems(items.filter((item) => item.product.id !== productId));
-    } catch (err) {
+    } catch {
       alert('Failed to remove item. Please try again.');
     }
   };
