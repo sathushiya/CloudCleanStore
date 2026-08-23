@@ -9,8 +9,6 @@ import {
   Phone,
   Calendar,
   DollarSign,
-  Award,
-  TrendingUp,
   X,
   Eye,
   EyeOff,
@@ -63,7 +61,7 @@ export default function StaffManagement() {
     try {
       const accounts = await staffService.list();
       setStaff(accounts.map(toStaffMember));
-    } catch (err) {
+    } catch {
       setLoadError('Could not load staff accounts.');
     } finally {
       setIsLoading(false);
@@ -87,7 +85,7 @@ export default function StaffManagement() {
     try {
       await staffService.remove(Number(id));
       await loadStaff();
-    } catch (err) {
+    } catch {
       alert('Failed to remove staff member. You cannot delete your own account.');
     }
   };
@@ -103,7 +101,7 @@ export default function StaffManagement() {
       });
       await loadStaff();
       setEditingStaff(null);
-    } catch (err) {
+    } catch {
       alert('Failed to save staff member. Please check all fields and try again.');
     }
   };
@@ -124,7 +122,7 @@ export default function StaffManagement() {
       });
       await loadStaff();
       setIsAddModalOpen(false);
-    } catch (err) {
+    } catch {
       alert('Failed to add staff member. The email may already be in use.');
     }
   };
