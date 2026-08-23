@@ -8,7 +8,6 @@ import {
   Check,
   Clock,
   Package,
-  ChevronRight,
   Plus,
   X,
   Edit2,
@@ -141,7 +140,7 @@ export default function Checkout({ onBack, onOrderPlaced }: CheckoutProps) {
       } else {
         finishOrder();
       }
-    } catch (err) {
+    } catch {
       setOrderError('We could not place your order. Please check your connection and try again.');
     } finally {
       setIsSubmittingOrder(false);
