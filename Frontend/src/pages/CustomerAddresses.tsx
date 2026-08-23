@@ -25,7 +25,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
     try {
       const data = await addressService.list();
       setAddresses(data);
-    } catch (err) {
+    } catch {
       setError('Could not load your addresses.');
     } finally {
       setIsLoading(false);
@@ -77,7 +77,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
 
       await loadAddresses();
       setShowModal(false);
-    } catch (err) {
+    } catch {
       alert('Failed to save address. Please check all fields and try again.');
     } finally {
       setSaving(false);
@@ -89,7 +89,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
     try {
       await addressService.remove(id);
       await loadAddresses();
-    } catch (err) {
+    } catch {
       alert('Failed to delete address. Please try again.');
     }
   };
