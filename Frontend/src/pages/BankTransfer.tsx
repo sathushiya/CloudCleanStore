@@ -44,7 +44,7 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
           clearInterval(interval);
           setTimeout(() => onConfirm(), 2500);
         }
-      } catch (err) {
+      } catch {
         // Transient network error -- just try again on the next tick
       }
     }, 3000);
@@ -131,6 +131,27 @@ export default function BankTransfer({ total, orderId, orderDetails, onBack, onC
           <p className="text-gray-600 dark:text-gray-400">
             Transfer your payment to this bank account
           </p>
+        </div>
+
+        <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 p-5 mb-4">
+          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            Order Summary
+          </div>
+          <div className="space-y-1 mb-3">
+            <div className="font-medium">{orderDetails.customerName}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{orderDetails.address}</div>
+          </div>
+          <ul className="space-y-1 mb-3">
+            {orderDetails.products.map((p, i) => (
+              <li key={i} className="text-sm text-gray-600 dark:text-gray-400 flex justify-between">
+                <span>{p.name}</span>
+                <span>× {p.quantity}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {orderDetails.deliveryTime === 'express' ? 'Express delivery' : 'Standard delivery'}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-purple-700/20 overflow-hidden mb-4">
