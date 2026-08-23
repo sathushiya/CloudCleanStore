@@ -133,7 +133,7 @@ export default function ForgotPassword({ onBack, onNavigateToLogin }: ForgotPass
     setError('');
     try {
       await authService.resendOtp(email, 'password_reset');
-    } catch (err: any) {
+    } catch {
       setError('Failed to resend code. Please try again.');
     }
   };
