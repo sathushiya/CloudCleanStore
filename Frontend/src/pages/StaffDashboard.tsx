@@ -38,6 +38,70 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 
 const POLL_INTERVAL_MS = 8000;
 
+// Persistent bell -- dismissing the big popup shouldn't lose the alert, it
+// should just drop back to this badge/dropdown until accepted.
+function NotificationBell({
+  alerts,
+  open,
+  onToggle,
+  onAccept,
+}: {
+  alerts: Order[];
+  open: boolean;
+  onToggle: () => void;
+  onAccept: (orderId: number) => void;
+}) {
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300"
+        aria-label="Order alerts"
+      >
+        <Bell className="w-6 h-6" />
+        {alerts.length > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {alerts.length}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white dark:bg-[#1a1425] rounded-2xl shadow-2xl border border-gray-200 dark:border-purple-700/20 z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-purple-700/20 font-semibold text-sm">
+            Order Alerts
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {alerts.length === 0 ? (
+              <p className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                No pending order alerts.
+              </p>
+            ) : (
+              alerts.map((order) => (
+                <div key={order.id} className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-sm">{order.order_number}</span>
+                    <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                      LKR {order.total.toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">{order.delivery_address}</p>
+                  <button
+                    onClick={() => onAccept(order.id)}
+                    className="w-full py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Accept Order
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -58,12 +122,18 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const [notifySms, setNotifySms] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
-  // Pops up an alert when a *new* unassigned order shows up between polls.
+  // newOrderAlerts is the persistent queue behind the bell icon -- it only
+  // shrinks when an order is accepted or someone else claims it first, never
+  // just by dismissing the popup. popupVisible controls only whether the
+  // big modal is showing; dismissing it drops back to the bell's badge
+  // count instead of losing the alert entirely.
   // null on the ref means "haven't done the first load yet" -- we seed it
   // silently on that first load instead of alerting for every order that
   // already existed before this dashboard was opened.
   const seenOrderIds = useRef<Set<number> | null>(null);
   const [newOrderAlerts, setNewOrderAlerts] = useState<Order[]>([]);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
 
   const loadOrders = useCallback(async () => {
     try {
@@ -80,16 +150,22 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       );
       setError(null);
 
+      const unassignedIds = new Set(unassigned.map((o) => o.id));
+      // Drop alerts for orders that are no longer unassigned -- someone
+      // else claimed it, so it shouldn't keep sitting in the bell.
+      setNewOrderAlerts((prev) => prev.filter((o) => unassignedIds.has(o.id)));
+
       if (seenOrderIds.current === null) {
-        seenOrderIds.current = new Set(unassigned.map((o) => o.id));
+        seenOrderIds.current = unassignedIds;
       } else {
         const freshlyArrived = unassigned.filter((o) => !seenOrderIds.current!.has(o.id));
-        unassigned.forEach((o) => seenOrderIds.current!.add(o.id));
+        unassignedIds.forEach((id) => seenOrderIds.current!.add(id));
         if (freshlyArrived.length > 0) {
           setNewOrderAlerts((prev) => {
             const existingIds = new Set(prev.map((o) => o.id));
             return [...prev, ...freshlyArrived.filter((o) => !existingIds.has(o.id))];
           });
+          setPopupVisible(true);
         }
       }
     } catch {
@@ -159,8 +235,10 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     await handleAcceptOrder(orderId);
   };
 
+  // Closes the popup only -- the alerts stay queued behind the bell icon
+  // until accepted (or claimed by someone else, pruned on the next poll).
   const handleDismissPopup = () => {
-    setNewOrderAlerts([]);
+    setPopupVisible(false);
   };
 
   const handleAdvanceStatus = async (order: Order) => {
@@ -206,12 +284,20 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#1a1425] border-b border-gray-200 dark:border-purple-700/20 px-4 py-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Staff Dashboard</h1>
+          <div className="flex items-center gap-1">
+          <NotificationBell
+            alerts={newOrderAlerts}
+            open={bellOpen}
+            onToggle={() => setBellOpen((v) => !v)}
+            onAccept={(id) => { setBellOpen(false); handleAcceptFromPopup(id); }}
+          />
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+          </div>
         </div>
       </div>
 
@@ -224,15 +310,21 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
           <div className="h-full flex flex-col">
             <div className="p-6 border-b border-gray-200 dark:border-purple-700/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center shrink-0">
                   <UserIcon className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <h2 className="font-bold text-gray-900 dark:text-white">{user?.name}</h2>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-bold text-gray-900 dark:text-white truncate">{user?.name}</h2>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     {user?.role === "staffsupervisor" ? "Staff Supervisor" : "Staff"}
                   </p>
                 </div>
+                <NotificationBell
+                  alerts={newOrderAlerts}
+                  open={bellOpen}
+                  onToggle={() => setBellOpen((v) => !v)}
+                  onAccept={(id) => { setBellOpen(false); handleAcceptFromPopup(id); }}
+                />
               </div>
 
               <button
@@ -547,11 +639,13 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
         </main>
       </div>
 
-      <OrderNotificationPopup
-        pendingOrders={newOrderAlerts}
-        onAcceptOrder={handleAcceptFromPopup}
-        onDismiss={handleDismissPopup}
-      />
+      {popupVisible && newOrderAlerts.length > 0 && (
+        <OrderNotificationPopup
+          pendingOrders={newOrderAlerts}
+          onAcceptOrder={handleAcceptFromPopup}
+          onDismiss={handleDismissPopup}
+        />
+      )}
     </div>
   );
 }
