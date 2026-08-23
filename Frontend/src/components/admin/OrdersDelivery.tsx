@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Truck, Package, CheckCircle, Clock, XCircle, User } from 'lucide-react';
 import { orderService, Order, OrderStatus } from '../../services/orderService';
 import { useAuth } from '../../context/AuthContext';
@@ -37,29 +37,29 @@ export default function OrdersDelivery() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await orderService.staffList(statusFilter === 'all' ? undefined : statusFilter);
       setOrders(data);
-    } catch (err) {
+    } catch {
       setError('Could not load orders.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     loadOrders();
-  }, [statusFilter]);
+  }, [loadOrders]);
 
   const handleAssignToSelf = async (orderId: number) => {
     setUpdatingId(orderId);
     try {
       await orderService.assignToSelf(orderId);
       await loadOrders();
-    } catch (err) {
+    } catch {
       alert('Failed to assign order. Please try again.');
     } finally {
       setUpdatingId(null);
@@ -75,7 +75,7 @@ export default function OrdersDelivery() {
     try {
       await orderService.updateStatus(order.id, nextStatus);
       await loadOrders();
-    } catch (err) {
+    } catch {
       alert('Failed to update order status. Please try again.');
     } finally {
       setUpdatingId(null);
@@ -88,7 +88,7 @@ export default function OrdersDelivery() {
     try {
       await orderService.updateStatus(orderId, 'cancelled');
       await loadOrders();
-    } catch (err) {
+    } catch {
       alert('Failed to cancel order. Please try again.');
     } finally {
       setUpdatingId(null);
