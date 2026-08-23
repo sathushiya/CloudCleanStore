@@ -19,7 +19,7 @@ export default function CustomerOrders({ onBack }: CustomerOrdersProps) {
       try {
         const data = await orderService.myOrders();
         if (!cancelled) setOrders(data);
-      } catch (err) {
+      } catch {
         if (!cancelled) setError('Could not load your orders. Please try again.');
       } finally {
         if (!cancelled) setIsLoading(false);
