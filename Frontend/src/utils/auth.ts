@@ -26,17 +26,12 @@ export function validatePassword(password: string): PasswordValidation {
 
   const isValid = errors.length === 0;
 
+  // Once a password is valid, it has already satisfied all four character-
+  // class checks -- they can no longer distinguish anything. Length is the
+  // only remaining signal, so it alone determines the medium/strong split.
   let strength: "weak" | "medium" | "strong" = "weak";
   if (isValid) {
-    const score =
-      (password.length >= 12 ? 1 : 0) +
-      (/[A-Z]/.test(password) ? 1 : 0) +
-      (/[a-z]/.test(password) ? 1 : 0) +
-      (/[0-9]/.test(password) ? 1 : 0) +
-      (/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 1 : 0);
-
-    if (score >= 4) strength = "strong";
-    else if (score >= 3) strength = "medium";
+    strength = password.length >= 14 ? "strong" : "medium";
   }
 
   return { isValid, errors, strength };
