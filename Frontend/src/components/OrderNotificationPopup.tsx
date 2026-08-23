@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Bell, X, User, MapPin, ShoppingCart, Clock, CheckCircle } from 'lucide-react';
-import { DeliveryTask } from '../data/admin';
+import { Bell, X, User, MapPin, ShoppingCart, CheckCircle } from 'lucide-react';
+import { Order } from '../services/orderService';
 
 interface OrderNotificationPopupProps {
-  pendingOrders: DeliveryTask[];
-  onAcceptOrder: (taskId: string) => void;
+  pendingOrders: Order[];
+  onAcceptOrder: (orderId: number) => void;
   onDismiss: () => void;
 }
 
@@ -13,21 +13,24 @@ export default function OrderNotificationPopup({
   onAcceptOrder,
   onDismiss
 }: OrderNotificationPopupProps) {
-  const [selectedOrder, setSelectedOrder] = useState<DeliveryTask | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // Auto-select first order if available
+  // Auto-select the first order, and re-select if the previously selected
+  // one dropped out of the list (e.g. someone else claimed it).
   useEffect(() => {
-    if (pendingOrders.length > 0 && !selectedOrder) {
+    if (pendingOrders.length === 0) {
+      setSelectedOrder(null);
+      return;
+    }
+    if (!selectedOrder || !pendingOrders.some((o) => o.id === selectedOrder.id)) {
       setSelectedOrder(pendingOrders[0]);
     }
-  }, [pendingOrders]);
+  }, [pendingOrders, selectedOrder]);
 
-  if (pendingOrders.length === 0) return null;
+  if (pendingOrders.length === 0 || !selectedOrder) return null;
 
   const handleAccept = () => {
-    if (selectedOrder) {
-      onAcceptOrder(selectedOrder.id);
-    }
+    onAcceptOrder(selectedOrder.id);
   };
 
   return (
@@ -70,103 +73,97 @@ export default function OrderNotificationPopup({
         </div>
 
         {/* Order Details */}
-        {selectedOrder && (
-          <div className="p-6 space-y-4">
-            {/* Order Selection */}
-            {pendingOrders.length > 1 && (
-              <div>
-                <label className="block text-sm font-semibold mb-2">Select Order:</label>
-                <select
-                  value={selectedOrder.id}
-                  onChange={(e) => {
-                    const order = pendingOrders.find(o => o.id === e.target.value);
-                    setSelectedOrder(order || null);
-                  }}
-                  className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
-                >
-                  {pendingOrders.map(order => (
-                    <option key={order.id} value={order.id}>
-                      {order.orderId} - LKR {order.total.toFixed(2)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+        <div className="p-6 space-y-4">
+          {/* Order Selection */}
+          {pendingOrders.length > 1 && (
+            <div>
+              <label className="block text-sm font-semibold mb-2">Select Order:</label>
+              <select
+                value={selectedOrder.id}
+                onChange={(e) => {
+                  const order = pendingOrders.find((o) => o.id === Number(e.target.value));
+                  setSelectedOrder(order || null);
+                }}
+                className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
+              >
+                {pendingOrders.map((order) => (
+                  <option key={order.id} value={order.id}>
+                    {order.order_number} - LKR {order.total.toFixed(2)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-            {/* Order Info */}
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-lg">{selectedOrder.orderId}</span>
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  LKR {selectedOrder.total.toFixed(2)}
+          {/* Order Info */}
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-lg">{selectedOrder.order_number}</span>
+              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                LKR {selectedOrder.total.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              {selectedOrder.user?.name && (
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <span className="text-gray-700 dark:text-gray-300">{selectedOrder.user.name}</span>
+                </div>
+              )}
+
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
+                <span className="text-gray-700 dark:text-gray-300 flex-1">
+                  {selectedOrder.delivery_address}
                 </span>
               </div>
 
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-gray-700 dark:text-gray-300">{selectedOrder.customerName}</span>
-                </div>
-
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
-                  <span className="text-gray-700 dark:text-gray-300 flex-1">
-                    {selectedOrder.customerAddress}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {selectedOrder.deliveryTime === 'express' ? 'Express Delivery' : 'Standard Delivery'} - {selectedOrder.estimatedTime}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {selectedOrder.products.length} {selectedOrder.products.length === 1 ? 'item' : 'items'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Products List */}
-              <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-700">
-                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Items:</div>
-                <div className="space-y-1">
-                  {selectedOrder.products.map((product, idx) => (
-                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-400 flex justify-between">
-                      <span>{product.name}</span>
-                      <span>× {product.quantity}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                <span className="text-gray-700 dark:text-gray-300">
+                  {selectedOrder.items.reduce((sum, i) => sum + i.quantity, 0)}{' '}
+                  {selectedOrder.items.length === 1 ? 'item' : 'items'}
+                </span>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={onDismiss}
-                className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                Dismiss
-              </button>
-              <button
-                onClick={handleAccept}
-                className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-5 h-5" />
-                Accept Order
-              </button>
+            {/* Products List */}
+            <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-700">
+              <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Items:</div>
+              <div className="space-y-1">
+                {selectedOrder.items.map((item) => (
+                  <div key={item.id} className="text-xs text-gray-600 dark:text-gray-400 flex justify-between">
+                    <span>{item.product_name} ({item.variant_size})</span>
+                    <span>× {item.quantity}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* Note */}
-            <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-              First to accept claims this order
-            </p>
           </div>
-        )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onDismiss}
+              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              Dismiss
+            </button>
+            <button
+              onClick={handleAccept}
+              className="flex-1 px-6 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-(--glow-purple-strong) transition-all hover:scale-105 flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="w-5 h-5" />
+              Accept Order
+            </button>
+          </div>
+
+          {/* Note */}
+          <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+            First to accept claims this order
+          </p>
+        </div>
       </div>
 
       <style>{`

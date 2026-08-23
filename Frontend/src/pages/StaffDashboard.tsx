@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Package,
   CheckCircle,
@@ -17,6 +17,7 @@ import { orderService, Order, OrderStatus } from "../services/orderService";
 import { staffService } from "../services/staffService";
 import { profileService } from "../services/profileService";
 import DeliveryMap from "../components/staff/DeliveryMap";
+import OrderNotificationPopup from "../components/OrderNotificationPopup";
 
 interface StaffDashboardProps {
   onLogout: () => void;
@@ -55,20 +56,41 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const [notifySms, setNotifySms] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
+  // Pops up an alert when a *new* unassigned order shows up between polls.
+  // null on the ref means "haven't done the first load yet" -- we seed it
+  // silently on that first load instead of alerting for every order that
+  // already existed before this dashboard was opened.
+  const seenOrderIds = useRef<Set<number> | null>(null);
+  const [newOrderAlerts, setNewOrderAlerts] = useState<Order[]>([]);
+
   const loadOrders = useCallback(async () => {
     try {
       const [pending, all] = await Promise.all([
         orderService.staffList("pending"),
         orderService.staffList(),
       ]);
-      setAvailableOrders(pending.filter((o) => !o.assigned_to));
+      const unassigned = pending.filter((o) => !o.assigned_to);
+      setAvailableOrders(unassigned);
       setMyOrders(
         all.filter(
           (o) => o.assigned_to === user?.id && o.status !== "delivered" && o.status !== "cancelled"
         )
       );
       setError(null);
-    } catch (err) {
+
+      if (seenOrderIds.current === null) {
+        seenOrderIds.current = new Set(unassigned.map((o) => o.id));
+      } else {
+        const freshlyArrived = unassigned.filter((o) => !seenOrderIds.current!.has(o.id));
+        unassigned.forEach((o) => seenOrderIds.current!.add(o.id));
+        if (freshlyArrived.length > 0) {
+          setNewOrderAlerts((prev) => {
+            const existingIds = new Set(prev.map((o) => o.id));
+            return [...prev, ...freshlyArrived.filter((o) => !existingIds.has(o.id))];
+          });
+        }
+      }
+    } catch {
       setError("Could not load orders.");
     } finally {
       setIsLoading(false);
@@ -89,7 +111,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       setNotifyEmail(profile.notify_email ?? true);
       setNotifySms(profile.notify_sms ?? false);
       setIsAvailable(profile.is_available ?? true);
-    } catch (err) {
+    } catch {
       // keep defaults
     } finally {
       setPrefsLoading(false);
@@ -110,7 +132,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     try {
       const result = await staffService.updateAvailability(!isAvailable);
       setIsAvailable(result.is_available);
-    } catch (err) {
+    } catch {
       alert("Failed to update your availability. Please try again.");
     } finally {
       setTogglingAvailability(false);
@@ -122,12 +144,21 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     try {
       await orderService.assignToSelf(orderId);
       await loadOrders();
-    } catch (err) {
+    } catch {
       alert("Failed to accept this order -- it may have just been taken by someone else.");
       await loadOrders();
     } finally {
       setActioningId(null);
     }
+  };
+
+  const handleAcceptFromPopup = async (orderId: number) => {
+    setNewOrderAlerts((prev) => prev.filter((o) => o.id !== orderId));
+    await handleAcceptOrder(orderId);
+  };
+
+  const handleDismissPopup = () => {
+    setNewOrderAlerts([]);
   };
 
   const handleAdvanceStatus = async (order: Order) => {
@@ -139,7 +170,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     try {
       await orderService.updateStatus(order.id, nextStatus);
       await loadOrders();
-    } catch (err) {
+    } catch {
       alert("Failed to update order status. Please try again.");
     } finally {
       setActioningId(null);
@@ -155,7 +186,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
         notify_sms: notifySms,
       });
       setActiveTab("overview");
-    } catch (err) {
+    } catch {
       alert("Failed to save settings. Please try again.");
     } finally {
       setSavingPrefs(false);
@@ -509,6 +540,12 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
           </div>
         </main>
       </div>
+
+      <OrderNotificationPopup
+        pendingOrders={newOrderAlerts}
+        onAcceptOrder={handleAcceptFromPopup}
+        onDismiss={handleDismissPopup}
+      />
     </div>
   );
 }
