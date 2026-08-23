@@ -69,7 +69,7 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
         if (!cancelled) {
           setProducts(paginated.data.map(toFrontendProduct));
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) setError('Could not load products. Please try again.');
       } finally {
         if (!cancelled) setIsLoading(false);
