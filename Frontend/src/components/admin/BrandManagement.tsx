@@ -17,7 +17,7 @@ export default function BrandManagement() {
     try {
       const data = await productService.adminListBrands();
       setBrands(data);
-    } catch (err) {
+    } catch {
       setError('Could not load brands.');
     } finally {
       setIsLoading(false);
@@ -33,7 +33,7 @@ export default function BrandManagement() {
     try {
       await productService.removeBrand(id);
       await loadBrands();
-    } catch (err) {
+    } catch {
       alert('Failed to delete brand. It may still have products assigned to it.');
     }
   };
@@ -105,6 +105,7 @@ export default function BrandManagement() {
       {editingBrand && (
         <BrandFormModal
           brand={editingBrand}
+          existingNames={brands.filter((b) => b.id !== editingBrand.id).map((b) => b.name)}
           onSaved={async () => { await loadBrands(); setEditingBrand(null); }}
           onClose={() => setEditingBrand(null)}
         />
@@ -112,6 +113,7 @@ export default function BrandManagement() {
 
       {showAddModal && (
         <BrandFormModal
+          existingNames={brands.map((b) => b.name)}
           onSaved={async () => { await loadBrands(); setShowAddModal(false); }}
           onClose={() => setShowAddModal(false)}
         />
@@ -122,19 +124,21 @@ export default function BrandManagement() {
 
 interface BrandFormModalProps {
   brand?: Brand;
+  existingNames: string[];
   onSaved: () => void;
   onClose: () => void;
 }
 
-function BrandFormModal({ brand, onSaved, onClose }: BrandFormModalProps) {
+function BrandFormModal({ brand, existingNames, onSaved, onClose }: BrandFormModalProps) {
   const [name, setName] = useState(brand?.name ?? '');
   const [description, setDescription] = useState(brand?.description ?? '');
   const [logo, setLogo] = useState(brand?.logo ?? '');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      alert('Please enter a brand name.');
+    const validationErrors = validateBrandForm(name, existingNames.map((n) => n.toLowerCase()));
+    if (validationErrors.length > 0) {
+      alert(validationErrors[0]);
       return;
     }
     setSaving(true);
@@ -145,7 +149,7 @@ function BrandFormModal({ brand, onSaved, onClose }: BrandFormModalProps) {
         await productService.createBrand({ name, description, logo });
       }
       onSaved();
-    } catch (err) {
+    } catch {
       alert('Failed to save brand. The name may already be in use.');
     } finally {
       setSaving(false);
