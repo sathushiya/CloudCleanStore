@@ -86,7 +86,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
   const loadPendingOrders = async () => {
     setOrdersLoading(true);
     try {
-      const data = await orderService.staffList("pending");
+      const data = await orderService.staffList("pending", undefined, true);
       setPendingOrders(data);
     } catch {
       // handled by empty-state below

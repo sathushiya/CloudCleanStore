@@ -101,6 +101,59 @@ class OrderControllerTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'assigned_to' => $staff->id]);
     }
 
+    // ─── Bank transfer orders aren't offered/assignable until paid ────────
+
+    public function test_available_only_hides_an_unconfirmed_bank_transfer_order(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        Order::factory()->create(['status' => 'pending', 'payment_method' => 'bank_transfer', 'payment_status' => 'submitted']);
+        $cashOrder = Order::factory()->create(['status' => 'pending', 'payment_method' => 'cash']);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/staff/orders?status=pending&available_only=1');
+
+        $response->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $cashOrder->id);
+    }
+
+    public function test_available_only_includes_a_confirmed_bank_transfer_order(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['status' => 'pending', 'payment_method' => 'bank_transfer', 'payment_status' => 'confirmed']);
+
+        $response = $this->actingAs($staff, 'sanctum')->getJson('/api/staff/orders?status=pending&available_only=1');
+
+        $response->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $order->id);
+    }
+
+    public function test_staff_cannot_accept_an_unconfirmed_bank_transfer_order(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create([
+            'assigned_to' => null,
+            'payment_method' => 'bank_transfer',
+            'payment_status' => 'submitted',
+        ]);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/assign");
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'assigned_to' => null]);
+    }
+
+    public function test_staff_can_accept_a_confirmed_bank_transfer_order(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create([
+            'assigned_to' => null,
+            'payment_method' => 'bank_transfer',
+            'payment_status' => 'confirmed',
+        ]);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/assign");
+
+        $response->assertOk();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'assigned_to' => $staff->id]);
+    }
+
     public function test_staff_can_update_order_status(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);

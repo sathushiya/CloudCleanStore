@@ -152,7 +152,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   const loadOrders = useCallback(async () => {
     try {
       const [pending, all] = await Promise.all([
-        orderService.staffList("pending"),
+        orderService.staffList("pending", undefined, true),
         orderService.staffList(),
       ]);
       const unassigned = pending.filter((o) => !o.assigned_to);

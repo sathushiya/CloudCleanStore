@@ -50,9 +50,17 @@ export const orderService = {
 
   // ─── Staff / Delivery (equal-tier — both can manage any order) ─────────────
 
-  async staffList(status?: OrderStatus, paymentStatus?: string) {
+  // availableOnly excludes bank transfer orders whose payment hasn't been
+  // confirmed yet -- use it for "orders staff can actually pick up"
+  // (Available Orders / the new-order popup), not for general order
+  // browsing where every pending order should still be visible.
+  async staffList(status?: OrderStatus, paymentStatus?: string, availableOnly?: boolean) {
     const { data } = await api.get('/staff/orders', {
-    params: { ...(status ? { status } : {}), ...(paymentStatus ? { payment_status: paymentStatus } : {}) },
+    params: {
+      ...(status ? { status } : {}),
+      ...(paymentStatus ? { payment_status: paymentStatus } : {}),
+      ...(availableOnly ? { available_only: 1 } : {}),
+    },
   });
     return data.data as Order[];
 },

@@ -119,6 +119,21 @@ class OrderController extends Controller
             $query->where('payment_status', $request->string('payment_status'));
         }
 
+        // Used for "orders staff/supervisors can actually pick up" (the
+        // Available Orders list and the new-order popup) -- a bank transfer
+        // order shouldn't be offered for delivery until its payment is
+        // actually verified, or staff would be committing to prepare/
+        // deliver something that might never get paid for. Cash orders are
+        // unaffected since payment happens on delivery, not up front. This
+        // is deliberately opt-in so Admin's general order browsing (which
+        // should still show every pending order for oversight) is untouched.
+        if ($request->boolean('available_only')) {
+            $query->where(function ($q) {
+                $q->where('payment_method', '!=', 'bank_transfer')
+                    ->orWhere('payment_status', 'confirmed');
+            });
+        }
+
         $orders = $query->orderByDesc('created_at')->get();
         return response()->json(['success' => true, 'data' => $orders]);
     }
@@ -160,6 +175,16 @@ class OrderController extends Controller
         // Only a supervisor/admin may assign to someone other than themselves.
         if ($assigneeId !== $user->id) {
             abort_if(!$user->isAdmin() && !$user->isSupervisor(), 403, 'Only a supervisor or admin can assign orders to other staff members.');
+        }
+
+        // Backstop for the available_only filter above -- blocks accepting
+        // an unpaid bank transfer order even if someone hits this endpoint
+        // directly rather than going through the filtered list.
+        if ($order->payment_method === 'bank_transfer' && $order->payment_status !== 'confirmed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order\'s bank transfer payment has not been confirmed yet.',
+            ], 422);
         }
 
         $order->update([
