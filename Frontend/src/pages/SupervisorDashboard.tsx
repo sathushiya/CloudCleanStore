@@ -14,8 +14,10 @@ import {
   MapPin,
   ShoppingCart,
   CheckCircle,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import PhoneVerificationStatus from "../components/common/PhoneVerificationStatus";
 import { productService, toFrontendProduct } from "../services/productService";
 import type { Product } from "../data/products";
 import { orderService, Order } from "../services/orderService";
@@ -858,8 +860,15 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
                     <ReadonlyField label="Full Name" value={user?.name || ""} />
                     <ReadonlyField label="Email" value={user?.email || ""} />
                     <ReadonlyField label="Role" value="Staff Supervisor" />
-                    <ReadonlyField label="Phone" value={user?.phone_number || "Not provided"} />
                   </div>
+                </div>
+
+                <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Phone &amp; WhatsApp
+                  </h2>
+                  <PhoneVerificationStatus />
                 </div>
 
                 <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">

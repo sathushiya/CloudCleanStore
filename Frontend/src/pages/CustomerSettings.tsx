@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Bell, Mail, MessageSquare, Moon, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import BackButton from '../components/common/BackButton';
 import profileService from '../services/profileService';
-import PhoneVerificationStatus from '../components/customer/PhoneVerificationStatus';
+import PhoneVerificationStatus from '../components/common/PhoneVerificationStatus';
 
 interface CustomerSettingsProps {
   onBack: () => void;

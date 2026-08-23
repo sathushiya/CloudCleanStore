@@ -11,6 +11,7 @@ import {
   Bell,
   ShoppingCart,
   User as UserIcon,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { orderService, Order, OrderStatus } from "../services/orderService";
@@ -18,6 +19,7 @@ import { staffService } from "../services/staffService";
 import { profileService } from "../services/profileService";
 import DeliveryMap from "../components/staff/DeliveryMap";
 import OrderNotificationPopup from "../components/OrderNotificationPopup";
+import PhoneVerificationStatus from "../components/common/PhoneVerificationStatus";
 
 interface StaffDashboardProps {
   onLogout: () => void;
@@ -482,11 +484,15 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                       <label className="block text-sm font-medium mb-2">Role</label>
                       <input type="text" value={user?.role === "staffsupervisor" ? "Staff Supervisor" : "Staff"} readOnly className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Phone</label>
-                      <input type="tel" value={user?.phone_number || "Not provided"} readOnly className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 cursor-not-allowed" />
-                    </div>
                   </div>
+                </div>
+
+                <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Phone &amp; WhatsApp
+                  </h2>
+                  <PhoneVerificationStatus />
                 </div>
 
                 <div className="bg-white dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
