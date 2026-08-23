@@ -22,7 +22,7 @@ export default function PhoneVerificationStatus() {
       setPhoneNumber(profile.phone_number ?? null);
       setVerifiedAt(profile.phone_verified_at ?? null);
       setHasWhatsapp(profile.has_whatsapp ?? null);
-    } catch (err) {
+    } catch {
       // leave blank on failure
     } finally {
       setLoading(false);
