@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Package,
-  Users,
   AlertCircle,
   LogOut,
   Settings,
@@ -72,7 +71,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     try {
       const apiProducts = await productService.adminList();
       setProducts(apiProducts.map(toFrontendProduct));
-    } catch (err) {
+    } catch {
       // handled by empty-state below
     } finally {
       setProductsLoading(false);
@@ -84,7 +83,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     try {
       const data = await orderService.staffList("pending");
       setPendingOrders(data);
-    } catch (err) {
+    } catch {
       // handled by empty-state below
     } finally {
       setOrdersLoading(false);
@@ -96,7 +95,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     try {
       const data = await orderService.staffList(undefined, "submitted");
       setPaymentSubmissions(data);
-    } catch (err) {
+    } catch {
       // handled by empty-state below
     } finally {
       setPaymentsLoading(false);
@@ -107,7 +106,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     try {
       const data = await staffService.list();
       setStaffList(data.filter((s) => s.is_active && (s.role === "staff" || s.role === "staffsupervisor")));
-    } catch (err) {
+    } catch {
       // dropdown just stays empty
     }
   };
@@ -119,7 +118,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       setNotifyPush(profile.notify_push ?? true);
       setNotifyEmail(profile.notify_email ?? true);
       setNotifySms(profile.notify_sms ?? false);
-    } catch (err) {
+    } catch {
       // keep defaults
     } finally {
       setPrefsLoading(false);
@@ -196,7 +195,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       });
       await loadProducts();
       setInputValues((prev) => ({ ...prev, [variantId]: "" }));
-    } catch (err) {
+    } catch {
       alert("Failed to update stock. Please try again.");
     } finally {
       setSavingKey(null);
@@ -209,7 +208,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       await productService.updateVariantStock(Number(variantId), { online_stock: onlineStock });
       await loadProducts();
       setOnlineInputValues((prev) => ({ ...prev, [`${variantId}-online`]: "" }));
-    } catch (err) {
+    } catch {
       alert("Failed to update online stock. Please try again.");
     } finally {
       setSavingKey(null);
@@ -223,7 +222,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
     try {
       await orderService.assignToSelf(orderId, Number(staffId));
       await loadPendingOrders();
-    } catch (err) {
+    } catch {
       alert("Failed to assign order. Please try again.");
     }
   };
@@ -233,7 +232,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       await orderService.confirmPayment(orderId, approved);
       await loadPaymentSubmissions();
       await loadPendingOrders();
-    } catch (err) {
+    } catch {
       alert("Failed to update payment status. Please try again.");
     }
   };
@@ -247,7 +246,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
         notify_sms: notifySms,
       });
       setActiveTab("overview");
-    } catch (err) {
+    } catch {
       alert("Failed to save settings. Please try again.");
     } finally {
       setSavingPrefs(false);
