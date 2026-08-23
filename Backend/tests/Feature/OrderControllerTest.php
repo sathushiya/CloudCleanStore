@@ -46,6 +46,21 @@ class OrderControllerTest extends TestCase
         $this->assertDatabaseHas('orders', ['user_id' => $customer->id, 'status' => 'pending', 'total' => 1000]);
     }
 
+    public function test_checkout_rejects_an_invalid_payment_method(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+        $variant = ProductVariant::factory()->create(['online_stock' => 10]);
+        CartItem::create(['user_id' => $customer->id, 'product_variant_id' => $variant->id, 'quantity' => 1]);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson('/api/customer/orders/checkout', [
+            'delivery_address' => '123 Main St',
+            'payment_method' => 'crypto',
+        ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_checkout_rejects_a_cart_that_now_exceeds_stock(): void
     {
         // Simulates stock dropping between "added to cart" and "checked out"
