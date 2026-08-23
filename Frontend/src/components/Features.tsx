@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Package, ShoppingBag, Truck, Shield, Clock, Leaf, HeadphonesIcon, Award } from 'lucide-react';
+import reviewService, { PublicReview } from '../services/reviewService';
 
 const deliverySteps = [
   {
@@ -60,34 +62,28 @@ const features = [
   }
 ];
 
-const testimonials = [
-  {
-    name: 'Sarah Johnson',
-    role: 'Homeowner',
-    avatar: 'SJ',
-    rating: 5,
-    text: 'Amazing service! The products are top quality and delivery is incredibly fast. My home has never been cleaner.',
-    gradient: 'from-purple-500 to-pink-500'
-  },
-  {
-    name: 'Michael Chen',
-    role: 'Restaurant Owner',
-    avatar: 'MC',
-    rating: 5,
-    text: 'We switched to Cloud Clean Store for our restaurant supplies. The industrial cleaners are excellent and prices are competitive.',
-    gradient: 'from-blue-500 to-cyan-500'
-  },
-  {
-    name: 'Emily Davis',
-    role: 'Office Manager',
-    avatar: 'ED',
-    rating: 5,
-    text: 'Perfect for our office needs. The eco-friendly products work great and the bulk ordering is so convenient.',
-    gradient: 'from-emerald-500 to-green-500'
-  }
+const AVATAR_GRADIENTS = [
+  'from-purple-500 to-pink-500',
+  'from-blue-500 to-cyan-500',
+  'from-emerald-500 to-green-500',
+  'from-orange-500 to-red-500',
+  'from-indigo-500 to-purple-500',
 ];
 
+const initialsOf = (name: string) =>
+  name.split(' ').map((part) => part[0]).join('').toUpperCase().slice(0, 2);
+
 export default function Features() {
+  const [testimonials, setTestimonials] = useState<PublicReview[]>([]);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+
+  useEffect(() => {
+    reviewService.listPublic()
+      .then(setTestimonials)
+      .catch(() => {})
+      .finally(() => setReviewsLoaded(true));
+  }, []);
+
   return (
     <>
       {/* Delivery Process */}
@@ -171,54 +167,56 @@ export default function Features() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium mb-4">
-              Testimonials
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              What Our Customers Say
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Join thousands of satisfied customers who trust Cloud Clean Store
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="backdrop-blur-xl bg-white dark:bg-white/5 rounded-3xl p-8 border border-gray-200 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2"
-              >
-                {/* Stars */}
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-
-                <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  "{testimonial.text}"
-                </p>
-
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 bg-linear-to-br ${testimonial.gradient} rounded-full flex items-center justify-center text-white font-bold`}>
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</div>
-                  </div>
-                </div>
+      {/* Testimonials -- real reviews left by customers on delivered orders */}
+      {(!reviewsLoaded || testimonials.length > 0) && (
+        <section className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium mb-4">
+                Testimonials
               </div>
-            ))}
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                What Our Customers Say
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                Real reviews from customers who've received their order
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {testimonials.map((review, index) => (
+                <div
+                  key={review.id}
+                  className="backdrop-blur-xl bg-white dark:bg-white/5 rounded-3xl p-8 border border-gray-200 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2"
+                >
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <svg key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+
+                  <p className="text-gray-700 dark:text-gray-300 mb-6">
+                    "{review.comment}"
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 bg-linear-to-br ${AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length]} rounded-full flex items-center justify-center text-white font-bold`}>
+                      {initialsOf(review.name)}
+                    </div>
+                    <div>
+                      <div className="font-semibold">{review.name}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Verified Customer</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   );
 }

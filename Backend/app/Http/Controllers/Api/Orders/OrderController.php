@@ -19,7 +19,7 @@ class OrderController extends Controller
     {
         $orders = $request->user()
             ->orders()
-            ->with(['items', 'assignedTo'])
+            ->with(['items', 'assignedTo', 'review'])
             ->latest()
             ->get();
 
@@ -30,7 +30,7 @@ class OrderController extends Controller
     {
         abort_if($order->user_id !== $request->user()->id, 403, 'You can only view your own orders.');
 
-        $order->load(['items', 'assignedTo']);
+        $order->load(['items', 'assignedTo', 'review']);
 
         return response()->json(['success' => true, 'data' => $order]);
     }

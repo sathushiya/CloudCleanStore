@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Catalog\ProductController;
 use App\Http\Controllers\Api\Customer\AddressController;
 use App\Http\Controllers\Api\Customer\ProfileController;
 use App\Http\Controllers\Api\Customer\WishlistController;
+use App\Http\Controllers\Api\Customer\ReviewController;
 use App\Http\Controllers\Api\Admin\StaffController;
 use App\Http\Controllers\Api\Admin\NotificationController;
 use App\Http\Controllers\Api\Catalog\CartController;
@@ -28,6 +29,7 @@ Route::prefix('auth')->group(function () {
 Route::get('/brands', [BrandController::class, 'index']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
+Route::get('/reviews', [ReviewController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -108,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
         Route::post('/orders/{order}/submit-payment', [OrderController::class, 'submitPayment']);
+        Route::post('/orders/{order}/review', [ReviewController::class, 'store']);
 
         Route::get('/addresses', [AddressController::class, 'index']);
         Route::post('/addresses', [AddressController::class, 'store']);

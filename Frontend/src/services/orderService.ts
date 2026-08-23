@@ -22,6 +22,7 @@ export interface Order {
   payment_reference?: string | null;
   items: OrderItem[];
   user?: { id: number; name: string; email: string };
+  review?: { id: number; rating: number; comment: string } | null;
   created_at: string;
 }
 
