@@ -74,8 +74,11 @@ export default function OrdersDelivery() {
     try {
       await orderService.assignToSelf(orderId);
       await loadOrders();
-    } catch {
-      alert('Failed to assign order. Please try again.');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to assign order. Please try again.');
+      // Refresh either way -- if someone else just claimed it, the list
+      // should stop showing it as available rather than leaving stale data.
+      await loadOrders();
     } finally {
       setUpdatingId(null);
     }

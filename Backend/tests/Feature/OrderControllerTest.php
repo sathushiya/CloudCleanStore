@@ -124,6 +124,40 @@ class OrderControllerTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'assigned_to' => $staff->id]);
     }
 
+    // ─── Two staff can't both claim the same order ─────────────────────────
+
+    public function test_a_second_staff_member_cannot_claim_an_already_assigned_order(): void
+    {
+        $firstStaff = User::factory()->create(['role' => 'staff']);
+        $secondStaff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['assigned_to' => null]);
+
+        // Simulates the first staff member's request landing first.
+        $this->actingAs($firstStaff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/assign")->assertOk();
+
+        $response = $this->actingAs($secondStaff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/assign");
+
+        $response->assertStatus(409);
+        // The order still belongs to whoever got there first, unchanged.
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'assigned_to' => $firstStaff->id]);
+    }
+
+    public function test_supervisor_cannot_assign_an_already_assigned_order_to_someone_else(): void
+    {
+        $supervisor = User::factory()->create(['role' => 'staffsupervisor']);
+        $alreadyAssigned = User::factory()->create(['role' => 'staff']);
+        $anotherStaff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['assigned_to' => $alreadyAssigned->id]);
+
+        $response = $this->actingAs($supervisor, 'sanctum')->patchJson(
+            "/api/staff/orders/{$order->id}/assign",
+            ['staff_id' => $anotherStaff->id]
+        );
+
+        $response->assertStatus(409);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'assigned_to' => $alreadyAssigned->id]);
+    }
+
     // ─── Bank transfer orders aren't offered/assignable until paid ────────
 
     public function test_available_only_hides_an_unconfirmed_bank_transfer_order(): void

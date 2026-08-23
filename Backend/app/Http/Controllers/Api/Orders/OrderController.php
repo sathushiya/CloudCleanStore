@@ -208,10 +208,23 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $order->update([
-            'assigned_to' => $assigneeId,
-            'status' => 'processing',
-        ]);
+        // Atomic claim: this UPDATE only actually matches a row if the order
+        // is *still* unassigned at the moment it runs. If two staff tap
+        // "Accept" on the same order within milliseconds of each other,
+        // only the first UPDATE's WHERE clause matches -- the second
+        // affects 0 rows and gets a clean conflict response instead of
+        // silently overwriting who has it (which a plain ->update() would
+        // do, since it has no such condition).
+        $claimed = Order::whereKey($order->id)
+            ->whereNull('assigned_to')
+            ->update(['assigned_to' => $assigneeId, 'status' => 'processing']);
+
+        if ($claimed === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order has already been claimed by someone else.',
+            ], 409);
+        }
 
         return response()->json([
             'success' => true,

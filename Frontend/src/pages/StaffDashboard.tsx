@@ -239,8 +239,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     try {
       await orderService.assignToSelf(orderId);
       await loadOrders();
-    } catch {
-      alert("Failed to accept this order -- it may have just been taken by someone else.");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to accept this order -- it may have just been taken by someone else.");
       await loadOrders();
     } finally {
       setActioningId(null);
