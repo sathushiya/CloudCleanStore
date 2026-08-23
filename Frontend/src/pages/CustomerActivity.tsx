@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, CheckCircle, XCircle } from 'lucide-react';
 import BackButton from '../components/common/BackButton';
 import { orderService, Order } from '../services/orderService';
 
