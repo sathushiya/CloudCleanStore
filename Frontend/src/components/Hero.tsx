@@ -3,12 +3,10 @@ import { ImageWithFallback } from './common/ImageWithFallback';
 import logoWatermark from '../assets/imports/WhatsApp_Image_2026-04-30_at_7.52.21_PM__1_.jpeg';
 
 interface HeroProps {
-  onNavigateToLogin?: () => void;
   onNavigateToShop?: () => void;
-  isAuthenticated?: boolean;
 }
 
-export default function Hero({ onNavigateToLogin, onNavigateToShop, isAuthenticated }: HeroProps = {}) {
+export default function Hero({ onNavigateToShop }: HeroProps = {}) {
   const handleActionClick = () => {
     onNavigateToShop?.();
   };

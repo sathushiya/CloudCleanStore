@@ -35,29 +35,38 @@ import CustomerSettings from "./pages/CustomerSettings";
 import CustomerWishlist from "./pages/CustomerWishlist";
 import CustomerActivity from "./pages/CustomerActivity";
 
+// Guests can browse (Shop, product pages) freely, but order-related pages
+// require an account. Redirect to login rather than silently failing on
+// 401s from the cart/order API once they get there. Hoisted out of the
+// component so it's a stable reference (a fresh array literal on every
+// render would defeat the point of listing it as an effect dependency).
+const GUEST_BLOCKED_PAGES: PageType[] = ["checkout", "orders", "addresses", "wishlist"];
+
 function AppContent() {
   const { isAuthenticated, user, isLoading, logout } = useAuth();
   const { currentPage, navigate, goBack, reset } = useNavigation("home");
   const [cartModalOpen, setCartModalOpen] = useState(false);
 
-  // Auto-redirect staff/admin/staffsupervisor roles on login
+  // Auto-redirect staff/admin/staffsupervisor roles to their dashboard right
+  // after login. Deliberately keyed on [isAuthenticated, user] only -- this
+  // fires once on the auth transition, not on every visit to "home" while
+  // already authenticated, so staff can navigate back to "home" afterwards
+  // without being bounced away again. currentPage/navigate are intentionally
+  // left out of the dependency array for that reason.
   useEffect(() => {
     if (isAuthenticated && currentPage === "home") {
       if (user?.role === "admin") navigate("admin");
       else if (user?.role === "staffsupervisor") navigate("staffsupervisor");
       else if (user?.role === "staff") navigate("staff");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user]);
 
-  // Guests can browse (Shop, product pages) freely, but order-related pages
-  // require an account. Redirect to login rather than silently failing on
-  // 401s from the cart/order API once they get there.
-  const GUEST_BLOCKED_PAGES: PageType[] = ["checkout", "orders", "addresses", "wishlist"];
   useEffect(() => {
     if (!isLoading && !isAuthenticated && GUEST_BLOCKED_PAGES.includes(currentPage)) {
       navigate("login");
     }
-  }, [isAuthenticated, isLoading, currentPage]);
+  }, [isAuthenticated, isLoading, currentPage, navigate]);
 
   const handleLoginSuccess = () => {
     if (user?.role === "admin") navigate("admin");
@@ -248,14 +257,10 @@ function AppContent() {
     <div className="min-h-screen">
       <Navbar {...navProps} />
       <Hero
-        onNavigateToLogin={() => navigate("login")}
         onNavigateToShop={handleNavigateToShop}
-        isAuthenticated={isAuthenticated}
       />
       <Categories
         onCategoryClick={handleCategoryClick}
-        onNavigateToSignup={() => navigate("signup")}
-        isAuthenticated={isAuthenticated}
       />
       <Products
         onNavigateToLogin={() => navigate("login")}

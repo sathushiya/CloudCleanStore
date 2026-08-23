@@ -47,11 +47,9 @@ const categories = [
 
 interface CategoriesProps {
   onCategoryClick?: (categoryId: string) => void;
-  onNavigateToSignup?: () => void;
-  isAuthenticated?: boolean;
 }
 
-export default function Categories({ onCategoryClick, onNavigateToSignup, isAuthenticated }: CategoriesProps = {}) {
+export default function Categories({ onCategoryClick }: CategoriesProps = {}) {
   const handleCategoryClick = (categoryId: string) => {
     onCategoryClick?.(categoryId);
   };
