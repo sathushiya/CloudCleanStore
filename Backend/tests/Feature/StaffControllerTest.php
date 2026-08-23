@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -101,5 +102,35 @@ class StaffControllerTest extends TestCase
 
         $response->assertOk();
         $this->assertSoftDeleted('users', ['id' => $staff->id]);
+    }
+
+    public function test_customer_cannot_view_staff_performance(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+
+        $response = $this->actingAs($customer, 'sanctum')->getJson('/api/admin/staff/performance');
+
+        $response->assertForbidden();
+    }
+
+    public function test_admin_can_view_staff_performance_with_real_order_counts(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $staff = User::factory()->create(['role' => 'staff', 'name' => 'Top Performer']);
+
+        // 2 delivered orders assigned to this staff member -- should count.
+        Order::factory()->count(2)->create(['assigned_to' => $staff->id, 'status' => 'delivered']);
+        // A pending order assigned to them -- should NOT count as completed.
+        Order::factory()->create(['assigned_to' => $staff->id, 'status' => 'pending']);
+        // A delivered order assigned to nobody -- should not affect anyone's count.
+        Order::factory()->create(['assigned_to' => null, 'status' => 'delivered']);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/admin/staff/performance');
+
+        $response->assertOk();
+        $data = collect($response->json('data'));
+        $entry = $data->firstWhere('id', $staff->id);
+        $this->assertNotNull($entry);
+        $this->assertEquals(2, $entry['tasks_completed']);
     }
 }

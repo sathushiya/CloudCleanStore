@@ -74,6 +74,21 @@ class StaffController extends Controller
         return response()->json(['success' => true, 'message' => 'Staff account removed.']);
     }
 
+    // GET /api/admin/staff/performance -- "tasks completed" per staff member,
+    // derived from real order data (delivered orders assigned to them) rather
+    // than any invented gamification numbers.
+    public function performance(): JsonResponse
+    {
+        $staff = User::whereIn('role', ['admin', 'staff', 'staffsupervisor'])
+            ->withCount(['assignedOrders as tasks_completed' => function ($query) {
+                $query->where('status', 'delivered');
+            }])
+            ->orderByDesc('tasks_completed')
+            ->get(['id', 'name', 'role']);
+
+        return response()->json(['success' => true, 'data' => $staff]);
+    }
+
     // PATCH /api/staff/availability -- the authenticated staff/staffsupervisor
     // toggles their own online/offline status. Deliberately self-only (no
     // user_id param) since only the person clocking themselves in/out should

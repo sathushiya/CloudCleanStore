@@ -80,6 +80,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function assignedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'assigned_to');
+    }
+
     // Helpers
     public function isAdmin(): bool
     {

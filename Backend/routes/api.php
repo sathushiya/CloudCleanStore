@@ -66,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/media/upload', [MediaController::class, 'upload']);
 
         Route::get('/staff', [StaffController::class, 'index']);
+        Route::get('/staff/performance', [StaffController::class, 'performance']);
         Route::post('/staff', [StaffController::class, 'store']);
         Route::put('/staff/{staff}', [StaffController::class, 'update']);
         Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
