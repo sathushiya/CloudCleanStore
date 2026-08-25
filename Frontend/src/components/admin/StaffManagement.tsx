@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -95,7 +96,7 @@ export default function StaffManagement() {
       await staffService.remove(Number(id));
       await loadStaff();
     } catch {
-      alert('Failed to remove staff member. You cannot delete your own account.');
+      toast.error('Failed to remove staff member. You cannot delete your own account.');
     }
   };
 
@@ -111,13 +112,13 @@ export default function StaffManagement() {
       await loadStaff();
       setEditingStaff(null);
     } catch {
-      alert('Failed to save staff member. Please check all fields and try again.');
+      toast.error('Failed to save staff member. Please check all fields and try again.');
     }
   };
 
   const handleAddStaff = async (newStaff: StaffMember & { password?: string }) => {
     if (!newStaff.password) {
-      alert('Please set a password for this account.');
+      toast.error('Please set a password for this account.');
       return;
     }
     try {
@@ -132,7 +133,7 @@ export default function StaffManagement() {
       await loadStaff();
       setIsAddModalOpen(false);
     } catch {
-      alert('Failed to add staff member. The email may already be in use.');
+      toast.error('Failed to add staff member. The email may already be in use.');
     }
   };
 

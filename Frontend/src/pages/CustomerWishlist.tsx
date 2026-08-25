@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import BackButton from '../components/common/BackButton';
 import { wishlistService } from '../services/wishlistService';
@@ -42,7 +43,7 @@ export default function CustomerWishlist({ onBack }: CustomerWishlistProps) {
       await wishlistService.remove(Number(productId));
       setItems(items.filter((item) => item.product.id !== productId));
     } catch {
-      alert('Failed to remove item. Please try again.');
+      toast.error('Failed to remove item. Please try again.');
     }
   };
 

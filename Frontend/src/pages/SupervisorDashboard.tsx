@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   Package,
   AlertCircle,
@@ -223,7 +224,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       await loadProducts();
       setInputValues((prev) => ({ ...prev, [variantId]: "" }));
     } catch {
-      alert("Failed to update stock. Please try again.");
+      toast.error("Failed to update stock. Please try again.");
     } finally {
       setSavingKey(null);
     }
@@ -236,7 +237,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       await loadProducts();
       setOnlineInputValues((prev) => ({ ...prev, [`${variantId}-online`]: "" }));
     } catch {
-      alert("Failed to update online stock. Please try again.");
+      toast.error("Failed to update online stock. Please try again.");
     } finally {
       setSavingKey(null);
     }
@@ -250,7 +251,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       await orderService.assignToSelf(orderId, Number(staffId));
       await loadPendingOrders();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to assign order. Please try again.");
+      toast.error(err.response?.data?.message || "Failed to assign order. Please try again.");
       // Refresh either way -- if someone else just claimed it, the list
       // should stop showing it as available rather than leaving stale data.
       await loadPendingOrders();
@@ -263,7 +264,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       await loadPaymentSubmissions();
       await loadPendingOrders();
     } catch {
-      alert("Failed to update payment status. Please try again.");
+      toast.error("Failed to update payment status. Please try again.");
     }
   };
 
@@ -277,7 +278,7 @@ export default function SupervisorDashboard({ onLogout }: SupervisorDashboardPro
       });
       setActiveTab("overview");
     } catch {
-      alert("Failed to save settings. Please try again.");
+      toast.error("Failed to save settings. Please try again.");
     } finally {
       setSavingPrefs(false);
     }

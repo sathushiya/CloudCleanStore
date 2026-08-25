@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Search, Shield, User } from "lucide-react";
 import { staffService, StaffAccount } from "../../services/staffService";
 
@@ -68,7 +69,7 @@ export default function PermissionsManagement() {
       });
       setStaff((prev) => prev.map((m) => (m.id === member.id ? { ...m, ...updated } : m)));
     } catch {
-      alert("Failed to update this staff member's role. Please try again.");
+      toast.error("Failed to update this staff member's role. Please try again.");
     } finally {
       setSavingId(null);
     }

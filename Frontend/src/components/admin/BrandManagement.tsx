@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { Plus, Edit, Trash2, X, Save, Tag } from 'lucide-react';
 import { productService, Brand } from '../../services/productService';
 import ImageUploader from './ImageUploader';
@@ -34,7 +35,7 @@ export default function BrandManagement() {
       await productService.removeBrand(id);
       await loadBrands();
     } catch {
-      alert('Failed to delete brand. It may still have products assigned to it.');
+      toast.error('Failed to delete brand. It may still have products assigned to it.');
     }
   };
 
@@ -138,7 +139,7 @@ function BrandFormModal({ brand, existingNames, onSaved, onClose }: BrandFormMod
   const handleSave = async () => {
     const validationErrors = validateBrandForm(name, existingNames.map((n) => n.toLowerCase()));
     if (validationErrors.length > 0) {
-      alert(validationErrors[0]);
+      toast.error(validationErrors[0]);
       return;
     }
     setSaving(true);
@@ -150,7 +151,7 @@ function BrandFormModal({ brand, existingNames, onSaved, onClose }: BrandFormMod
       }
       onSaved();
     } catch {
-      alert('Failed to save brand. The name may already be in use.');
+      toast.error('Failed to save brand. The name may already be in use.');
     } finally {
       setSaving(false);
     }

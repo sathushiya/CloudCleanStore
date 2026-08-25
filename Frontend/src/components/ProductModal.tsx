@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from "sonner";
 import { X, Star, ShoppingCart, Plus, Minus, Check, Heart } from 'lucide-react';
 import { Product, ProductVariant } from '../data/products';
 import { useCart } from '../context/CartContext';
@@ -74,9 +75,9 @@ export default function ProductModal({ product, onClose, onRequireLogin }: Produ
       }
     } catch (err: any) {
       if (err?.response?.status === 401) {
-        alert('Please log in to use the wishlist.');
+        toast.error('Please log in to use the wishlist.');
       } else {
-        alert('Something went wrong updating your wishlist. Please try again.');
+        toast.error('Something went wrong updating your wishlist. Please try again.');
       }
     } finally {
       setWishlistLoading(false);

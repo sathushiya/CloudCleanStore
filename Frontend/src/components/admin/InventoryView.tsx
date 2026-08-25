@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from "sonner";
 import { Search, Package, AlertCircle, Edit2, Check, X } from 'lucide-react';
 import { categories, Product } from '../../data/products';
 import { productService, toFrontendProduct } from '../../services/productService';
@@ -76,7 +77,7 @@ export default function InventoryView() {
       await loadProducts();
       setEditingVariantId(null);
     } catch {
-      alert('Failed to update stock. Please try again.');
+      toast.error('Failed to update stock. Please try again.');
     } finally {
       setSaving(false);
     }

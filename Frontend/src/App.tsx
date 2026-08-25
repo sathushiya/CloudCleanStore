@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Truck, X } from "lucide-react";
+import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { useNavigation } from "./hooks/useNavigation";
@@ -370,6 +371,10 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
+        {/* Renders every toast.* call app-wide (replaces raw browser alert()
+            popups -- see commit that introduced this for the full list of
+            call sites that used to block the page with a native dialog). */}
+        <Toaster position="top-right" richColors closeButton />
         <AppContent />
       </CartProvider>
     </AuthProvider>

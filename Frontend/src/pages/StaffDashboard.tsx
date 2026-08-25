@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import {
   Package,
   CheckCircle,
@@ -228,7 +229,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       const result = await staffService.updateAvailability(!isAvailable);
       setIsAvailable(result.is_available);
     } catch {
-      alert("Failed to update your availability. Please try again.");
+      toast.error("Failed to update your availability. Please try again.");
     } finally {
       setTogglingAvailability(false);
     }
@@ -240,7 +241,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       await orderService.assignToSelf(orderId);
       await loadOrders();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to accept this order -- it may have just been taken by someone else.");
+      toast.error(err.response?.data?.message || "Failed to accept this order -- it may have just been taken by someone else.");
       await loadOrders();
     } finally {
       setActioningId(null);
@@ -267,7 +268,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       await orderService.updateStatus(order.id, nextStatus);
       await loadOrders();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to update order status. Please try again.");
+      toast.error(err.response?.data?.message || "Failed to update order status. Please try again.");
       await loadOrders();
     } finally {
       setActioningId(null);
@@ -284,7 +285,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
       });
       setActiveTab("overview");
     } catch {
-      alert("Failed to save settings. Please try again.");
+      toast.error("Failed to save settings. Please try again.");
     } finally {
       setSavingPrefs(false);
     }

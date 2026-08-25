@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { Plus, Search, Edit, Trash2, Package, AlertCircle, X, Save } from 'lucide-react';
 import { Product, ProductVariant, categories } from '../../data/products';
 import { productService, toFrontendProduct, Brand } from '../../services/productService';
@@ -61,14 +62,14 @@ export default function ProductsManagement() {
       await productService.remove(Number(productId));
       setProducts(products.filter((p) => p.id !== productId));
     } catch {
-      alert('Failed to delete product. Please try again.');
+      toast.error('Failed to delete product. Please try again.');
     }
   };
 
   const handleSaveProduct = async (updatedProduct: Product) => {
     const validationErrors = validateProductForm(updatedProduct);
     if (validationErrors.length > 0) {
-      alert(validationErrors[0]);
+      toast.error(validationErrors[0]);
       return;
     }
     if (!updatedProduct.brandId) return; // validateProductForm already guarantees this; narrows the type below
@@ -90,14 +91,14 @@ export default function ProductsManagement() {
       await loadProducts();
       setEditingProduct(null);
     } catch {
-      alert('Failed to save product. Please check all fields and try again.');
+      toast.error('Failed to save product. Please check all fields and try again.');
     }
   };
 
   const handleAddProduct = async (newProduct: Product) => {
     const validationErrors = validateProductForm(newProduct);
     if (validationErrors.length > 0) {
-      alert(validationErrors[0]);
+      toast.error(validationErrors[0]);
       return;
     }
     if (!newProduct.brandId) return; // validateProductForm already guarantees this; narrows the type below
@@ -119,7 +120,7 @@ export default function ProductsManagement() {
       await loadProducts();
       setShowAddModal(false);
     } catch {
-      alert('Failed to add product. Please check all fields and try again.');
+      toast.error('Failed to add product. Please check all fields and try again.');
     }
   };
 
@@ -500,7 +501,7 @@ function AddProductModal({ brands, onAdd, onClose }: AddProductModalProps) {
     if (formData.name && formData.brandId && formData.variants && formData.variants.length > 0) {
       onAdd(formData as Product);
     } else {
-      alert('Please fill in the product name, select a brand, and add at least one variant.');
+      toast.error('Please fill in the product name, select a brand, and add at least one variant.');
     }
   };
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { MapPin, Plus, Edit, Trash2, X, Save } from 'lucide-react';
 import BackButton from '../components/common/BackButton';
 import { addressService } from '../services/addressService';
@@ -78,7 +79,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
       await loadAddresses();
       setShowModal(false);
     } catch {
-      alert('Failed to save address. Please check all fields and try again.');
+      toast.error('Failed to save address. Please check all fields and try again.');
     } finally {
       setSaving(false);
     }
@@ -90,7 +91,7 @@ export default function CustomerAddresses({ onBack }: CustomerAddressesProps) {
       await addressService.remove(id);
       await loadAddresses();
     } catch {
-      alert('Failed to delete address. Please try again.');
+      toast.error('Failed to delete address. Please try again.');
     }
   };
 

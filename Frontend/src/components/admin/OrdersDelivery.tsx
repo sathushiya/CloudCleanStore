@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { Truck, Package, CheckCircle, Clock, XCircle, User } from 'lucide-react';
 import { orderService, Order, OrderStatus } from '../../services/orderService';
 import { useAuth } from '../../context/AuthContext';
@@ -75,7 +76,7 @@ export default function OrdersDelivery() {
       await orderService.assignToSelf(orderId);
       await loadOrders();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to assign order. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to assign order. Please try again.');
       // Refresh either way -- if someone else just claimed it, the list
       // should stop showing it as available rather than leaving stale data.
       await loadOrders();
@@ -93,7 +94,7 @@ export default function OrdersDelivery() {
       await orderService.updateStatus(order.id, nextStatus);
       await loadOrders();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update order status. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to update order status. Please try again.');
       await loadOrders();
     } finally {
       setUpdatingId(null);
@@ -107,7 +108,7 @@ export default function OrdersDelivery() {
       await orderService.updateStatus(orderId, 'cancelled');
       await loadOrders();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to cancel order. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to cancel order. Please try again.');
       await loadOrders();
     } finally {
       setUpdatingId(null);
