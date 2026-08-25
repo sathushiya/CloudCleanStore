@@ -388,6 +388,19 @@ class OrderController extends Controller
             ], 422);
         }
 
+        // Approving/rejecting a payment on a dead order invites real
+        // confusion -- e.g. staff working through a stale list and
+        // approving money for an order that isn't happening anymore.
+        // Cancelling already sends its own refund-flag notification if the
+        // payment was confirmed *before* cancellation; there's no good
+        // reason to still be reviewing it afterward.
+        if ($order->status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order has been cancelled -- its payment can no longer be confirmed or rejected here.',
+            ], 422);
+        }
+
         // Confirmed is terminal from here too -- once payment is verified,
         // this endpoint can't flip it back to rejected. (If a confirmed
         // payment genuinely turns out to be wrong, that's a rare enough

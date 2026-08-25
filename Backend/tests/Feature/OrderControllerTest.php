@@ -398,6 +398,23 @@ class OrderControllerTest extends TestCase
         $response->assertUnprocessable();
     }
 
+    public function test_cannot_confirm_payment_on_a_cancelled_order(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create([
+            'status' => 'cancelled',
+            'payment_method' => 'bank_transfer',
+            'payment_status' => 'submitted',
+        ]);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
+            'approved' => true,
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'submitted']);
+    }
+
     public function test_order_status_rejects_invalid_values(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
