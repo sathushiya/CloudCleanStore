@@ -7,6 +7,12 @@ const api = axios.create({
     'Accept': 'application/json',
   },
   withCredentials: true, // needed for Sanctum CSRF
+  // Without this, a dead/unreachable backend leaves any request pending
+  // forever -- and since AuthContext's initial auth check only clears its
+  // full-page loading spinner in a .then()/.catch(), a request that never
+  // settles means the app never gets past that spinner. 20s is generous
+  // for a normal API call but still bounds the worst case.
+  timeout: 20000,
 });
 
 // ─── Request Interceptor: attach access token ────────────────────────────────
