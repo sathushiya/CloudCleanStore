@@ -305,6 +305,44 @@ class OrderControllerTest extends TestCase
         $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'online_stock' => 5]);
     }
 
+    public function test_cancelling_an_unpaid_order_notifies_the_customer_with_no_refund_mention(): void
+    {
+        config(['services.green_api.instance_id' => 'test-instance', 'services.green_api.token' => 'test-token']);
+        Http::fake(['api.green-api.com/*/sendMessage/*' => Http::response(['idMessage' => 'abc'])]);
+
+        $staff = User::factory()->create(['role' => 'staff']);
+        $customer = User::factory()->create(['phone_number' => '+94771234567']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'status' => 'pending', 'payment_status' => 'pending']);
+
+        $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", ['status' => 'cancelled'])->assertOk();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['message'], 'cancelled')
+            && !str_contains($request['message'], 'refund'));
+        $this->assertDatabaseCount('notifications', 0);
+    }
+
+    public function test_cancelling_a_paid_order_notifies_the_customer_and_flags_a_refund(): void
+    {
+        config(['services.green_api.instance_id' => 'test-instance', 'services.green_api.token' => 'test-token']);
+        Http::fake(['api.green-api.com/*/sendMessage/*' => Http::response(['idMessage' => 'abc'])]);
+
+        $staff = User::factory()->create(['role' => 'staff']);
+        $customer = User::factory()->create(['phone_number' => '+94771234567']);
+        $order = Order::factory()->create([
+            'user_id' => $customer->id,
+            'status' => 'pending',
+            'payment_method' => 'bank_transfer',
+            'payment_status' => 'confirmed',
+        ]);
+
+        $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", ['status' => 'cancelled'])->assertOk();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['message'], 'refund'));
+        $this->assertDatabaseHas('notifications', ['type' => 'order', 'title' => 'Refund Needed']);
+    }
+
     // ─── Cash on delivery ───────────────────────────────────────────────────
 
     public function test_delivering_a_cash_order_marks_its_payment_confirmed(): void

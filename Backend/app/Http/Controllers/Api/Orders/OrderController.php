@@ -214,11 +214,45 @@ class OrderController extends Controller
             $order->update($update);
         });
 
+        if ($newStatus === 'cancelled') {
+            $this->notifyOfCancellation($order);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully.',
             'data' => $order->fresh(['user', 'items', 'assignedStaff']),
         ]);
+    }
+
+    // Cancelling an order previously notified no one -- the customer had no
+    // way to find out except by checking the app themselves. If payment was
+    // already confirmed (a bank transfer that was verified before something
+    // else caused the cancellation), that's money already collected for an
+    // order that's no longer happening -- flag it for a human to actually
+    // refund, since there's no automated refund/payment-gateway integration
+    // here to do it for us.
+    private function notifyOfCancellation(Order $order): void
+    {
+        $customer = $order->user;
+        $needsRefund = $order->payment_status === 'confirmed';
+
+        if ($customer?->phone_number) {
+            $message = $needsRefund
+                ? "Hi {$customer->name}, your order #{$order->order_number} has been cancelled. Since your payment was already confirmed, we'll be in touch shortly about your refund."
+                : "Hi {$customer->name}, your order #{$order->order_number} has been cancelled. If you have any questions, just reply here.";
+
+            $this->whatsAppService->sendMessage($customer->phone_number, $message, 'order cancelled');
+        }
+
+        if ($needsRefund) {
+            Notification::log(
+                'order',
+                'Refund Needed',
+                "Order #{$order->order_number} was cancelled after its payment was already confirmed (LKR " . number_format($order->total, 2) . "). A refund is owed to {$customer?->name}.",
+                'high',
+            );
+        }
     }
 
     // Staff/delivery calling this without a body still just assigns to
