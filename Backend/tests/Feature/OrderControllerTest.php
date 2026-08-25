@@ -305,6 +305,61 @@ class OrderControllerTest extends TestCase
         $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'online_stock' => 5]);
     }
 
+    // ─── Cash on delivery ───────────────────────────────────────────────────
+
+    public function test_delivering_a_cash_order_marks_its_payment_confirmed(): void
+    {
+        // Cash orders never go through submit/confirm-payment (nothing to
+        // verify up front) -- delivery is the payment event for COD.
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['status' => 'out_for_delivery', 'payment_method' => 'cash', 'payment_status' => 'pending']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", [
+            'status' => 'delivered',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'delivered', 'payment_status' => 'confirmed']);
+    }
+
+    public function test_delivering_a_bank_transfer_order_does_not_touch_its_payment_status(): void
+    {
+        // A bank transfer order's payment_status is already meaningful
+        // (confirmed via the Payment Confirmations flow before it could
+        // even reach "out_for_delivery" here) -- delivering it shouldn't
+        // silently overwrite whatever that already was.
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['status' => 'out_for_delivery', 'payment_method' => 'bank_transfer', 'payment_status' => 'confirmed']);
+
+        $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/status", ['status' => 'delivered'])->assertOk();
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'confirmed']);
+    }
+
+    public function test_cannot_submit_payment_on_a_cash_order(): void
+    {
+        $customer = User::factory()->create();
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_method' => 'cash']);
+
+        $response = $this->actingAs($customer, 'sanctum')->postJson("/api/customer/orders/{$order->id}/submit-payment", [
+            'payment_reference' => 'REF123',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_cannot_confirm_payment_on_a_cash_order(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $order = Order::factory()->create(['payment_method' => 'cash']);
+
+        $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
+            'approved' => true,
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
     public function test_order_status_rejects_invalid_values(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
@@ -348,7 +403,7 @@ class OrderControllerTest extends TestCase
 
         $customer = User::factory()->create(['phone_number' => '+94771234567']);
         $staff = User::factory()->create(['role' => 'staffsupervisor']);
-        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'submitted']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_method' => 'bank_transfer', 'payment_status' => 'submitted']);
 
         $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
             'approved' => true,
@@ -366,7 +421,7 @@ class OrderControllerTest extends TestCase
 
         $customer = User::factory()->create(['phone_number' => '+94771234567']);
         $staff = User::factory()->create(['role' => 'staffsupervisor']);
-        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'submitted']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_method' => 'bank_transfer', 'payment_status' => 'submitted']);
 
         $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
             'approved' => false,
@@ -409,7 +464,7 @@ class OrderControllerTest extends TestCase
         // The retry path: a rejected order isn't a dead end -- the customer
         // can submit a corrected reference and it goes back to "submitted".
         $customer = User::factory()->create();
-        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_status' => 'rejected']);
+        $order = Order::factory()->create(['user_id' => $customer->id, 'payment_method' => 'bank_transfer', 'payment_status' => 'rejected']);
 
         $response = $this->actingAs($customer, 'sanctum')->postJson("/api/customer/orders/{$order->id}/submit-payment", [
             'payment_reference' => 'CORRECTED-REF',
@@ -438,7 +493,7 @@ class OrderControllerTest extends TestCase
         // covers the "two staff reviewed it near-simultaneously" case
         // where the state already matches what's being requested.
         $staff = User::factory()->create(['role' => 'staff']);
-        $order = Order::factory()->create(['payment_status' => 'rejected']);
+        $order = Order::factory()->create(['payment_method' => 'bank_transfer', 'payment_status' => 'rejected']);
 
         $response = $this->actingAs($staff, 'sanctum')->patchJson("/api/staff/orders/{$order->id}/confirm-payment", [
             'approved' => false,

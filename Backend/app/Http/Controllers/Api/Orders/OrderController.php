@@ -200,7 +200,18 @@ class OrderController extends Controller
                 }
             }
 
-            $order->update(['status' => $newStatus]);
+            $update = ['status' => $newStatus];
+
+            // Cash orders never go through submit/confirm-payment (there's
+            // nothing to verify up front) -- their payment_status would
+            // otherwise sit at "pending" forever, even after the order is
+            // actually delivered and paid for. Delivery *is* the payment
+            // event for cash on delivery, so record it as confirmed here.
+            if ($newStatus === 'delivered' && $order->payment_method === 'cash') {
+                $update['payment_status'] = 'confirmed';
+            }
+
+            $order->update($update);
         });
 
         return response()->json([
@@ -281,6 +292,13 @@ class OrderController extends Controller
     {
         abort_if($order->user_id !== $request->user()->id, 403, 'This order does not belong to you.');
 
+        if ($order->payment_method !== 'bank_transfer') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order is paid on delivery, not by bank transfer.',
+            ], 422);
+        }
+
         // Confirmed is the one terminal state here -- a customer resubmitting
         // could otherwise silently revert an already-verified payment back
         // to "submitted". Resubmitting from "rejected" is deliberately
@@ -328,6 +346,13 @@ class OrderController extends Controller
     public function confirmPayment(Request $request, Order $order): JsonResponse
     {
         $request->validate(['approved' => ['required', 'boolean']]);
+
+        if ($order->payment_method !== 'bank_transfer') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order is paid on delivery -- there\'s no bank transfer to confirm.',
+            ], 422);
+        }
 
         // Confirmed is terminal from here too -- once payment is verified,
         // this endpoint can't flip it back to rejected. (If a confirmed
