@@ -10,7 +10,7 @@ export default function Footer({ onNavigateToLegal }: FooterProps = {}) {
   return (
     <footer id="footer" className="relative bg-linear-to-br from-gray-50 to-purple-50 dark:from-[#0f0a1e] dark:to-[#1a1425] border-t border-gray-200 dark:border-purple-700/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
           {/* Company Info */}
           <div>
             <Logo variant="icon" className="mb-6" />
@@ -57,26 +57,6 @@ export default function Footer({ onNavigateToLegal }: FooterProps = {}) {
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="font-bold mb-6">Stay Updated</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-              Subscribe to get special offers and updates
-            </p>
-            <form className="space-y-3">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-purple-700/20 focus:border-purple-500 dark:focus:border-purple-500 focus:outline-none transition-colors text-sm"
-              />
-              <button
-                type="submit"
-                className="w-full px-4 py-3 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-2xl font-medium hover:shadow-(--glow-purple) transition-all text-sm"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
         </div>
 
         {/* Contact Info */}
