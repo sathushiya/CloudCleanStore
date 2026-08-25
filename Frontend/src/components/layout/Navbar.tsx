@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, User, Search, Settings, LogOut, Camera, Heart, MapPin, Package, Clock, Bell, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import Logo from '../common/Logo';
+import DashboardSearchModal from '../DashboardSearchModal';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import orderService, { Order, OrderStatus } from '../../services/orderService';
@@ -42,6 +43,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const { isAuthenticated, user, refreshUser } = useAuth();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
@@ -141,7 +143,7 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
           <div className="flex items-center space-x-2 md:space-x-4">
             {isAuthenticated && (
               <>
-                <button onClick={onNavigateToShop} className="p-2 hover:bg-accent rounded-full transition-colors">
+                <button onClick={() => setSearchModalOpen(true)} className="p-2 hover:bg-accent rounded-full transition-colors">
                   <Search className="w-5 h-5" />
                 </button>
                 <button
@@ -539,6 +541,10 @@ export default function Navbar({ onNavigateToLogin, onNavigateToShop, onOpenCart
             </div>
           </div>
         </>
+      )}
+
+      {searchModalOpen && (
+        <DashboardSearchModal onClose={() => setSearchModalOpen(false)} />
       )}
     </nav>
   );
