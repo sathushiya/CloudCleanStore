@@ -67,9 +67,7 @@ export default function Footer({ onNavigateToLegal }: FooterProps = {}) {
             </div>
             <div>
               <div className="font-semibold mb-1 text-sm">Call Us</div>
-              <a href="tel:+94765427147" className="text-gray-600 dark:text-gray-400 text-sm hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                076 542 7147
-              </a>
+              <div className="text-gray-600 dark:text-gray-400 text-sm">076 542 7147</div>
             </div>
           </div>
 
