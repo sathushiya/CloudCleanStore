@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Menu, X, ShoppingCart, User, Settings, LogOut, Camera, Heart, MapPin, Package, Clock, Bell, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import Logo from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
@@ -199,6 +200,14 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
         </div>
       </div>
 
+      {/* Portaled to document.body: this nav has backdrop-blur-xl, which
+          establishes a new CSS containing block for position:fixed
+          descendants. Without the portal, "bottom-0" here resolves against
+          the nav's own ~80px box instead of the viewport, collapsing this
+          drawer's height to just its header and clipping everything below
+          it (invisibly, since overflow-y-auto hides rather than spills). */}
+      {createPortal(
+        <>
       {/* 60% Dark Overlay Background - Covers entire page */}
       {mobileMenuOpen && (
         <div
@@ -345,6 +354,9 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
           </div>
         </div>
       </div>
+        </>,
+        document.body
+      )}
 
       <style>{`
         @keyframes fadeIn {
@@ -360,8 +372,9 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
         }
       `}</style>
 
-      {/* Notification Drawer - Right Side */}
-      {notificationModalOpen && (
+      {/* Notification Drawer - Right Side. Portaled to document.body for the
+          same containing-block reason as the mobile menu above. */}
+      {notificationModalOpen && createPortal(
         <>
           {/* Dark Overlay - Covers Entire Page */}
           <div
@@ -449,11 +462,13 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
               )}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
-      {/* Profile Drawer - Right Side */}
-      {profileModalOpen && (
+      {/* Profile Drawer - Right Side. Portaled to document.body for the same
+          containing-block reason as the mobile menu above. */}
+      {profileModalOpen && createPortal(
         <>
           {/* Dark Overlay - Covers Entire Page */}
           <div
@@ -553,7 +568,8 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
     </nav>
