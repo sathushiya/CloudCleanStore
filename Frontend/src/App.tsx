@@ -152,7 +152,6 @@ function AppContent() {
 
   const navProps = {
     onNavigateToLogin: () => navigate("login"),
-    onNavigateToShop: handleNavigateToShop,
     onOpenCart: () => setCartModalOpen(true),
     onLogout: handleLogout,
     onNavigateToOrders: () => navigate("orders"),
