@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Star, ShoppingCart, Heart } from 'lucide-react';
 import { ImageWithFallback } from './common/ImageWithFallback';
 import { useCart } from '../context/CartContext';
-import { productService, toFrontendProduct } from '../services/productService';
+import { toFrontendProduct } from '../services/productService';
+import { useProducts } from '../hooks/queries/useProducts';
 import { wishlistService } from '../services/wishlistService';
 import type { Product } from '../data/products';
 
@@ -19,21 +20,14 @@ interface ProductsProps {
 
 export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthenticated, isCustomer }: ProductsProps = {}) {
   const { addToCart } = useCart();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // React Query-backed with the same cache key Shop.tsx uses for the
+  // unfiltered catalog -- if that's already been fetched this session
+  // (very likely, since it's how Shop populates its search bar), this
+  // section renders with zero loading state instead of re-fetching from
+  // scratch and flashing "Loading products..." on every mount.
+  const { data: paginated, isLoading } = useProducts({});
+  const products: Product[] = (paginated?.data ?? []).map(toFrontendProduct).slice(0, 8);
   const [wishlist, setWishlist] = useState<string[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    productService.list({}).then((paginated) => {
-      if (!cancelled) {
-        setProducts(paginated.data.map(toFrontendProduct).slice(0, 8));
-      }
-    }).finally(() => {
-      if (!cancelled) setIsLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, []);
 
   useEffect(() => {
     if (!isAuthenticated || !isCustomer) {
