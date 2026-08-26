@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { productService, Brand } from '../services/productService';
+import { Brand } from '../services/productService';
+import { useBrands } from '../hooks/queries/useProducts';
 
 interface BrandsProps {
   onNavigateToShop?: () => void;
@@ -15,16 +15,13 @@ const FALLBACK_COLORS = [
 ];
 
 export default function Brands({ onNavigateToShop }: BrandsProps = {}) {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    productService.listBrands()
-      .then((data) => { if (!cancelled) setBrands(data); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
+  // React Query-backed: once brands have been fetched anywhere in the app
+  // this session, revisiting this section (or the page) within the 30s
+  // staleTime shows the cached list immediately, with no loading state at
+  // all -- rather than the plain useState+useEffect fetch this used to do,
+  // which re-fetched from scratch (and re-showed "Loading brands...") on
+  // every single mount, even seconds after the same data was already shown.
+  const { data: brands = [] as Brand[], isLoading } = useBrands();
 
   // Browsing by brand is open to everyone, guest or not -- login is only
   // required once someone tries to actually buy something inside the Shop.
