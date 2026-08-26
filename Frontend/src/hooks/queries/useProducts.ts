@@ -56,6 +56,13 @@ export function useDeleteProduct() {
 
 // ─── Brands ─────────────────────────────────────────────────────────────────
 
+export function useBrands() {
+  return useQuery({
+    queryKey: queryKeys.brands.all,
+    queryFn: (): Promise<Brand[]> => productService.listBrands(),
+  });
+}
+
 export function useAdminBrands() {
   return useQuery({
     queryKey: queryKeys.brands.admin,
