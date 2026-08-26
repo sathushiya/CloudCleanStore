@@ -98,6 +98,16 @@ Before deploying, in your production `.env`:
 - [ ] `php artisan config:cache` and `php artisan route:cache` run after any `.env` change
 - [ ] Frontend built via `npm run build` and the `dist/` output deployed, not served via `npm run dev`
 
+## Caching, Sessions & Queues
+
+No `CACHE_STORE`, `SESSION_DRIVER`, or `QUEUE_CONNECTION` are set in `.env`, so all three fall back to Laravel's default: the `database` driver (`cache`, `sessions`, and `jobs` tables, created by the base migrations). This is enough for how the app actually works today:
+
+- **Rate limiting** (`throttle:*` on login/register/OTP routes) is backed by this cache store — live-tested by hammering `/api/auth/login` with bad credentials, which correctly returns `429` on the 6th attempt within a minute.
+- **Queued jobs:** nothing in the codebase implements `ShouldQueue` — OTP emails are sent synchronously (`Mail::send()`, not `->queue()`). The `jobs` table exists but stays empty; **no `php artisan queue:work` process is needed** unless queued jobs are added later, in which case that worker becomes a required always-running background process, easy to forget at deploy time.
+- **Data caching:** there is currently no `Cache::remember()` anywhere in the app — every product/brand listing hits MySQL fresh on every request. Not a problem at low-to-moderate traffic, but the first thing worth adding if the catalog pages start feeling slow under real load.
+
+**Important if you ever scale beyond a single app server:** the `database` driver for cache/sessions only behaves correctly on a single server. If the deployment ever moves to multiple app instances behind a load balancer, switch `CACHE_STORE`/`SESSION_DRIVER` to `redis` — otherwise each instance enforces its own separate rate limits and sessions, which is a real correctness bug, not just a performance one.
+
 ## Known Limitations
 
 - WhatsApp verification relies on Green API, an unofficial third-party service — requires linking a real WhatsApp account and is not an official Meta integration
