@@ -45,6 +45,12 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
 };
 
+// Matches StaffDashboard's poll interval -- an admin sitting on this tab
+// while staff assign/advance orders elsewhere would otherwise see nothing
+// change until they navigate away and back (or reload). No websocket layer
+// here, so polling is the whole mechanism -- see README's "Known Limitations".
+const POLL_INTERVAL_MS = 8000;
+
 export default function OrdersDelivery() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -53,8 +59,11 @@ export default function OrdersDelivery() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
+  // Deliberately doesn't flip isLoading back to true on every poll -- only
+  // the very first load (isLoading starts true) should show the "Loading
+  // orders..." state. A background refresh every few seconds shouldn't
+  // make the whole list flicker out and back in.
   const loadOrders = useCallback(async () => {
-    setIsLoading(true);
     setError(null);
     try {
       const data = await orderService.staffList(statusFilter === 'all' ? undefined : statusFilter);
@@ -68,6 +77,8 @@ export default function OrdersDelivery() {
 
   useEffect(() => {
     loadOrders();
+    const interval = setInterval(loadOrders, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, [loadOrders]);
 
   const handleAssignToSelf = async (orderId: number) => {
