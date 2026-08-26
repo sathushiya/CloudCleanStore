@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Star, ShoppingCart } from 'lucide-react';
 import { categories } from '../data/products';
 import { Product } from '../data/products';
-import { productService, toFrontendProduct } from '../services/productService';
+import { toFrontendProduct } from '../services/productService';
+import { useProducts } from '../hooks/queries/useProducts';
 import SearchBar from '../components/common/SearchBar';
 import ProductModal from '../components/ProductModal';
 import { ImageWithFallback } from '../components/common/ImageWithFallback';
@@ -17,10 +18,6 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<{ id: number; name: string } | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]); // unfiltered, used only for real category counts + search
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Read any category/brand filter that was set on the landing page before
   // navigating here (Categories.tsx / Brands.tsx write to sessionStorage,
@@ -41,51 +38,24 @@ export default function Shop({ onBack, onRequireLogin }: ShopProps) {
     }
   }, []);
 
-  // Fetch the full unfiltered catalog once, purely to compute real
-  // per-category counts and to feed the search bar.
-  useEffect(() => {
-    let cancelled = false;
-    productService.list({}).then((paginated) => {
-      if (!cancelled) setAllProducts(paginated.data.map(toFrontendProduct));
-    }).catch(() => {
-      // Non-fatal -- category counts just show 0 and search has nothing to search
-    });
-    return () => { cancelled = true; };
-  }, []);
+  // React Query-backed, sharing a cache key with Products.tsx's landing-page
+  // section -- so if that already fetched the unfiltered catalog this
+  // session (very likely, it's on the page you came from), this renders
+  // instantly with no loading state instead of re-fetching from scratch.
+  const { data: allPaginated } = useProducts({});
+  const allProducts: Product[] = (allPaginated?.data ?? []).map(toFrontendProduct);
 
-  // Fetch the actual displayed product list whenever category or brand filter changes
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProducts() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const filters: { category?: string; brand_id?: number } = {};
-        if (selectedCategory !== 'all') filters.category = selectedCategory;
-        if (selectedBrandFilter) filters.brand_id = selectedBrandFilter.id;
-
-        const paginated = await productService.list(filters);
-        if (!cancelled) {
-          setProducts(paginated.data.map(toFrontendProduct));
-        }
-      } catch {
-        if (!cancelled) setError('Could not load products. Please try again.');
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadProducts();
-    return () => { cancelled = true; };
-  }, [selectedCategory, selectedBrandFilter]);
+  const filters: { category?: string; brand_id?: number } = {};
+  if (selectedCategory !== 'all') filters.category = selectedCategory;
+  if (selectedBrandFilter) filters.brand_id = selectedBrandFilter.id;
+  const { data: filteredPaginated, isLoading, isError } = useProducts(filters);
+  const filteredProducts: Product[] = (filteredPaginated?.data ?? []).map(toFrontendProduct);
+  const error = isError ? 'Could not load products. Please try again.' : null;
 
   const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     acc[cat.id] = allProducts.filter((p) => p.category === cat.id).length;
     return acc;
   }, {});
-
-  const filteredProducts = products;
 
   return (
     <section className="py-8 md:py-16 min-h-screen" id="shop">
