@@ -10,9 +10,9 @@ export default function Footer({ onNavigateToLegal }: FooterProps = {}) {
   return (
     <footer id="footer" className="relative bg-linear-to-br from-gray-50 to-purple-50 dark:from-[#0f0a1e] dark:to-[#1a1425] border-t border-gray-200 dark:border-purple-700/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+        <div className="flex flex-col md:flex-row md:justify-between gap-12 mb-12">
           {/* Company Info */}
-          <div>
+          <div className="md:max-w-sm">
             <Logo variant="icon" className="mb-6" />
             <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
               Your trusted partner for premium cleaning products. Fast delivery, quality guaranteed.
@@ -77,7 +77,9 @@ export default function Footer({ onNavigateToLegal }: FooterProps = {}) {
             </div>
             <div>
               <div className="font-semibold mb-1 text-sm">Email Us</div>
-              <div className="text-gray-600 dark:text-gray-400 text-sm">support@cloudclean.store</div>
+              <a href="mailto:support@cloudclean.store" className="text-gray-600 dark:text-gray-400 text-sm hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                support@cloudclean.store
+              </a>
             </div>
           </div>
 
