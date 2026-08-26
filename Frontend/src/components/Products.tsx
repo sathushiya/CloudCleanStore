@@ -10,9 +10,14 @@ interface ProductsProps {
   onNavigateToLogin?: () => void;
   onNavigateToShop?: () => void;
   isAuthenticated?: boolean;
+  // Staff/admin/staffsupervisor briefly render this landing page before
+  // App.tsx's auto-redirect effect sends them to their own dashboard --
+  // without this, the wishlist fetch below would fire a guaranteed-403
+  // request for every non-customer login.
+  isCustomer?: boolean;
 }
 
-export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthenticated }: ProductsProps = {}) {
+export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthenticated, isCustomer }: ProductsProps = {}) {
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +36,7 @@ export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthen
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !isCustomer) {
       setWishlist([]);
       return;
     }
@@ -40,7 +45,7 @@ export default function Products({ onNavigateToLogin, onNavigateToShop, isAuthen
       if (!cancelled) setWishlist(items.map((i) => i.product.id));
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isCustomer]);
 
     const handleViewAllClick = () => {
     onNavigateToShop?.();

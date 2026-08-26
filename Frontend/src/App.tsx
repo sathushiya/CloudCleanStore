@@ -334,6 +334,7 @@ function AppContent() {
         onNavigateToLogin={() => navigate("login")}
         onNavigateToShop={handleNavigateToShop}
         isAuthenticated={isAuthenticated}
+        isCustomer={user?.role === "customer"}
       />
       <Brands onNavigateToShop={handleNavigateToShop} />
       <Features />

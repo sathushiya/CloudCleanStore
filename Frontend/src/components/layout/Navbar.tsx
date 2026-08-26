@@ -59,7 +59,11 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
   const ORDER_POLL_INTERVAL_MS = 15000;
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // Only customers ever own orders through this endpoint -- staff/admin/
+    // staffsupervisor briefly render this home layout before App.tsx's
+    // auto-redirect effect sends them to their own dashboard, and would
+    // otherwise fire a guaranteed-403 request (and its poll) on every login.
+    if (!isAuthenticated || user?.role !== 'customer') return;
 
     let cancelled = false;
     const loadOrders = () => {
@@ -72,7 +76,7 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
     loadOrders();
     const interval = setInterval(loadOrders, ORDER_POLL_INTERVAL_MS);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.role]);
 
   const orderNotifications = orders
     .filter((o) => o.status !== 'cancelled')
