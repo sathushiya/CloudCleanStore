@@ -49,23 +49,42 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
   // separate stored notification, just their live order status.
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoaded, setOrdersLoaded] = useState(false);
-  const [readIds, setReadIds] = useState<Set<number>>(new Set());
+  // Keyed by `${order.id}:${order.status}`, not just order.id -- otherwise
+  // reading an order's notification once (e.g. while it's "processing")
+  // would permanently suppress the unread badge for that order, even after
+  // staff advances it to "out for delivery" or "delivered" later.
+  const [readKeys, setReadKeys] = useState<Set<string>>(new Set());
+
+  const ORDER_POLL_INTERVAL_MS = 15000;
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    orderService.myOrders()
-      .then(setOrders)
-      .catch(() => {})
-      .finally(() => setOrdersLoaded(true));
+
+    let cancelled = false;
+    const loadOrders = () => {
+      orderService.myOrders()
+        .then((data) => { if (!cancelled) setOrders(data); })
+        .catch(() => {})
+        .finally(() => { if (!cancelled) setOrdersLoaded(true); });
+    };
+
+    loadOrders();
+    const interval = setInterval(loadOrders, ORDER_POLL_INTERVAL_MS);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [isAuthenticated]);
 
   const orderNotifications = orders
     .filter((o) => o.status !== 'cancelled')
     .slice(0, 10);
-  const unreadCount = orderNotifications.filter((o) => !readIds.has(o.id)).length;
+  const readKeyFor = (order: Order) => `${order.id}:${order.status}`;
+  const unreadCount = orderNotifications.filter((o) => !readKeys.has(readKeyFor(o))).length;
 
   const handleMarkAllRead = () => {
-    setReadIds(new Set(orderNotifications.map((o) => o.id)));
+    setReadKeys((prev) => {
+      const next = new Set(prev);
+      orderNotifications.forEach((o) => next.add(readKeyFor(o)));
+      return next;
+    });
   };
 
   // Profile drawer -- name is the only field the backend lets a user edit
@@ -387,12 +406,12 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
                 {orderNotifications.map((order) => {
                   const copy = ORDER_STATUS_COPY[order.status];
                   const Icon = copy.icon;
-                  const isUnread = !readIds.has(order.id);
+                  const isUnread = !readKeys.has(readKeyFor(order));
                   return (
                     <button
                       key={order.id}
                       onClick={() => {
-                        setReadIds((prev) => new Set(prev).add(order.id));
+                        setReadKeys((prev) => new Set(prev).add(readKeyFor(order)));
                         setNotificationModalOpen(false);
                         onNavigateToOrders?.();
                       }}
