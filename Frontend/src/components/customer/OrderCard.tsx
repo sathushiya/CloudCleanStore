@@ -1,5 +1,10 @@
-import { Clock, Package, Truck, CheckCircle, XCircle, User, MapPin, Star } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Clock, Package, Truck, CheckCircle, XCircle, User, MapPin, Star, RotateCcw } from 'lucide-react';
 import type { Order, OrderStatus } from '../../services/orderService';
+import { useProducts } from '../../hooks/queries/useProducts';
+import { useCart } from '../../context/CartContext';
+import { buildReorderItems } from '../../utils/reorder';
 import ReviewForm from './ReviewForm';
 
 const STATUS_META: Record<OrderStatus, { label: string; icon: typeof Package; badgeClass: string }> = {
@@ -56,13 +61,48 @@ interface OrderCardProps {
   isReviewing?: boolean;
   onStartReview?: () => void;
   onReviewSubmitted?: (orderId: number, rating: number, comment: string) => void;
+  // Only passed for orders in Order History -- an active/pending order
+  // doesn't need a "reorder" action.
+  onReorder?: () => void;
 }
 
-export default function OrderCard({ order, isReviewing, onStartReview, onReviewSubmitted }: OrderCardProps) {
+export default function OrderCard({ order, isReviewing, onStartReview, onReviewSubmitted, onReorder }: OrderCardProps) {
   const meta = STATUS_META[order.status];
   const StatusIcon = meta.icon;
   const timeline = timelineLabel(order);
   const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  // React Query-cached (see hooks/queries/useProducts.ts) -- shares the same
+  // cache entry as Shop.tsx/Products.tsx, so this usually doesn't need a
+  // fresh network request at all by the time a customer reaches here.
+  const { data: catalogPage } = useProducts({});
+  const { addToCart } = useCart();
+  const [reordering, setReordering] = useState(false);
+
+  const handleReorder = async () => {
+    setReordering(true);
+    try {
+      const { items, unavailableItemNames } = buildReorderItems(order, catalogPage?.data ?? []);
+
+      items.forEach(({ product, variant, quantity }) => addToCart(product, variant, quantity));
+
+      if (unavailableItemNames.length > 0) {
+        toast.warning(
+          items.length > 0
+            ? `Added ${items.length} item${items.length !== 1 ? 's' : ''} to your cart. ${unavailableItemNames.join(', ')} ${unavailableItemNames.length !== 1 ? 'are' : 'is'} no longer available.`
+            : `None of the items in this order are available anymore.`
+        );
+      } else if (items.length > 0) {
+        toast.success(`Added ${items.length} item${items.length !== 1 ? 's' : ''} to your cart.`);
+      }
+
+      if (items.length > 0) {
+        onReorder?.();
+      }
+    } finally {
+      setReordering(false);
+    }
+  };
 
   return (
     <div className="backdrop-blur-xl bg-white/70 dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20 hover:border-purple-300 dark:hover:border-purple-600/50 transition-all">
@@ -126,6 +166,20 @@ export default function OrderCard({ order, isReviewing, onStartReview, onReviewS
         <span className="text-sm text-gray-600 dark:text-gray-400">Order Total</span>
         <span className="text-xl font-bold text-purple-600 dark:text-purple-400">LKR {order.total.toFixed(2)}</span>
       </div>
+
+      {/* Reorder -- Order History only (see the onReorder prop comment above) */}
+      {onReorder && (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-purple-700/20">
+          <button
+            onClick={handleReorder}
+            disabled={reordering}
+            className="w-full sm:w-auto px-5 py-2.5 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-xl text-sm font-semibold hover:shadow-(--glow-purple) transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RotateCcw className="w-4 h-4" />
+            {reordering ? 'Adding to cart...' : 'Reorder'}
+          </button>
+        </div>
+      )}
 
       {/* Review flow -- delivered orders only */}
       {order.status === 'delivered' && (
