@@ -76,7 +76,6 @@ export type PageType =
   | "staff"
   | "shop"
   | "checkout"
-  | "orders"
   | "addresses"
   | "settings"
   | "wishlist"
