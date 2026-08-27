@@ -25,6 +25,7 @@ export interface Order {
   user?: { id: number; name: string; email: string };
   review?: { id: number; rating: number; comment: string } | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export const orderService = {
