@@ -91,7 +91,6 @@ src/
 │   ├── AdminDashboard.tsx
 │   ├── StaffDashboard.tsx
 │   ├── SupervisorDashboard.tsx
-│   ├── CustomerOrders.tsx
 │   ├── CustomerAddresses.tsx
 │   ├── CustomerSettings.tsx
 │   ├── CustomerWishlist.tsx
