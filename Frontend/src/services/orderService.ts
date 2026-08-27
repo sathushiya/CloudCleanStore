@@ -4,6 +4,7 @@ export type OrderStatus = 'pending' | 'processing' | 'out_for_delivery' | 'deliv
 
 export interface OrderItem {
   id: number;
+  product_variant_id: number;
   product_name: string;
   variant_size: string;
   price: number;
