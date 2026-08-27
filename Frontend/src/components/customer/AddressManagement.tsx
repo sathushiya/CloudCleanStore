@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from "sonner";
 import { MapPin, Plus, Edit, Trash2, X, Save } from 'lucide-react';
 import { addressService } from '../../services/addressService';
@@ -146,9 +147,20 @@ export default function AddressManagement() {
         </div>
       )}
 
-      {showModal && (
+      {showModal && createPortal(
+        // Portaled to document.body: this component is embedded inside the
+        // "My Address" card in Settings, which has backdrop-blur-xl -- that
+        // establishes a new CSS containing block for position:fixed
+        // descendants (same root cause as the navbar drawers). Without the
+        // portal, "fixed inset-0" here resolved against that card's own box
+        // instead of the viewport, clipping the modal so the bottom of the
+        // form -- including the Save/Cancel buttons -- rendered off-screen
+        // and unreachable.
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white dark:bg-[#1a1425] rounded-3xl shadow-2xl p-6">
+          {/* max-h + overflow-y-auto -- belt-and-braces so the form still
+              scrolls internally on a short viewport even now that it's
+              correctly centered on the full page. */}
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1a1425] rounded-3xl shadow-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {editingAddress ? 'Edit Address' : 'Add Address'}
@@ -235,7 +247,8 @@ export default function AddressManagement() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
