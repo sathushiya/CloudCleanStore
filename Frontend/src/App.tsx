@@ -32,7 +32,6 @@ import StaffDashboard from "./pages/StaffDashboard";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import Shop from "./pages/Shop";
 import Checkout from "./pages/Checkout";
-import CustomerOrders from "./pages/CustomerOrders";
 import CustomerAddresses from "./pages/CustomerAddresses";
 import CustomerSettings from "./pages/CustomerSettings";
 import CustomerWishlist from "./pages/CustomerWishlist";
@@ -44,7 +43,7 @@ import Legal from "./pages/Legal";
 // 401s from the cart/order API once they get there. Hoisted out of the
 // component so it's a stable reference (a fresh array literal on every
 // render would defeat the point of listing it as an effect dependency).
-const GUEST_BLOCKED_PAGES: PageType[] = ["checkout", "orders", "addresses", "wishlist"];
+const GUEST_BLOCKED_PAGES: PageType[] = ["checkout", "addresses", "wishlist"];
 
 function AppContent() {
   const { isAuthenticated, user, isLoading, logout } = useAuth();
@@ -154,7 +153,6 @@ function AppContent() {
     onNavigateToLogin: () => navigate("login"),
     onOpenCart: () => setCartModalOpen(true),
     onLogout: handleLogout,
-    onNavigateToOrders: () => navigate("orders"),
     onNavigateToAddresses: () => navigate("addresses"),
     onNavigateToSettings: () => navigate("settings"),
     onNavigateToWishlist: () => navigate("wishlist"),
@@ -234,13 +232,6 @@ function AppContent() {
             setCartModalOpen(false);
           }}
         />
-        <ThemeToggle />
-      </>
-    );
-  if (currentPage === "orders" && isAuthenticated)
-    return (
-      <>
-        <CustomerOrders onBack={goBack} />
         <ThemeToggle />
       </>
     );
