@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Menu, X, ShoppingCart, User, Settings, LogOut, Camera, Heart, MapPin, Package, Clock, Bell, Truck, CheckCircle, AlertCircle } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, Settings, LogOut, Camera, Heart, Package, Clock, Bell, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import Logo from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -31,13 +31,12 @@ interface NavbarProps {
   onNavigateToLogin?: () => void;
   onOpenCart?: () => void;
   onLogout?: () => void;
-  onNavigateToAddresses?: () => void;
   onNavigateToSettings?: () => void;
   onNavigateToWishlist?: () => void;
   onNavigateToActivity?: () => void;
 }
 
-export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavigateToAddresses, onNavigateToSettings, onNavigateToWishlist, onNavigateToActivity }: NavbarProps = {}) {
+export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavigateToSettings, onNavigateToWishlist, onNavigateToActivity }: NavbarProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
@@ -288,16 +287,6 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
                   >
                     <Clock className="w-5 h-5 shrink-0" />
                     <span>My Activity</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigateToAddresses?.();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
-                  >
-                    <MapPin className="w-5 h-5 shrink-0" />
-                    <span>My Addresses</span>
                   </button>
                   <button
                     onClick={() => {
