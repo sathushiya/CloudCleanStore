@@ -247,19 +247,21 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
               {loading ? 'Updating...' : 'Update Password'}
             </button>
           </form>
+        </div>
 
-          {/* My Address -- moved here from the standalone My Addresses page.
-              Opens the exact same address management interface, embedded
-              directly in Settings instead of a separate page. */}
+        {/* My Address Section -- its own card, same as Phone & WhatsApp and
+            Change Password above. Expands in place to the exact same address
+            management interface that used to live on its own page. */}
+        <div className="mb-8 backdrop-blur-xl bg-white/70 dark:bg-white/5 rounded-3xl p-6 border border-gray-200 dark:border-purple-700/20">
           <button
             onClick={() => setShowAddressManagement((prev) => !prev)}
-            className="w-full mt-6 pt-6 border-t border-gray-200 dark:border-purple-700/20 flex items-center gap-4"
+            className="w-full flex items-center gap-4"
           >
             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 shrink-0">
               <MapPin className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="flex-1 text-left">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">My Address</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Address</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">Manage your delivery addresses</p>
             </div>
             <ChevronDown
