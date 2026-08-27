@@ -31,14 +31,13 @@ interface NavbarProps {
   onNavigateToLogin?: () => void;
   onOpenCart?: () => void;
   onLogout?: () => void;
-  onNavigateToOrders?: () => void;
   onNavigateToAddresses?: () => void;
   onNavigateToSettings?: () => void;
   onNavigateToWishlist?: () => void;
   onNavigateToActivity?: () => void;
 }
 
-export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavigateToOrders, onNavigateToAddresses, onNavigateToSettings, onNavigateToWishlist, onNavigateToActivity }: NavbarProps = {}) {
+export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavigateToAddresses, onNavigateToSettings, onNavigateToWishlist, onNavigateToActivity }: NavbarProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
@@ -292,16 +291,6 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
                   </button>
                   <button
                     onClick={() => {
-                      onNavigateToOrders?.();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="shrink-0 w-full flex items-center gap-2.5 px-4 py-2.5 text-base text-gray-100 hover:text-white hover:bg-purple-800 rounded-lg transition-all font-medium"
-                  >
-                    <Package className="w-5 h-5 shrink-0" />
-                    <span>My Orders</span>
-                  </button>
-                  <button
-                    onClick={() => {
                       onNavigateToAddresses?.();
                       setMobileMenuOpen(false);
                     }}
@@ -430,7 +419,7 @@ export default function Navbar({ onNavigateToLogin, onOpenCart, onLogout, onNavi
                       onClick={() => {
                         setReadKeys((prev) => new Set(prev).add(readKeyFor(order)));
                         setNotificationModalOpen(false);
-                        onNavigateToOrders?.();
+                        onNavigateToActivity?.();
                       }}
                       className="w-full text-left bg-white/10 rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer"
                     >
