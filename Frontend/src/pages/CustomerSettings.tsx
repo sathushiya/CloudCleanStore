@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Bell, Mail, MessageSquare, Moon, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { Bell, Mail, MessageSquare, Moon, Lock, Eye, EyeOff, CheckCircle, AlertCircle, MapPin, ChevronDown } from 'lucide-react';
 import BackButton from '../components/common/BackButton';
 import profileService from '../services/profileService';
 import PhoneVerificationStatus from '../components/common/PhoneVerificationStatus';
+import AddressManagement from '../components/customer/AddressManagement';
 
 interface CustomerSettingsProps {
   onBack: () => void;
@@ -31,6 +32,8 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [showAddressManagement, setShowAddressManagement] = useState(false);
 
   useEffect(() => {
     profileService.get()
@@ -244,6 +247,31 @@ export default function CustomerSettings({ onBack }: CustomerSettingsProps) {
               {loading ? 'Updating...' : 'Update Password'}
             </button>
           </form>
+
+          {/* My Address -- moved here from the standalone My Addresses page.
+              Opens the exact same address management interface, embedded
+              directly in Settings instead of a separate page. */}
+          <button
+            onClick={() => setShowAddressManagement((prev) => !prev)}
+            className="w-full mt-6 pt-6 border-t border-gray-200 dark:border-purple-700/20 flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 shrink-0">
+              <MapPin className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="flex-1 text-left">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">My Address</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Manage your delivery addresses</p>
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${showAddressManagement ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {showAddressManagement && (
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-purple-700/20">
+              <AddressManagement />
+            </div>
+          )}
         </div>
 
         {/* Settings List */}
