@@ -259,7 +259,13 @@ function AppContent() {
   if (currentPage === "activity" && isAuthenticated)
     return (
       <>
-        <CustomerActivity onBack={goBack} />
+        <CustomerActivity
+          onBack={goBack}
+          onReorder={() => {
+            navigate("shop");
+            setCartModalOpen(true);
+          }}
+        />
         <ThemeToggle />
       </>
     );

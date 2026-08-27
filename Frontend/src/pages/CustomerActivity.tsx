@@ -7,6 +7,10 @@ import { groupOrdersForActivity } from '../utils/orderActivity';
 
 interface CustomerActivityProps {
   onBack: () => void;
+  // Called after a reorder successfully adds at least one item to the
+  // cart -- App.tsx handles the actual navigation to the cart, since that's
+  // outside what this page has access to on its own.
+  onReorder?: () => void;
 }
 
 interface SectionProps {
@@ -18,6 +22,7 @@ interface SectionProps {
   reviewingOrderId: number | null;
   onStartReview: (orderId: number) => void;
   onReviewSubmitted: (orderId: number, rating: number, comment: string) => void;
+  onReorder?: () => void;
 }
 
 function ActivitySection({
@@ -29,6 +34,7 @@ function ActivitySection({
   reviewingOrderId,
   onStartReview,
   onReviewSubmitted,
+  onReorder,
 }: SectionProps) {
   return (
     <section>
@@ -55,6 +61,7 @@ function ActivitySection({
               isReviewing={reviewingOrderId === order.id}
               onStartReview={() => onStartReview(order.id)}
               onReviewSubmitted={onReviewSubmitted}
+              onReorder={onReorder}
             />
           ))}
         </div>
@@ -63,7 +70,7 @@ function ActivitySection({
   );
 }
 
-export default function CustomerActivity({ onBack }: CustomerActivityProps) {
+export default function CustomerActivity({ onBack, onReorder }: CustomerActivityProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,6 +143,7 @@ export default function CustomerActivity({ onBack }: CustomerActivityProps) {
               reviewingOrderId={reviewingOrderId}
               onStartReview={setReviewingOrderId}
               onReviewSubmitted={handleReviewSubmitted}
+              onReorder={onReorder}
             />
           </div>
         )}
