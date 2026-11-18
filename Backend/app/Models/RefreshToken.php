@@ -12,6 +12,7 @@ class RefreshToken extends Model
         'token',
         'expires_at',
         'is_revoked',
+        'remember',
         'user_agent',
         'ip_address',
     ];
@@ -21,12 +22,27 @@ class RefreshToken extends Model
         return [
             'expires_at' => 'datetime',
             'is_revoked' => 'boolean',
+            'remember' => 'boolean',
         ];
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Refresh tokens are stored as a SHA-256 hash; the raw value only ever
+     * lives in the client's HttpOnly cookie.
+     */
+    public static function hashToken(string $raw): string
+    {
+        return hash('sha256', $raw);
+    }
+
+    public static function findByRaw(string $raw): ?self
+    {
+        return static::where('token', static::hashToken($raw))->with('user')->first();
     }
 
     public function isValid(): bool

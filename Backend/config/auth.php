@@ -119,4 +119,27 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Token Lifetimes
+    |--------------------------------------------------------------------------
+    |
+    | Read by App\Services\TokenService and App\Support\RefreshCookie. Kept in
+    | config (not env() calls in the service) so `php artisan config:cache`
+    | works. Values are minutes.
+    |
+    | - access_expiry: Sanctum bearer token, held only in frontend memory.
+    | - refresh_expiry: server-side lifetime of a refresh token row, and the
+    |   Max-Age of the refresh cookie when "remember me" is ticked.
+    | - refresh_cookie_secure: the Secure flag on the refresh cookie. Must be
+    |   true anywhere served over HTTPS; set false only for local http.
+    |
+    */
+
+    'tokens' => [
+        'access_expiry' => (int) env('ACCESS_TOKEN_EXPIRY', 15),
+        'refresh_expiry' => (int) env('REFRESH_TOKEN_EXPIRY', 10080),
+        'refresh_cookie_secure' => (bool) env('REFRESH_COOKIE_SECURE', true),
+    ],
+
 ];

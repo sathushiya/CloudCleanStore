@@ -18,12 +18,18 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+    // This app does NOT use Sanctum's SPA session-cookie mode: the frontend
+    // authenticates with a bearer token plus our own HttpOnly refresh cookie.
+    // If the frontend origin were listed here, Sanctum would treat its
+    // requests as "stateful" and demand a CSRF token, so /auth/refresh and
+    // /auth/logout would fail with 419. Set SANCTUM_STATEFUL_DOMAINS= (empty)
+    // in .env; empty entries are filtered out so that means "none".
+    'stateful' => array_values(array_filter(array_map('trim', explode(',', (string) env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s',
         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
         Sanctum::currentApplicationUrlWithPort(),
         // Sanctum::currentRequestHost(),
-    ))),
+    )))))),
 
     /*
     |--------------------------------------------------------------------------

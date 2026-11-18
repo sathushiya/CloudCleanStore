@@ -27,7 +27,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:3,1');
     Route::post('/verify-reset-otp', [AuthController::class, 'verifyPasswordResetOtp'])->middleware('throttle:10,1');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
-    Route::post('/refresh', [AuthController::class, 'refresh']);
+    // Authenticated by the HttpOnly refresh_token cookie (path /api/auth),
+    // so it also gets the Origin check as a CSRF guard.
+    Route::post('/refresh', [AuthController::class, 'refresh'])->middleware(['trusted.origin', 'throttle:30,1']);
 });
 
 Route::get('/brands', [BrandController::class, 'index']);
@@ -39,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
-        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/logout', [AuthController::class, 'logout'])->middleware('trusted.origin');
     });
 
     Route::prefix('phone')->group(function () {

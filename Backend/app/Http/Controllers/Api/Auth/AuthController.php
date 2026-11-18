@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\OtpService;
 use App\Services\PhoneService;
 use App\Services\TokenService;
+use App\Support\RefreshCookie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -101,16 +102,16 @@ class AuthController extends Controller
     private function activateUser(User $user, Request $request): JsonResponse
     {
         $user->update(['email_verified_at' => now()]);
-        $tokens = $this->tokenService->createTokenPair($user, $request);
+        $issued = $this->tokenService->issueTokens($user, $request, false);
 
         return response()->json([
             'success' => true,
             'message' => 'Email verified successfully. Welcome to Cloud Clean Store!',
             'data' => [
                 'user' => $this->formatUser($user),
-                'tokens' => $tokens,
+                'tokens' => $issued['tokens'],
             ],
-        ]);
+        ])->withCookie(RefreshCookie::make($issued['refresh_token'], $issued['remember']));
     }
 
     // ─── Resend OTP ──────────────────────────────────────────────────────────
@@ -175,45 +176,50 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Create tokens
-        $tokens = $this->tokenService->createTokenPair($user, $request);
+        // Access token goes in the JSON (frontend keeps it in memory only);
+        // the refresh token goes ONLY into the HttpOnly cookie.
+        $remember = $request->boolean('remember_me');
+        $issued = $this->tokenService->issueTokens($user, $request, $remember);
 
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
             'data' => [
                 'user' => $this->formatUser($user),
-                'tokens' => $tokens,
-                'remember_me' => (bool) $request->remember_me,
+                'tokens' => $issued['tokens'],
+                'remember_me' => $remember,
             ],
-        ]);
+        ])->withCookie(RefreshCookie::make($issued['refresh_token'], $issued['remember']));
     }
 
     // ─── Refresh Token ───────────────────────────────────────────────────────
 
     public function refresh(Request $request): JsonResponse
     {
-        $request->validate([
-            'refresh_token' => ['required', 'string'],
-        ]);
-
-        $tokens = $this->tokenService->refreshAccessToken(
-            $request->refresh_token,
+        // Cookie only -- any refresh_token in the body is deliberately ignored.
+        $result = $this->tokenService->rotateRefreshToken(
+            $request->cookie(RefreshCookie::NAME),
             $request
         );
 
-        if (!$tokens) {
-            return response()->json([
+        if ($result['status'] !== TokenService::REFRESH_OK) {
+            $response = response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired refresh token. Please log in again.',
             ], 401);
+
+            // A token another tab rotated a moment ago: the browser already
+            // holds the new cookie, so don't wipe it.
+            return $result['status'] === TokenService::REFRESH_SUPERSEDED
+                ? $response
+                : $response->withCookie(RefreshCookie::forget());
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Token refreshed',
-            'data' => ['tokens' => $tokens],
-        ]);
+            'data' => ['tokens' => $result['tokens']],
+        ])->withCookie(RefreshCookie::make($result['refresh_token'], $result['remember']));
     }
 
     // ─── Logout ──────────────────────────────────────────────────────────────
@@ -225,7 +231,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully',
-        ]);
+        ])->withCookie(RefreshCookie::forget());
     }
 
     // ─── Get Authenticated User ───────────────────────────────────────────────
