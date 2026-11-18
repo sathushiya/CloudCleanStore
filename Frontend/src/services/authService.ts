@@ -1,4 +1,4 @@
-import api, { storeTokens, clearAuthStorage } from './api';
+import api, { setAccessToken, clearAuthStorage } from './api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,11 +26,12 @@ export interface AuthUser {
   avatar: string;
 }
 
+// The refresh token is never in a response body: it lives only in an
+// HttpOnly cookie (Path=/api/auth) that JS cannot read.
 export interface AuthTokens {
   access_token: string;
-  refresh_token: string;
   token_type: string;
-  expires_in: number;
+  expires_in: number; // seconds (900 = 15 minutes)
 }
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
@@ -45,11 +46,9 @@ export const authService = {
   async verifyEmail(email: string, otp: string) {
     const { data } = await api.post('/auth/verify-email', { email, otp });
     if (data.success) {
-      storeTokens(
-        data.data.tokens.access_token,
-        data.data.tokens.refresh_token,
-        false // after email verify, default no remember
-      );
+      // Access token in memory only; the backend set the refresh cookie
+      // (session cookie -- no "remember me" after email verification).
+      setAccessToken(data.data.tokens.access_token);
     }
     return data; // { success, message, data: { user, tokens } }
   },
@@ -62,18 +61,17 @@ export const authService = {
   async login(payload: LoginPayload) {
     const { data } = await api.post('/auth/login', payload);
     if (data.success) {
-      storeTokens(
-        data.data.tokens.access_token,
-        data.data.tokens.refresh_token,
-        payload.remember_me ?? false
-      );
+      // remember_me (sent in the body) decides server-side whether the
+      // refresh cookie is persistent or a session cookie.
+      setAccessToken(data.data.tokens.access_token);
     }
     return data; // { success, message, data: { user, tokens, remember_me } }
   },
 
   async logout() {
     try {
-      await api.post('/auth/logout');
+      // Server revokes tokens and clears the refresh cookie.
+      await api.post('/auth/logout', {}, { withCredentials: true });
     } finally {
       clearAuthStorage();
     }

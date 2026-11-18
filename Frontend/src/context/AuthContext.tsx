@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, AuthUser } from '../services/authService';
-import { getStoredToken, clearAuthStorage } from '../services/api';
+import { refreshSession, clearAuthStorage } from '../services/api';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -17,23 +17,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true); // true while checking token on startup
 
-  // On app load: check if a token exists and fetch the user from the API
+  // On app load there is never an access token in memory. Try a silent refresh
+  // using the HttpOnly refresh cookie; if that yields a token, fetch the user.
+  // refreshSession() is de-duplicated, so StrictMode's double-run effect still
+  // sends only ONE /auth/refresh request. Both calls are bounded by the axios
+  // 20s timeout, so the loading spinner can't hang.
   useEffect(() => {
     const initAuth = async () => {
-      const token = getStoredToken();
-
-      if (token) {
-        try {
-          const fetchedUser = await authService.me();
-          setUser(fetchedUser);
-        } catch {
-          // Token is invalid, clear it
+      try {
+        const token = await refreshSession();
+        if (token) {
+          setUser(await authService.me());
+        } else {
           clearAuthStorage();
           setUser(null);
         }
+      } catch {
+        clearAuthStorage();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     initAuth();
